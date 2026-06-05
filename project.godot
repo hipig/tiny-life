@@ -1,0 +1,52 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Tiny Life"
+run/main_scene="res://scenes/main/Main.tscn"
+config/features=PackedStringArray("4.6", "Mobile")
+config/icon="res://icon.svg"
+
+[autoload]
+
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+GameEvents="*res://scripts/autoload/GameEvents.gd"
+ConfigManager="*res://scripts/autoload/ConfigManager.gd"
+PlatformManager="*res://scripts/autoload/PlatformManager.gd"
+AdManager="*res://scripts/autoload/AdManager.gd"
+UIManager="*res://scripts/autoload/UIManager.gd"
+TimeManager="*res://scripts/autoload/TimeManager.gd"
+AssetResolver="*res://scripts/autoload/AssetResolver.gd"
+GameState="*res://scripts/autoload/GameState.gd"
+EconomyManager="*res://scripts/autoload/EconomyManager.gd"
+TaskManager="*res://scripts/autoload/TaskManager.gd"
+SaveManager="*res://scripts/autoload/SaveManager.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/handheld/orientation=1
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="mobile"

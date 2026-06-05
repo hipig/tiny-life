@@ -1,0 +1,8 @@
+[
+  {"floor_index":1,"initial_built":true,"required_apartment_level":1,"build_cost":0},
+  {"floor_index":2,"initial_built":true,"required_apartment_level":1,"build_cost":0},
+  {"floor_index":3,"initial_built":false,"required_apartment_level":2,"build_cost":500},
+  {"floor_index":4,"initial_built":false,"required_apartment_level":3,"build_cost":1200},
+  {"floor_index":5,"initial_built":false,"required_apartment_level":4,"build_cost":2400},
+  {"floor_index":6,"initial_built":false,"required_apartment_level":5,"build_cost":4200}
+]

@@ -1,0 +1,14 @@
+[
+  {"id":"room_101","floor_index":1,"room_name":"101 房","grid_size":[8,5]},
+  {"id":"room_102","floor_index":1,"room_name":"102 房","grid_size":[8,5]},
+  {"id":"room_201","floor_index":2,"room_name":"201 房","grid_size":[8,5]},
+  {"id":"room_202","floor_index":2,"room_name":"202 房","grid_size":[8,5]},
+  {"id":"room_301","floor_index":3,"room_name":"301 房","grid_size":[10,5]},
+  {"id":"room_302","floor_index":3,"room_name":"302 房","grid_size":[10,5]},
+  {"id":"room_401","floor_index":4,"room_name":"401 房","grid_size":[10,5]},
+  {"id":"room_402","floor_index":4,"room_name":"402 房","grid_size":[10,5]},
+  {"id":"room_501","floor_index":5,"room_name":"501 房","grid_size":[10,6]},
+  {"id":"room_502","floor_index":5,"room_name":"502 房","grid_size":[10,6]},
+  {"id":"room_601","floor_index":6,"room_name":"601 房","grid_size":[12,6]},
+  {"id":"room_602","floor_index":6,"room_name":"602 房","grid_size":[12,6]}
+]
