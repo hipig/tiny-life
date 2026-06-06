@@ -59,7 +59,7 @@ func _apply_event(task_config: Dictionary, task_state: Dictionary, event_name: S
 func _complete_task(task_config: Dictionary, task_state: Dictionary) -> void:
 	task_state["completed"] = true
 	task_state["claimed"] = true
-	GameState.add_coins(int(task_config.get("reward_coins", 0)))
+	GameState.add_coins(int(task_config.get("reward_coins", 0)), "task_reward")
 	GameState.add_apartment_exp(int(task_config.get("reward_exp", 0)))
 	GameEvents.task_completed.emit(str(task_config.get("id", "")))
 	SaveManager.save_game()

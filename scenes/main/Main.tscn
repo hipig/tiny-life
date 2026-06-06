@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://tiny_life_main"]
+[gd_scene load_steps=6 format=3 uid="uid://tiny_life_main"]
 
 [ext_resource type="Script" path="res://scenes/main/Main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/ui/TopStatusBar.tscn" id="2_top"]
+[ext_resource type="PackedScene" path="res://scenes/building/BuildingView.tscn" id="3_building"]
+[ext_resource type="PackedScene" path="res://scenes/ui/FloatingMenu.tscn" id="4_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PopupLayer.tscn" id="5_popup"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -11,3 +15,35 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.953, 0.906, 0.769, 1)
+
+[node name="AppRoot" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 1
+anchors_preset = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+
+[node name="TopStatusBar" parent="AppRoot" instance=ExtResource("2_top")]
+layout_mode = 2
+
+[node name="MainRow" type="HBoxContainer" parent="AppRoot"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BuildingView" parent="AppRoot/MainRow" instance=ExtResource("3_building")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="FloatingMenu" parent="AppRoot/MainRow" instance=ExtResource("4_menu")]
+layout_mode = 2
+
+[node name="PopupLayer" parent="." instance=ExtResource("5_popup")]

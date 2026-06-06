@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/furniture/Furniture.gd" id="1_furniture"]
+
+[node name="Furniture" type="TextureRect"]
+custom_minimum_size = Vector2(26, 26)
+script = ExtResource("1_furniture")

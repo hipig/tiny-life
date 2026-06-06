@@ -16,14 +16,40 @@ func calculate_room_rent(room: Dictionary) -> float:
 	var tenant_id := str(room.get("tenant_id", ""))
 	if tenant_id.is_empty():
 		return 0.0
+	return calculate_room_rent_for_tenant(room, tenant_id)
+
+func calculate_room_rent_for_tenant(room: Dictionary, tenant_id: String) -> float:
+	if tenant_id.is_empty():
+		return 0.0
+	return float(get_room_rent_breakdown(room, tenant_id).get("rent", 0.0))
+
+func get_room_rent_breakdown(room: Dictionary, tenant_id := "") -> Dictionary:
+	if tenant_id.is_empty():
+		tenant_id = str(room.get("tenant_id", ""))
+	if tenant_id.is_empty():
+		return {
+			"base_rent": 0.0,
+			"score_part": 0.0,
+			"pay_multiplier": 0.0,
+			"satisfaction_multiplier": 0.0,
+			"rent": 0.0
+		}
 	var tenant_state: Dictionary = GameState.tenants.get(tenant_id, {})
 	var tenant_data: Dictionary = ConfigManager.get_tenant_data(tenant_id)
 	var base_rent: float = float(ConfigManager.get_economy_value("base_rent", 10.0))
 	var score_factor: float = float(ConfigManager.get_economy_value("score_rent_factor", 0.5))
 	var score_part: float = float(room.get("score", 0)) * score_factor
 	var pay_multiplier: float = float(tenant_data.get("pay_multiplier", 1.0))
-	var satisfaction_multiplier: float = get_satisfaction_multiplier(int(tenant_state.get("satisfaction", 60)))
-	return (base_rent + score_part) * pay_multiplier * satisfaction_multiplier
+	var satisfaction := int(tenant_state.get("satisfaction", int(tenant_data.get("initial_satisfaction", 60))))
+	var satisfaction_multiplier: float = get_satisfaction_multiplier(satisfaction)
+	return {
+		"base_rent": base_rent,
+		"score_part": score_part,
+		"pay_multiplier": pay_multiplier,
+		"satisfaction": satisfaction,
+		"satisfaction_multiplier": satisfaction_multiplier,
+		"rent": (base_rent + score_part) * pay_multiplier * satisfaction_multiplier
+	}
 
 func get_satisfaction_multiplier(value: int) -> float:
 	if value <= 30:
@@ -47,14 +73,20 @@ func recalculate_total_rent() -> void:
 	TaskManager.notify_event("rent_reached", {"rent": total})
 
 func income_tick(delta: float) -> void:
-	var income_per_second: float = GameState.total_rent_per_minute / 60.0
+	var income_per_second: float = get_income_per_second()
 	if income_per_second <= 0.0:
 		return
 	coin_buffer += income_per_second * delta
 	if coin_buffer >= 1.0:
 		var coins_to_add := int(coin_buffer)
 		coin_buffer -= coins_to_add
-		GameState.add_coins(coins_to_add)
+		GameState.add_coins(coins_to_add, "auto_income")
+
+func get_income_per_second() -> float:
+	return GameState.total_rent_per_minute / 60.0
+
+func get_income_buffer() -> float:
+	return coin_buffer
 
 func calculate_offline_income() -> Dictionary:
 	var now: int = TimeManager.now_unix()
@@ -69,7 +101,7 @@ func claim_offline_income(double_reward := false) -> int:
 	if double_reward:
 		amount *= 2
 	if amount > 0:
-		GameState.add_coins(amount)
+		GameState.add_coins(amount, "offline_income")
 		GameState.stats["offline_claimed_count"] = int(GameState.stats.get("offline_claimed_count", 0)) + 1
 		TaskManager.notify_event("offline_reward_claimed", {"amount": amount})
 	elif double_reward:

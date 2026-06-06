@@ -71,13 +71,14 @@ func reset_new_game() -> void:
 			"claimed": false
 		}
 
-func add_coins(amount: int) -> void:
+func add_coins(amount: int, source := "generic") -> void:
 	if amount == 0:
 		return
 	coins = max(0, coins + amount)
 	GameEvents.coins_changed.emit(coins)
 	if amount > 0:
 		GameEvents.coin_gain_batched.emit(amount)
+		GameEvents.coin_gain_recorded.emit(amount, source)
 
 func spend_coins(amount: int) -> bool:
 	if coins < amount:
@@ -185,7 +186,7 @@ func recycle_furniture_instance(room_id: String, instance_id: String) -> int:
 			list.remove_at(i)
 			room["furniture_instances"] = list
 			rooms[room_id] = room
-			add_coins(refund)
+			add_coins(refund, "furniture_recycle")
 			recalculate_room_stats(room_id)
 			EconomyManager.recalculate_total_rent()
 			GameEvents.furniture_recycled.emit(room_id, furniture_id)
@@ -288,13 +289,77 @@ func from_save_data(data: Dictionary) -> void:
 	apartment_exp = int(data.get("apartment_exp", apartment_exp))
 	highest_built_floor = int(data.get("highest_built_floor", highest_built_floor))
 	last_save_timestamp = int(data.get("last_save_timestamp", TimeManager.now_unix()))
-	rooms = data.get("rooms", rooms)
-	tenants = data.get("tenants", tenants)
-	tasks = data.get("tasks", tasks)
-	stats = data.get("stats", stats)
+	var saved_rooms: Variant = data.get("rooms", rooms)
+	var saved_tenants: Variant = data.get("tenants", tenants)
+	var saved_tasks: Variant = data.get("tasks", tasks)
+	var saved_stats: Variant = data.get("stats", stats)
+	if saved_rooms is Dictionary:
+		rooms = saved_rooms
+	if saved_tenants is Dictionary:
+		tenants = saved_tenants
+	if saved_tasks is Dictionary:
+		tasks = saved_tasks
+	if saved_stats is Dictionary:
+		stats = saved_stats
+	_ensure_runtime_defaults()
 	for room_id in rooms.keys():
 		recalculate_room_stats(str(room_id))
 	EconomyManager.recalculate_total_rent()
 	GameEvents.coins_changed.emit(coins)
 	GameEvents.apartment_level_changed.emit(apartment_level)
 	GameEvents.state_loaded.emit()
+
+func _ensure_runtime_defaults() -> void:
+	if last_save_timestamp <= 0:
+		last_save_timestamp = TimeManager.now_unix()
+	_ensure_stats_defaults()
+	for room_config in ConfigManager.rooms:
+		var room_data: Dictionary = room_config
+		var room_id := str(room_data.get("id", ""))
+		if room_id.is_empty():
+			continue
+		var room: Dictionary = rooms.get(room_id, {})
+		var floor_index := int(room_data.get("floor_index", room.get("floor_index", 1)))
+		room["id"] = room_id
+		room["floor_index"] = floor_index
+		room["room_name"] = str(room.get("room_name", room_data.get("room_name", "")))
+		room["grid_size"] = room.get("grid_size", room_data.get("grid_size", [8, 5]))
+		room["unlocked"] = bool(room.get("unlocked", floor_index <= highest_built_floor))
+		room["level"] = int(room.get("level", 1))
+		room["tenant_id"] = str(room.get("tenant_id", ""))
+		room["furniture_instances"] = room.get("furniture_instances", [])
+		room["score"] = int(room.get("score", 0))
+		room["comfort"] = int(room.get("comfort", 0))
+		room["entertainment"] = int(room.get("entertainment", 0))
+		room["hygiene"] = int(room.get("hygiene", 0))
+		room["food"] = int(room.get("food", 0))
+		room["rent_per_minute"] = float(room.get("rent_per_minute", 0.0))
+		rooms[room_id] = room
+	for tenant_config in ConfigManager.tenants:
+		var tenant_data: Dictionary = tenant_config
+		var tenant_id := str(tenant_data.get("id", ""))
+		if tenant_id.is_empty():
+			continue
+		var tenant: Dictionary = tenants.get(tenant_id, {})
+		tenant["id"] = tenant_id
+		tenant["satisfaction"] = int(tenant.get("satisfaction", int(tenant_data.get("initial_satisfaction", 60))))
+		tenant["current_need"] = str(tenant.get("current_need", ""))
+		tenant["current_behavior"] = str(tenant.get("current_behavior", "闲逛"))
+		tenant["room_id"] = str(tenant.get("room_id", ""))
+		tenants[tenant_id] = tenant
+	for task_config in ConfigManager.tasks:
+		var task_data: Dictionary = task_config
+		var task_id := str(task_data.get("id", ""))
+		if task_id.is_empty():
+			continue
+		var task: Dictionary = tasks.get(task_id, {})
+		task["id"] = task_id
+		task["progress"] = int(task.get("progress", 0))
+		task["completed"] = bool(task.get("completed", false))
+		task["claimed"] = bool(task.get("claimed", false))
+		tasks[task_id] = task
+
+func _ensure_stats_defaults() -> void:
+	stats["furniture_placed_count"] = int(stats.get("furniture_placed_count", 0))
+	stats["tenant_recruited_count"] = int(stats.get("tenant_recruited_count", 0))
+	stats["offline_claimed_count"] = int(stats.get("offline_claimed_count", 0))

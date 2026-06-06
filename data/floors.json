@@ -1,8 +1,8 @@
 [
-  {"floor_index":1,"initial_built":true,"required_apartment_level":1,"build_cost":0},
-  {"floor_index":2,"initial_built":true,"required_apartment_level":1,"build_cost":0},
-  {"floor_index":3,"initial_built":false,"required_apartment_level":2,"build_cost":500},
-  {"floor_index":4,"initial_built":false,"required_apartment_level":3,"build_cost":1200},
-  {"floor_index":5,"initial_built":false,"required_apartment_level":4,"build_cost":2400},
-  {"floor_index":6,"initial_built":false,"required_apartment_level":5,"build_cost":4200}
+  {"floor_index":1,"display_name":"大厅","visual_role":"lobby","initial_built":true,"required_apartment_level":1,"build_cost":0},
+  {"floor_index":2,"display_name":"2F","visual_role":"room_floor","initial_built":false,"required_apartment_level":1,"build_cost":500},
+  {"floor_index":3,"display_name":"3F","visual_role":"room_floor","initial_built":false,"required_apartment_level":2,"build_cost":900},
+  {"floor_index":4,"display_name":"4F","visual_role":"room_floor","initial_built":false,"required_apartment_level":3,"build_cost":1600},
+  {"floor_index":5,"display_name":"5F","visual_role":"room_floor","initial_built":false,"required_apartment_level":4,"build_cost":2800},
+  {"floor_index":6,"display_name":"6F","visual_role":"room_floor","initial_built":false,"required_apartment_level":5,"build_cost":4600}
 ]

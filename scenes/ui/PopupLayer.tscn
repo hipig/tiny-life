@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PopupLayer.gd" id="1_popup_layer"]
+[ext_resource type="PackedScene" path="res://scenes/effects/FloatingCoinText.tscn" id="2_toast"]
+
+[node name="PopupLayer" type="CanvasLayer"]
+script = ExtResource("1_popup_layer")
+
+[node name="Toast" parent="." instance=ExtResource("2_toast")]

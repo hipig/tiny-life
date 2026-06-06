@@ -2,6 +2,7 @@ extends Node
 
 signal coins_changed(value: int)
 signal coin_gain_batched(amount: int)
+signal coin_gain_recorded(amount: int, source: String)
 signal rent_changed(value: float)
 signal apartment_level_changed(level: int)
 signal room_updated(room_id: String)
@@ -17,4 +18,3 @@ signal task_completed(task_id: String)
 signal state_loaded
 signal offline_income_ready(amount: int, seconds: int)
 signal toast_requested(message: String)
-

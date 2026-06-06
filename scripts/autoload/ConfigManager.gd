@@ -2,6 +2,7 @@ extends Node
 
 var furniture: Array = []
 var tenants: Array = []
+var tenant_regions: Array = []
 var rooms: Array = []
 var floors: Array = []
 var tasks: Array = []
@@ -12,6 +13,7 @@ var platform_config: Dictionary = {}
 
 var furniture_by_id: Dictionary = {}
 var tenant_by_id: Dictionary = {}
+var tenant_region_by_id: Dictionary = {}
 var floor_by_index: Dictionary = {}
 var room_by_id: Dictionary = {}
 var level_by_value: Dictionary = {}
@@ -22,6 +24,7 @@ func _ready() -> void:
 func load_all() -> void:
 	furniture = _load_json_array("res://data/furniture.json")
 	tenants = _load_json_array("res://data/tenants.json")
+	tenant_regions = _load_json_array("res://data/tenant_regions.json")
 	rooms = _load_json_array("res://data/rooms.json")
 	floors = _load_json_array("res://data/floors.json")
 	tasks = _load_json_array("res://data/tasks.json")
@@ -58,6 +61,10 @@ func _rebuild_indexes() -> void:
 	for item in tenants:
 		var tenant_data: Dictionary = item
 		tenant_by_id[tenant_data.get("id", "")] = tenant_data
+	tenant_region_by_id.clear()
+	for item in tenant_regions:
+		var region_data: Dictionary = item
+		tenant_region_by_id[region_data.get("id", "")] = region_data
 	floor_by_index.clear()
 	for item in floors:
 		var floor_data: Dictionary = item
@@ -76,6 +83,37 @@ func get_furniture_data(id: String) -> Dictionary:
 
 func get_tenant_data(id: String) -> Dictionary:
 	return tenant_by_id.get(id, {})
+
+func get_tenant_region_data(id: String) -> Dictionary:
+	return tenant_region_by_id.get(id, {})
+
+func get_unlocked_tenant_regions(apartment_level: int) -> Array:
+	var result: Array = []
+	for item in tenant_regions:
+		var region_data: Dictionary = item
+		if apartment_level >= int(region_data.get("required_apartment_level", 1)):
+			result.append(region_data)
+	return result
+
+func get_region_candidate_tenants(region_id: String) -> Array:
+	var region: Dictionary = get_tenant_region_data(region_id)
+	if region.is_empty():
+		return []
+	var result: Array = []
+	for tenant_id in region.get("tenant_ids", []):
+		var tenant_data: Dictionary = get_tenant_data(str(tenant_id))
+		if not tenant_data.is_empty():
+			result.append(tenant_data)
+	return result
+
+func refresh_tenant_applications() -> void:
+	for i in range(tenant_regions.size()):
+		var region: Dictionary = tenant_regions[i]
+		var tenant_ids: Array = region.get("tenant_ids", []).duplicate(true)
+		tenant_ids.shuffle()
+		region["tenant_ids"] = tenant_ids
+		tenant_regions[i] = region
+	_rebuild_indexes()
 
 func get_floor_data(index: int) -> Dictionary:
 	return floor_by_index.get(index, {})
