@@ -1,7 +1,49 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/building/Room.gd" id="1_room"]
+[ext_resource type="PackedScene" path="res://scenes/building/RoomShell.tscn" id="2_room_shell"]
+[ext_resource type="PackedScene" path="res://scenes/furniture/Furniture.tscn" id="3_furniture"]
+[ext_resource type="PackedScene" path="res://scenes/tenant/Tenant.tscn" id="4_tenant"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_room_normal"]
+bg_color = Color(0, 0, 0, 0)
+border_color = Color(0.164706, 0.0901961, 0.12549, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_room_hover"]
+bg_color = Color(1, 0.91, 0.58, 0.12)
+border_color = Color(0.945098, 0.827451, 0.478431, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_room_pressed"]
+bg_color = Color(0.95, 0.55, 0.26, 0.16)
+border_color = Color(0.968627, 0.65098, 0.290196, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
 
 [node name="Room" type="Button"]
-custom_minimum_size = Vector2(250, 130)
+custom_minimum_size = Vector2(224, 88)
+focus_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_styles/normal = SubResource("StyleBoxFlat_room_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_room_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_room_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_room_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_room_normal")
 script = ExtResource("1_room")
+tenant_scene = ExtResource("4_tenant")
+furniture_scene = ExtResource("3_furniture")
+fallback_room_name = "房间"
+rent_badge_template = "评分 %d  租金 %.1f"
+
+[node name="RoomShell" parent="." instance=ExtResource("2_room_shell")]

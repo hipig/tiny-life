@@ -16,7 +16,7 @@
 - 任务奖励和目标。
 - 经济常量。
 - 公寓等级要求。
-- UI 文案。
+- 玩法配置文案和可复用本地化文案。
 - 平台配置。
 
 预期数据文件：
@@ -30,6 +30,7 @@ data/tasks.json
 data/economy.json
 data/apartment_levels.json
 data/ui_text.json
+data/behavior_aliases.json
 data/platform_config.json
 ```
 
@@ -78,6 +79,7 @@ comfort + entertainment + hygiene + food
 id
 floor_index
 room_name
+room_scene_path
 unlocked
 level
 tenant_id
@@ -98,6 +100,17 @@ furniture_id
 grid_pos
 mirrored
 ```
+
+`room_scene_path` 用于选择编辑器可打开的房间模板场景。不同房间尺寸或视觉外壳应优先拆成 `.tscn` 模板，并由配置选择，不要在 GDScript 中硬编码或临时拼主体视觉。
+
+楼层配置可包含：
+
+```text
+floor_scene_path
+build_slot_scene_path
+```
+
+这两个路径用于选择已建楼层模板和施工槽模板。楼层外壳、服务核心、屋檐、施工表现应由这些模板中的 TileMap/子场景承载。
 
 ## 租客数据
 
@@ -184,9 +197,11 @@ MVP 离线收益上限：
 
 ## 本地化
 
-即使 MVP 只做中文，UI 文案也应通过 `ui_text.json` 使用 key 管理。
+即使 MVP 只做中文，也要预留本地化边界，但必须服从编辑器所见即所得的 UI 工作流。
 
-配置中优先使用文案 key，避免后续本地化时重写玩法逻辑。
+- 固定 UI 结构、默认按钮文案、面板标题、空状态、说明行和可调显示模板优先写在对应 `.tscn` 或场景导出属性中，方便直接在 Godot 编辑器中预览和调整。
+- 玩法配置里的名称、描述、任务文本、租客/家具文本等仍可使用 `text_key` 或 `ui_text.json`，避免后续本地化时重写玩法逻辑。
+- GDScript 不应硬编码固定中文 UI 文案；需要动态格式化时，把模板导出到场景或放入配置，脚本只填运行时数据。
 
 ## 资源配置
 
@@ -198,4 +213,3 @@ MVP 离线收益上限：
 - TileSet。
 
 使用 `AssetResolver` 应用资源配置。玩法组件不要重复实现资源解析逻辑。
-

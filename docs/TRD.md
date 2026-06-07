@@ -139,6 +139,7 @@ res://
     economy.json
     apartment_levels.json
     ui_text.json
+    behavior_aliases.json
     platform_config.json
 
   assets/
@@ -187,6 +188,35 @@ FloatingMenu：右侧任务 / 福利 / 设置
 PlacementOverlay：摆放状态提示层
 PopupLayer：所有弹窗统一入口
 ```
+
+## 3.3 UI 编辑器工作流
+
+UI 层以编辑器所见即所得为准。
+
+所有 UI 面板、页签、按钮、卡片、空状态、列表容器、固定布局和固定视觉样式都必须直接配置在 `.tscn` 中。GDScript 只负责：
+
+```text
+绑定数据到场景中已经存在的节点
+切换可见性、选中态、禁用态
+连接信号
+实例化已经拆分好的子条目场景
+```
+
+禁止在 UI 脚本中用 `Button.new()`、`Label.new()`、`PanelContainer.new()`、`HBoxContainer.new()`、`VBoxContainer.new()` 等方式临时拼 UI 骨架，也禁止把固定 `StyleBox`、固定字号、固定颜色、固定描边、固定 anchors、固定 offsets、固定 `custom_minimum_size` 等 Inspector 可配置布局和视觉样式藏在脚本里。
+
+动态列表允许按数据实例化独立子条目场景，例如：
+
+```text
+StatCard.tscn
+IconInfoRow.tscn
+IconActionRow.tscn
+PanelActionButton.tscn
+FurnitureShopItemRow.tscn
+RoomFurnitureItemRow.tscn
+TaskItemRow.tscn
+```
+
+节点过多的界面必须继续拆分为独立子场景，保证编辑器中能直接预览布局和视觉层级。
 
 ---
 
@@ -368,6 +398,21 @@ BuildingView
 ├── Camera2D
 ├── BuildingRoot
 └── InputArea
+```
+
+公寓主体应改为 TileMap / TileMapLayer 优先的可编辑结构。楼层外壳、房间格子、墙面、地面、屋檐和施工层表现应尽量由 `.tscn` 中的 TileMapLayer 或拆分子场景承载，脚本只绑定配置数据、切换状态和实例化子场景，不运行时绘制不可预览的主体结构。
+
+详细迁移边界与验收标准见 `docs/APARTMENT_TILEMAP_MIGRATION.md`。
+
+迁移顺序：
+
+```text
+1. 新增 res://tilesets/apartment_tileset.tres，统一引用公寓墙体、地板、屋檐、施工层、门梯等 16x16 素材。
+2. 新建 ApartmentTileMap.tscn，至少包含 WallTileMap、FloorTileMap、InfrastructureTileMap、RoofTileMap、ConstructionTileMap。
+3. Room.tscn / Floor.tscn 保留交互按钮和租客/家具挂点，但房间墙体、地板、骨架、屋檐改由 TileMapLayer 编辑器手动铺设。
+4. 建造槽状态通过切换已铺好的 TileMapLayer/子场景可见性表达，不在脚本中生成色块、框线或施工素材。
+5. 房间大小、格子大小、房间数量扩展继续来自 rooms.json / floors.json；脚本只把配置绑定到交互区域、家具网格和租客挂点。
+6. 完成迁移后移除 RoomShell / BuildSlotShell 中用于墙面、地面、屋檐和施工表现的 TextureRect/ColorRect 兜底结构；租客、家具、摆放网格保留为数据驱动子场景或交互挂点。
 ```
 
 ---
@@ -1586,6 +1631,7 @@ tasks.json
 economy.json
 apartment_levels.json
 ui_text.json
+behavior_aliases.json
 ```
 
 ---
@@ -1600,7 +1646,7 @@ ui_text.json
 楼层价格
 租客倍率
 任务奖励
-UI 文案
+玩法配置文案、可复用本地化文案
 ```
 
 全部走配置表。
@@ -1609,7 +1655,9 @@ UI 文案
 
 # 24. 本地化预留
 
-即使 MVP 只做中文，也建议 UI 文案使用 key。
+即使 MVP 只做中文，也建议为可复用和玩法配置文案预留 key。
+
+固定 UI 结构、默认按钮文案、面板标题、空状态、说明行和显示模板优先写在 `.tscn` 或场景导出属性中，保证 Godot 编辑器可直接预览。脚本只填运行时数据，不硬编码固定中文 UI 文案。
 
 ui_text.json：
 

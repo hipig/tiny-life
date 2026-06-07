@@ -1,7 +1,181 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://delt4c5cxrwqw"]
 
-[ext_resource type="Script" path="res://scripts/ui/TopStatusBar.gd" id="1_status"]
+[ext_resource type="Script" uid="uid://cxcqawj1eydda" path="res://scripts/ui/TopStatusBar.gd" id="1_status"]
+[ext_resource type="Texture2D" uid="uid://bp6h4ewb86f4f" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long.png" id="2_button_blue"]
+[ext_resource type="Texture2D" uid="uid://bpvf1rxg5d0qx" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long_pressed.png" id="3_button_blue_pressed"]
+[ext_resource type="Texture2D" uid="uid://byhc50upxns2g" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_long.png" id="4_button_yellow"]
+[ext_resource type="Texture2D" uid="uid://8if5f1q4smkq" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_long_pressed.png" id="5_button_yellow_pressed"]
+[ext_resource type="Texture2D" uid="uid://cltvbtn43bc7t" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_green_long.png" id="6_button_green"]
+[ext_resource type="Texture2D" uid="uid://dim4uowalogix" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_green_long_pressed.png" id="7_button_green_pressed"]
+[ext_resource type="Texture2D" uid="uid://dweknalxbxn2m" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_long.png" id="8_button_grey"]
+[ext_resource type="Texture2D" uid="uid://c5nqs4phh3wc2" path="res://assets/pixel_spaces/icons/Population.png" id="9_icon_population"]
+[ext_resource type="Texture2D" uid="uid://btp20p3kmwhox" path="res://assets/pixel_spaces/icons/Currency.png" id="10_icon_currency"]
+[ext_resource type="Texture2D" uid="uid://cc6ie2gbb4v7h" path="res://assets/pixel_spaces/icons/XP_bar_8.png" id="11_icon_rent"]
 
-[node name="TopStatusBar" type="Control"]
-custom_minimum_size = Vector2(0, 70)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_normal"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("2_button_blue")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_pressed"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("3_button_blue_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_normal"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("4_button_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_disabled"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("8_button_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_pressed"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("5_button_yellow_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_green_normal"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("6_button_green")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_green_pressed"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+texture = ExtResource("7_button_green_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+
+[node name="TopStatusBar" type="Control" unique_id=1887108067]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
 script = ExtResource("1_status")
+
+[node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1891653790]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="LevelButton" type="Button" parent="ButtonRow" unique_id=950086961]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "公寓总览"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/icon_max_width = 18
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_blue_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_blue_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_disabled")
+icon = ExtResource("9_icon_population")
+expand_icon = true
+
+[node name="CoinButton" type="Button" parent="ButtonRow" unique_id=730422338]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "收益详情"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/icon_max_width = 18
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_yellow_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_disabled")
+icon = ExtResource("10_icon_currency")
+expand_icon = true
+
+[node name="RentButton" type="Button" parent="ButtonRow" unique_id=647454395]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "租金构成"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/icon_max_width = 18
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxTexture_green_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_green_pressed")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_disabled")
+icon = ExtResource("11_icon_rent")
+expand_icon = true
+
+[node name="CoinGainPopup" type="Label" parent="." unique_id=1412552830]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 36.0
+offset_bottom = 66.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.168627, 0.576471, 0.282353, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1

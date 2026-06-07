@@ -1,0 +1,91 @@
+[gd_scene load_steps=6 format=3 uid="uid://build_slot_shell"]
+
+[ext_resource type="Script" path="res://scripts/building/BuildSlotShell.gd" id="1_slot_shell"]
+[ext_resource type="PackedScene" path="res://scenes/building/ApartmentTileMap.tscn" id="2_apartment_tilemap"]
+[ext_resource type="PackedScene" path="res://scenes/building/ServiceCoreTileMap.tscn" id="3_service_tilemap"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Hammer.png" id="4_hammer"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status"]
+bg_color = Color(0.14, 0.08, 0.07, 0.44)
+border_color = Color(0.945098, 0.827451, 0.478431, 0.64)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="BuildSlotShell" type="HBoxContainer"]
+custom_minimum_size = Vector2(272, 88)
+layout_mode = 0
+offset_right = 272.0
+offset_bottom = 88.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+clip_contents = true
+script = ExtResource("1_slot_shell")
+
+[node name="BuildServiceCore" type="Control" parent="."]
+custom_minimum_size = Vector2(48, 88)
+layout_mode = 2
+offset_right = 48.0
+offset_bottom = 88.0
+mouse_filter = 2
+clip_contents = true
+
+[node name="ServiceCoreTileMap" parent="BuildServiceCore" instance=ExtResource("3_service_tilemap")]
+
+[node name="BuildRoomShell" type="Control" parent="."]
+custom_minimum_size = Vector2(224, 88)
+layout_mode = 2
+offset_right = 272.0
+offset_bottom = 88.0
+mouse_filter = 2
+clip_contents = true
+
+[node name="ApartmentTileMap" parent="BuildRoomShell" instance=ExtResource("2_apartment_tilemap")]
+
+[node name="BuildSlotStatusPanel" type="PanelContainer" parent="BuildRoomShell"]
+custom_minimum_size = Vector2(181, 35)
+layout_mode = 0
+offset_left = 18.0
+offset_top = 24.0
+offset_right = 199.0
+offset_bottom = 59.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_status")
+
+[node name="MarginContainer" type="MarginContainer" parent="BuildRoomShell/BuildSlotStatusPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="StatusRow" type="HBoxContainer" parent="BuildRoomShell/BuildSlotStatusPanel/MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="BuildHammer" type="TextureRect" parent="BuildRoomShell/BuildSlotStatusPanel/MarginContainer/StatusRow"]
+custom_minimum_size = Vector2(19, 19)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_hammer")
+stretch_mode = 5
+
+[node name="BuildSlotLabel" type="Label" parent="BuildRoomShell/BuildSlotStatusPanel/MarginContainer/StatusRow"]
+custom_minimum_size = Vector2(126, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "待修建"
+theme_override_colors/font_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_colors/font_outline_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+vertical_alignment = 1
+autowrap_mode = 2

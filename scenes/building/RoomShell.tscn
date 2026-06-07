@@ -1,0 +1,66 @@
+[gd_scene load_steps=3 format=3 uid="uid://room_shell"]
+
+[ext_resource type="Script" path="res://scripts/building/RoomShell.gd" id="1_room_shell"]
+[ext_resource type="PackedScene" path="res://scenes/building/ApartmentTileMap.tscn" id="2_apartment_tilemap"]
+
+[node name="RoomShell" type="Control"]
+custom_minimum_size = Vector2(224, 88)
+layout_mode = 0
+offset_right = 224.0
+offset_bottom = 88.0
+mouse_filter = 2
+clip_contents = true
+script = ExtResource("1_room_shell")
+
+[node name="ApartmentTileMap" parent="." instance=ExtResource("2_apartment_tilemap")]
+
+[node name="RoomNameBadge" type="Label" parent="."]
+custom_minimum_size = Vector2(48, 13)
+layout_mode = 0
+offset_left = 14.0
+offset_top = 9.0
+offset_right = 62.0
+offset_bottom = 22.0
+mouse_filter = 2
+text = "房间"
+theme_override_colors/font_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_colors/font_outline_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 9
+
+[node name="RoomRentBadge" type="Label" parent="."]
+custom_minimum_size = Vector2(88, 13)
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -106.0
+offset_top = 9.0
+offset_right = -18.0
+offset_bottom = 22.0
+grow_horizontal = 0
+mouse_filter = 2
+text = "评分 0  租金 0"
+theme_override_colors/font_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_colors/font_outline_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+
+[node name="RoomVisualLayer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="PlacementGridLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

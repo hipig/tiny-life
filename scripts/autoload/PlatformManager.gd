@@ -11,7 +11,7 @@ func get_platform_name() -> String:
 func save_data(key: String, data: Dictionary) -> void:
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
-		push_error("无法写入存档: %s" % SAVE_PATH)
+		push_error("Unable to write save data: %s" % SAVE_PATH)
 		return
 	file.store_string(JSON.stringify(data, "\t"))
 

@@ -4,19 +4,66 @@ extends "res://scripts/ui/AppPanel.gd"
 signal build_confirmed(floor_index: int)
 
 var floor_index := 0
+var stats_grid: GridContainer
+var message_root: VBoxContainer
+var cost_card: StatCard
+var coin_card: StatCard
+var status_row: IconInfoRow
+var confirm_button: Button
+
+var title_template := ""
+var can_build_title := ""
+var can_build_detail := ""
+var can_build_icon_file := ""
+var insufficient_title := ""
+var insufficient_detail_template := ""
+var insufficient_icon_file := ""
 
 func open(target_floor_index: int) -> void:
 	floor_index = target_floor_index
 	var floor: Dictionary = ConfigManager.get_floor_data(floor_index)
 	var cost := int(floor.get("build_cost", 0))
-	setup_panel("建造第 %d 层" % floor_index)
-	add_text("需要金币：%d" % cost)
-	add_text("当前金币：%d" % GameState.coins)
+	setup_panel("", false)
+	_bind_scene_nodes()
+	_bind_scene_text()
+	title_label.text = title_template % floor_index
+	cost_card.set_value("%d" % cost)
+	coin_card.set_value("%d" % GameState.coins)
 	if GameState.coins < cost:
-		add_text("还差：%d" % (cost - GameState.coins))
-	var confirm := Button.new()
-	UIPanelFactory.style_button(confirm)
-	confirm.text = "确认建造"
-	confirm.disabled = GameState.coins < cost
-	confirm.pressed.connect(func(): build_confirmed.emit(floor_index))
-	content_root.add_child(confirm)
+		status_row.set_icon(insufficient_icon_file)
+		status_row.set_title(insufficient_title)
+		status_row.set_detail(insufficient_detail_template % (cost - GameState.coins))
+	else:
+		status_row.set_icon(can_build_icon_file)
+		status_row.set_title(can_build_title)
+		status_row.set_detail(can_build_detail)
+	confirm_button.disabled = GameState.coins < cost
+	if not confirm_button.pressed.is_connected(_on_confirm_pressed):
+		confirm_button.pressed.connect(_on_confirm_pressed)
+
+func _bind_scene_nodes() -> void:
+	stats_grid = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/StatsGrid") as GridContainer
+	message_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/MessageRoot") as VBoxContainer
+	cost_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/StatsGrid/CostCard") as StatCard
+	coin_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard") as StatCard
+	status_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/MessageRoot/StatusRow") as IconInfoRow
+	confirm_button = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/ConfirmButton") as Button
+
+func _bind_scene_text() -> void:
+	title_template = _template_text("TitleTemplate")
+	can_build_title = _template_text("CanBuildTitle")
+	can_build_detail = _template_text("CanBuildDetail")
+	can_build_icon_file = _template_text("CanBuildIconFile")
+	insufficient_title = _template_text("InsufficientTitle")
+	insufficient_detail_template = _template_text("InsufficientDetailTemplate")
+	insufficient_icon_file = _template_text("InsufficientIconFile")
+
+func _template_text(node_name: String) -> String:
+	var template_label := get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TemplateText/%s" % node_name) as Label
+	if template_label == null:
+		push_error("BuildConfirmPopup scene is missing TemplateText/%s." % node_name)
+		return ""
+	return template_label.text
+
+func _on_confirm_pressed() -> void:
+	build_confirmed.emit(floor_index)

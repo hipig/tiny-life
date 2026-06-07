@@ -1,6 +1,275 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=14 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/RoomPanel.gd" id="1_room_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/RoomPanel.gd" id="2_room_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelTabButton.tscn" id="3_tab"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StatCard.tscn" id="4_stat"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="5_info"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelActionButton.tscn" id="6_action"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Frame Icons/Star_full.png" id="7_icon_star"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Currency.png" id="8_icon_currency"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Properties.png" id="9_icon_properties"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Shopping_cart.png" id="10_icon_shop"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Package.png" id="11_icon_package"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Population.png" id="12_icon_population"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Status_happiness_2.png" id="13_icon_happiness"]
 
-[node name="RoomPanel" type="PanelContainer"]
-script = ExtResource("1_room_panel")
+[node name="RoomPanel" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 300)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -300.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_room_panel")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "房间"
+
+[node name="TabRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="FurnitureTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="0" instance=ExtResource("3_tab")]
+text = "家具"
+metadata/tab_id = "furniture"
+
+[node name="TenantTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="1" instance=ExtResource("3_tab")]
+text = "租客"
+metadata/tab_id = "tenant"
+
+[node name="OverviewTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="2" instance=ExtResource("3_tab")]
+text = "概览"
+metadata/tab_id = "overview"
+
+[node name="TabContent" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OverviewContent" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OverviewStatsGrid" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="ScoreCard" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/ScoreCard/Row" index="0"]
+texture = ExtResource("7_icon_star")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/ScoreCard/Row/Texts" index="0"]
+text = "房间评分"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/ScoreCard/Row/Texts" index="1"]
+text = "0"
+
+[node name="RentCard" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/RentCard/Row" index="0"]
+texture = ExtResource("8_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/RentCard/Row/Texts" index="0"]
+text = "当前租金"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/RentCard/Row/Texts" index="1"]
+text = "0 / 分钟"
+
+[node name="AttributeRow" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent" instance=ExtResource("5_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/AttributeRow/Row" index="0"]
+texture = ExtResource("9_icon_properties")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/AttributeRow/Row/Texts" index="0"]
+text = "房间属性"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/AttributeRow/Row/Texts" index="1"]
+text = "舒适 0  娱乐 0  卫生 0  食物 0"
+
+[node name="FurnitureContent" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AddFurnitureButton" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent" instance=ExtResource("6_action")]
+layout_mode = 2
+text = "添加家具"
+icon = ExtResource("10_icon_shop")
+
+[node name="FurnitureEmptyRow" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent" instance=ExtResource("5_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent/FurnitureEmptyRow/Row" index="0"]
+texture = ExtResource("11_icon_package")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent/FurnitureEmptyRow/Row/Texts" index="0"]
+text = "当前没有家具"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent/FurnitureEmptyRow/Row/Texts" index="1"]
+text = "从家具商店选择家具后可在房间内拖动摆放。"
+
+[node name="FurnitureListRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TenantContent" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TenantEmptyRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TenantEmptyRow" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantEmptyRoot" instance=ExtResource("5_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantEmptyRoot/TenantEmptyRow/Row" index="0"]
+texture = ExtResource("12_icon_population")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantEmptyRoot/TenantEmptyRow/Row/Texts" index="0"]
+text = "当前无租客"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantEmptyRoot/TenantEmptyRow/Row/Texts" index="1"]
+text = "进入区域寻找合适租客。"
+
+[node name="RecruitTenantButton" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantEmptyRoot" instance=ExtResource("6_action")]
+layout_mode = 2
+text = "招募租客"
+icon = ExtResource("12_icon_population")
+
+[node name="TenantOccupiedRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TenantStatCard" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantStatCard/Row" index="0"]
+texture = ExtResource("12_icon_population")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantStatCard/Row/Texts" index="0"]
+text = "租客"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantStatCard/Row/Texts" index="1"]
+text = "职业"
+
+[node name="TenantInfoRow" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot" instance=ExtResource("5_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantInfoRow/Row" index="0"]
+texture = ExtResource("13_icon_happiness")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantInfoRow/Row/Texts" index="0"]
+text = "满意度"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantInfoRow/Row/Texts" index="1"]
+text = "当前行为\n租金贡献"
+
+[node name="ViewTenantButton" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot" instance=ExtResource("6_action")]
+layout_mode = 2
+text = "查看租客"
+icon = ExtResource("12_icon_population")
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
+visible = false
+layout_mode = 2
+
+[node name="TitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "房间：%s"
+
+[node name="RoomFallbackName" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "房间"
+
+[node name="AttributeDetailTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "舒适 %d  娱乐 %d  卫生 %d  食物 %d"
+
+[node name="TenantStatTitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "租客：%s"
+
+[node name="TenantSatisfactionTitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "满意度：%d"
+
+[node name="TenantDetailTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "当前行为：%s\n租金贡献：%.1f / 分钟"
+
+[node name="RentValueTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%.1f / 分钟"
+
+[node name="FallbackBehaviorLabel" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "闲逛"
+
+[node name="BehaviorLabels" type="Control" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+
+[node name="Clean" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "清洁"
+metadata/behavior_key = "clean"
+
+[node name="Eat" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "吃东西"
+metadata/behavior_key = "eat"
+
+[node name="Entertainment" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "娱乐"
+metadata/behavior_key = "entertainment"
+
+[node name="Happy" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "开心"
+metadata/behavior_key = "happy"
+
+[node name="Idle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "发呆"
+metadata/behavior_key = "idle"
+
+[node name="Recruited" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "入住"
+metadata/behavior_key = "recruited"
+
+[node name="Relax" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "放松"
+metadata/behavior_key = "relax"
+
+[node name="Sleep" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "睡觉"
+metadata/behavior_key = "sleep"
+
+[node name="Study" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "学习/工作"
+metadata/behavior_key = "study"
+
+[node name="Wander" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "闲逛"
+metadata/behavior_key = "wander"

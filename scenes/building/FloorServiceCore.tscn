@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/building/FloorServiceCore.gd" id="1_service_core"]
+[ext_resource type="PackedScene" path="res://scenes/building/ServiceCoreTileMap.tscn" id="2_service_tilemap"]
+
+[node name="FloorServiceCore" type="Control"]
+custom_minimum_size = Vector2(48, 88)
+mouse_filter = 2
+clip_contents = true
+script = ExtResource("1_service_core")
+
+[node name="ServiceCoreTileMap" parent="." instance=ExtResource("2_service_tilemap")]
+
+[node name="FloorLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(40, 13)
+layout_mode = 0
+offset_left = 4.0
+offset_top = 8.0
+offset_right = 44.0
+offset_bottom = 21.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_colors/font_outline_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 1
+vertical_alignment = 1

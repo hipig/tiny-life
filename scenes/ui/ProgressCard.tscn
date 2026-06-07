@@ -1,0 +1,75 @@
+[gd_scene load_steps=6 format=3 uid="uid://progress_card"]
+
+[ext_resource type="Script" path="res://scripts/ui/ProgressCard.gd" id="1_progress_card"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Panel_white.png" id="2_panel_white"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel_white"]
+texture = ExtResource("2_panel_white")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_background"]
+bg_color = Color(0.427451, 0.458824, 0.388235, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
+bg_color = Color(0.454902, 0.784314, 0.411765, 1)
+
+[node name="ProgressCard" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 82)
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel_white")
+script = ExtResource("1_progress_card")
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="Body/Header"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "进度"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="ProgressBar" type="ProgressBar" parent="Body"]
+custom_minimum_size = Vector2(0, 9)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+max_value = 1.0
+step = 0.01
+value = 0.25
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="TitleTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "%s  %s"
+
+[node name="FallbackTitle" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "进度"

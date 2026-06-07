@@ -14,17 +14,16 @@ const REWARD_PANEL_SCENE := preload("res://scenes/ui/RewardPanel.tscn")
 const SETTINGS_PANEL_SCENE := preload("res://scenes/ui/SettingsPanel.tscn")
 const OFFLINE_REWARD_POPUP_SCENE := preload("res://scenes/ui/OfflineRewardPopup.tscn")
 
-@onready var app_root: VBoxContainer = $AppRoot
-@onready var top_status_bar: TopStatusBar = $AppRoot/TopStatusBar
-@onready var building_view: BuildingView = $AppRoot/MainRow/BuildingView
-@onready var floating_menu: FloatingMenu = $AppRoot/MainRow/FloatingMenu
+@onready var building_view: BuildingView = $BuildingView
+@onready var top_status_bar: TopStatusBar = $CanvasLayer_UI/TopStatusBar
+@onready var floating_menu: FloatingMenu = $CanvasLayer_UI/FloatingMenu
 @onready var popup_layer: PopupLayer = $PopupLayer
 
 var selected_room_id := ""
 var tenant_ai_timer := 0.0
 
 func _ready() -> void:
-	_configure_layout()
+	_connect_view_controls()
 	_connect_events()
 	_refresh_all()
 
@@ -34,17 +33,7 @@ func _process(delta: float) -> void:
 		tenant_ai_timer = 0.0
 		_tick_tenant_ai()
 
-func _configure_layout() -> void:
-	custom_minimum_size = Vector2.ZERO
-	app_root.custom_minimum_size = Vector2(720, 1280)
-	app_root.size = Vector2(720, 1280)
-	app_root.add_theme_constant_override("separation", 8)
-	top_status_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var main_row := $AppRoot/MainRow as HBoxContainer
-	main_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_row.add_theme_constant_override("separation", 8)
-	building_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	building_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+func _connect_view_controls() -> void:
 	building_view.zoom_changed.connect(_on_building_zoom_changed)
 	floating_menu.zoom_in_requested.connect(_on_zoom_in_requested)
 	floating_menu.zoom_out_requested.connect(_on_zoom_out_requested)
@@ -54,12 +43,14 @@ func _connect_events() -> void:
 	GameEvents.rent_changed.connect(_on_rent_changed)
 	GameEvents.apartment_level_changed.connect(_on_apartment_level_changed)
 	GameEvents.room_updated.connect(_on_room_updated)
+	GameEvents.room_layout_changed.connect(func(_room_id): _refresh_building())
+	GameEvents.room_unlocked.connect(func(_room_id): _refresh_building())
 	GameEvents.furniture_placed.connect(func(_room_id, _furniture_id): _refresh_building())
 	GameEvents.furniture_moved.connect(func(_room_id, _furniture_id): _refresh_building())
 	GameEvents.furniture_recycled.connect(func(_room_id, _furniture_id): _refresh_building())
 	GameEvents.tenant_recruited.connect(func(_tenant_id, _room_id): _refresh_building())
 	GameEvents.task_updated.connect(func(_task_id): pass)
-	GameEvents.task_completed.connect(func(task_id): _show_toast("任务完成：%s" % _task_title(task_id)))
+	GameEvents.task_completed.connect(func(task_id): _toast("toast_task_completed", [_task_title(task_id)]))
 	GameEvents.toast_requested.connect(_show_toast)
 	GameEvents.state_loaded.connect(_refresh_all)
 	GameEvents.offline_income_ready.connect(_show_offline_reward)
@@ -70,6 +61,7 @@ func _connect_events() -> void:
 	UIManager.panel_requested.connect(_show_named_panel)
 	UIManager.placement_requested.connect(_show_new_placement)
 	UIManager.move_existing_requested.connect(_show_move_existing)
+	UIManager.state_changed.connect(_on_ui_state_changed)
 
 func _refresh_all() -> void:
 	_refresh_top_bar()
@@ -86,6 +78,13 @@ func _on_apartment_level_changed(_level: int) -> void:
 func _on_room_updated(_room_id: String) -> void:
 	_refresh_building()
 	_refresh_room_panel_if_open()
+
+func _on_ui_state_changed(state: int) -> void:
+	var placement_active := state == UIManager.UIState.PLACING_NEW_FURNITURE or state == UIManager.UIState.MOVING_EXISTING_FURNITURE
+	if floating_menu != null:
+		floating_menu.visible = not placement_active
+	if not placement_active and building_view != null and building_view.has_method("clear_focus"):
+		building_view.clear_focus()
 
 func _on_building_zoom_changed(zoom_value: float) -> void:
 	if floating_menu != null:
@@ -123,29 +122,37 @@ func _show_furniture_shop(room_id: String) -> void:
 
 func _show_new_placement(furniture_id: String, room_id: String) -> void:
 	selected_room_id = room_id
-	var panel := _open_panel(PLACEMENT_OVERLAY_SCENE) as PlacementOverlay
-	panel.new_placement_confirmed.connect(_confirm_new_placement)
-	panel.move_confirmed.connect(_confirm_move)
-	panel.cancelled.connect(UIManager.open_room_panel)
-	panel.open_new(room_id, furniture_id)
+	_clear_panel_layer_panels()
+	if building_view != null and building_view.has_method("focus_room"):
+		building_view.focus_room(room_id)
+		await get_tree().process_frame
+	var overlay := popup_layer.open_overlay(PLACEMENT_OVERLAY_SCENE) as PlacementOverlay
+	overlay.new_placement_confirmed.connect(_confirm_new_placement)
+	overlay.move_confirmed.connect(_confirm_move)
+	overlay.cancelled.connect(UIManager.open_room_panel)
+	overlay.open_new(room_id, furniture_id)
 
 func _show_move_existing(room_id: String, instance_id: String) -> void:
 	selected_room_id = room_id
-	var panel := _open_panel(PLACEMENT_OVERLAY_SCENE) as PlacementOverlay
-	panel.new_placement_confirmed.connect(_confirm_new_placement)
-	panel.move_confirmed.connect(_confirm_move)
-	panel.cancelled.connect(UIManager.open_room_panel)
-	panel.open_move(room_id, instance_id)
+	_clear_panel_layer_panels()
+	if building_view != null and building_view.has_method("focus_room"):
+		building_view.focus_room(room_id)
+		await get_tree().process_frame
+	var overlay := popup_layer.open_overlay(PLACEMENT_OVERLAY_SCENE) as PlacementOverlay
+	overlay.new_placement_confirmed.connect(_confirm_new_placement)
+	overlay.move_confirmed.connect(_confirm_move)
+	overlay.cancelled.connect(UIManager.open_room_panel)
+	overlay.open_move(room_id, instance_id)
 
 func _confirm_new_placement(room_id: String, furniture_id: String, grid_pos: Array) -> void:
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var price := int(data.get("price", 0))
 	if not GameState.spend_coins(price):
-		_show_toast("金币不足")
+		_toast("toast_insufficient_coins")
 		return
 	GameState.add_furniture_instance(room_id, furniture_id, grid_pos)
 	SaveManager.save_game()
-	_show_toast("已摆放 %s" % data.get("name", "家具"))
+	_toast("toast_furniture_placed", [data.get("name", "furniture")])
 	UIManager.open_room_panel(room_id)
 
 func _on_move_furniture_pressed(instance_id: String) -> void:
@@ -160,7 +167,7 @@ func _on_shop_place_pressed(furniture_id: String, room_id: String) -> void:
 func _confirm_move(room_id: String, instance_id: String, grid_pos: Array) -> void:
 	if GameState.move_furniture_instance(room_id, instance_id, grid_pos):
 		SaveManager.save_game()
-		_show_toast("家具已移动")
+		_toast("toast_furniture_moved")
 	UIManager.open_room_panel(room_id)
 
 func _confirm_recycle(room_id: String, instance_id: String) -> void:
@@ -173,7 +180,7 @@ func _do_recycle(room_id: String, instance_id: String) -> void:
 	var refund: int = GameState.recycle_furniture_instance(room_id, instance_id)
 	if refund > 0:
 		SaveManager.save_game()
-		_show_toast("回收成功，返还 %d 金币" % refund)
+		_toast("toast_furniture_recycled", [refund])
 	UIManager.open_room_panel(room_id)
 
 func _show_tenant_panel(room_id: String, mode: String) -> void:
@@ -185,7 +192,7 @@ func _show_tenant_panel(room_id: String, mode: String) -> void:
 func _on_recruit_tenant_pressed(tenant_id: String, room_id: String) -> void:
 	if GameState.recruit_tenant(room_id, tenant_id):
 		SaveManager.save_game()
-		_show_toast("租客已入住")
+		_toast("toast_tenant_recruited")
 	UIManager.open_room_panel(room_id)
 
 func _show_build_confirm(floor_index: int) -> void:
@@ -196,7 +203,7 @@ func _show_build_confirm(floor_index: int) -> void:
 func _on_build_confirmed(floor_index: int) -> void:
 	if GameState.build_floor(floor_index):
 		SaveManager.save_game()
-		_show_toast("第 %d 层已建成" % floor_index)
+		_toast("toast_floor_built", [floor_index])
 		UIManager.return_to_normal()
 		_clear_panel_layer_panels()
 		_refresh_building()
@@ -234,19 +241,19 @@ func _on_reward_offline_claim_requested(double: bool) -> void:
 		AdManager.show_rewarded_ad("offline_double", func(success):
 			if success:
 				var amount: int = EconomyManager.claim_offline_income(true)
-				_show_toast("双倍领取 %d 金币" % amount)
+				_toast("toast_offline_double_claim", [amount])
 				_show_reward_panel()
 		)
 		return
 	var amount: int = EconomyManager.claim_offline_income(false)
-	_show_toast("领取 %d 金币" % amount)
+	_toast("toast_offline_claim", [amount])
 	_show_reward_panel()
 
 func _on_reward_tenant_refresh_requested() -> void:
 	AdManager.show_rewarded_ad("refresh_tenants", func(success):
 		if success:
 			ConfigManager.refresh_tenant_applications()
-			_show_toast("租客申请已刷新")
+			_toast("toast_tenant_applications_refreshed")
 	)
 
 func _show_settings_panel() -> void:
@@ -257,13 +264,13 @@ func _show_settings_panel() -> void:
 
 func _on_save_pressed() -> void:
 	SaveManager.save_game()
-	_show_toast("已存档")
+	_toast("toast_save_done")
 
 func _on_reset_pressed() -> void:
 	SaveManager.delete_save_and_restart()
 	_clear_panel_layer_panels()
 	_refresh_all()
-	_show_toast("已重置")
+	_toast("toast_reset_done")
 
 func _show_offline_reward(amount: int, seconds: int) -> void:
 	var panel := _open_panel(OFFLINE_REWARD_POPUP_SCENE) as OfflineRewardPopup
@@ -275,12 +282,12 @@ func _on_offline_reward_claim_requested(double: bool) -> void:
 		AdManager.show_rewarded_ad("offline_double", func(success):
 			if success:
 				var got: int = EconomyManager.claim_offline_income(true)
-				_show_toast("双倍领取 %d 金币" % got)
+				_toast("toast_offline_double_claim", [got])
 				_clear_panel_layer_panels()
 		)
 		return
 	var got: int = EconomyManager.claim_offline_income(false)
-	_show_toast("领取 %d 金币" % got)
+	_toast("toast_offline_claim", [got])
 	_clear_panel_layer_panels()
 
 func _tick_tenant_ai() -> void:
@@ -299,7 +306,7 @@ func _tick_tenant_ai() -> void:
 			if not need.is_empty():
 				needs.append(need)
 		if needs.is_empty():
-			tenant["current_behavior"] = "发呆"
+			tenant["current_behavior"] = GameState.IDLE_TENANT_BEHAVIOR
 			GameState.tenants[tenant_id] = tenant
 		else:
 			GameState.observe_tenant_behavior(str(tenant_id), needs.pick_random())
@@ -314,6 +321,13 @@ func _on_panel_close_requested() -> void:
 
 func _show_toast(message: String) -> void:
 	popup_layer.show_toast(message)
+
+func _toast(key: String, values: Array = []) -> void:
+	var template := ConfigManager.text(key, key)
+	if not values.is_empty():
+		_show_toast(template % values)
+		return
+	_show_toast(template)
 
 func _task_title(task_id: String) -> String:
 	for task in ConfigManager.tasks:

@@ -1,18 +1,139 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/tenant/TenantEmote.gd" id="1_tenant_emote"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Chat Bubbles/ChatBubble_yellow.png" id="2_bubble_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Emotes/Heart_green.png" id="3_icon_happy"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Emotes/Thumbs_up.png" id="4_icon_like"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Emotes/Thumbs_down.png" id="5_icon_dislike"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Emotes/Money.png" id="6_icon_money"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Emotes/Question.png" id="7_icon_question"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/effects/Emotes/Present.png" id="8_icon_present"]
 
-[node name="TenantEmote" type="Label"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_emote_bubble"]
+atlas = ExtResource("2_bubble_yellow")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_emote"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_emote_bubble")
+}],
+"loop": true,
+"name": &"default",
+"speed": 4.0
+}]
+
+[node name="TenantEmote" type="Control"]
 visible = false
+custom_minimum_size = Vector2(44, 34)
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -20.0
-offset_top = -32.0
-offset_right = 20.0
-offset_bottom = -10.0
+offset_left = -22.0
+offset_top = -38.0
+offset_right = 22.0
+offset_bottom = -4.0
 grow_horizontal = 2
-horizontal_alignment = 1
 mouse_filter = 2
 script = ExtResource("1_tenant_emote")
+
+[node name="EmoteAnimation" type="AnimatedSprite2D" parent="."]
+position = Vector2(22, 17)
+scale = Vector2(1.15, 0.95)
+sprite_frames = SubResource("SpriteFrames_emote")
+animation = &"default"
+autoplay = "default"
+
+[node name="IconRoot" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HappyIcon" type="TextureRect" parent="IconRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_icon_happy")
+stretch_mode = 5
+metadata/emote_key = "happy"
+
+[node name="LikeIcon" type="TextureRect" parent="IconRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_icon_like")
+stretch_mode = 5
+metadata/emote_key = "like"
+
+[node name="DislikeIcon" type="TextureRect" parent="IconRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_icon_dislike")
+stretch_mode = 5
+metadata/emote_key = "dislike"
+
+[node name="MoneyIcon" type="TextureRect" parent="IconRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_icon_money")
+stretch_mode = 5
+metadata/emote_key = "money"
+
+[node name="QuestionIcon" type="TextureRect" parent="IconRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_icon_question")
+stretch_mode = 5
+metadata/emote_key = "question"
+
+[node name="PresentIcon" type="TextureRect" parent="IconRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_icon_present")
+stretch_mode = 5
+metadata/emote_key = "present"

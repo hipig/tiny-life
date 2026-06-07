@@ -1,19 +1,42 @@
 class_name ApartmentOverviewPanel
 extends "res://scripts/ui/AppPanel.gd"
 
+const FLOOR_OVERVIEW_ROW_SCENE := preload("res://scenes/ui/FloorOverviewRow.tscn")
+const TENANT_OVERVIEW_ROW_SCENE := preload("res://scenes/ui/TenantOverviewRow.tscn")
+
 var selected_tab := "overview"
+var tab_row: HBoxContainer
+var summary_grid: GridContainer
+var upgrade_progress_card: ProgressCard
+var list_root: VBoxContainer
+var empty_tenant_row: IconInfoRow
+var level_card: StatCard
+var exp_card: StatCard
+var rent_card: StatCard
+var floor_card: StatCard
+var room_card: StatCard
+var tenant_card: StatCard
+var satisfaction_card: StatCard
+var next_goal_card: StatCard
+
+var rent_value_template := ""
+var floor_value_template := ""
+var room_count_template := ""
+var tenant_count_template := ""
+var max_level_text := ""
+var next_level_text_template := ""
+var empty_satisfaction_text := ""
 
 func open(initial_tab := "overview") -> void:
 	selected_tab = initial_tab
 	_refresh()
 
 func _refresh() -> void:
-	setup_panel("公寓总览")
-	var tabs := HBoxContainer.new()
-	content_root.add_child(tabs)
-	_add_tab_button(tabs, "概览", "overview")
-	_add_tab_button(tabs, "楼层", "floors")
-	_add_tab_button(tabs, "租客", "tenants")
+	setup_panel("", false)
+	_bind_scene_nodes()
+	_bind_scene_text()
+	_configure_tabs()
+	_prepare_content_roots()
 	match selected_tab:
 		"floors":
 			_build_floors_tab()
@@ -22,38 +45,72 @@ func _refresh() -> void:
 		_:
 			_build_summary_tab()
 
-func _add_tab_button(parent: Control, text: String, tab: String) -> void:
-	var button := Button.new()
-	UIPanelFactory.style_button(button)
-	button.text = text
-	button.disabled = selected_tab == tab
-	button.pressed.connect(func():
-		selected_tab = tab
-		_refresh()
-	)
-	parent.add_child(button)
+func _bind_scene_nodes() -> void:
+	tab_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabRow") as HBoxContainer
+	summary_grid = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid") as GridContainer
+	upgrade_progress_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/UpgradeProgressCard") as ProgressCard
+	list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/ListRoot") as VBoxContainer
+	empty_tenant_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/EmptyTenantRow") as IconInfoRow
+	level_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/LevelCard") as StatCard
+	exp_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/ExpCard") as StatCard
+	rent_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RentCard") as StatCard
+	floor_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/FloorCard") as StatCard
+	room_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RoomCard") as StatCard
+	tenant_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/TenantCard") as StatCard
+	satisfaction_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/SatisfactionCard") as StatCard
+	next_goal_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/SummaryGrid/NextGoalCard") as StatCard
+
+func _bind_scene_text() -> void:
+	rent_value_template = _template_text("RentValueTemplate")
+	floor_value_template = _template_text("FloorValueTemplate")
+	room_count_template = _template_text("RoomCountTemplate")
+	tenant_count_template = _template_text("TenantCountTemplate")
+	max_level_text = _template_text("MaxLevelText")
+	next_level_text_template = _template_text("NextLevelTextTemplate")
+	empty_satisfaction_text = _template_text("EmptySatisfactionText")
+
+func _template_text(node_name: String) -> String:
+	var template_label := get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TemplateText/%s" % node_name) as Label
+	if template_label == null:
+		push_error("ApartmentOverviewPanel scene is missing TemplateText/%s." % node_name)
+		return ""
+	return template_label.text
+
+func _configure_tabs() -> void:
+	for node_name in ["OverviewTab", "FloorsTab", "TenantsTab"]:
+		var tab_button := tab_row.get_node_or_null(node_name) as PanelTabButton
+		if tab_button == null:
+			continue
+		if not tab_button.tab_selected.is_connected(_on_tab_selected):
+			tab_button.tab_selected.connect(_on_tab_selected)
+		tab_button.setup("", selected_tab == tab_button.tab_id)
+
+func _prepare_content_roots() -> void:
+	summary_grid.visible = selected_tab == "overview"
+	upgrade_progress_card.visible = selected_tab == "overview" and _next_level_ratio() >= 0.0
+	list_root.visible = selected_tab != "overview"
+	empty_tenant_row.visible = false
+	UIPanelFactory.clear_children(list_root)
 
 func _build_summary_tab() -> void:
-	add_text("等级：Lv.%d  经验：%d" % [GameState.apartment_level, GameState.apartment_exp])
-	add_text("下一级目标：%s" % _next_level_text())
-	add_text("总租金：%.1f / 分钟" % GameState.total_rent_per_minute)
-	add_text("房间数量：%d  入住人数：%d" % [GameState.get_unlocked_rooms().size(), _tenant_count()])
-	add_text("平均满意度：%s" % _average_satisfaction_text())
-	add_text("已建最高楼层：%d" % GameState.highest_built_floor)
+	level_card.set_value("Lv.%d" % GameState.apartment_level)
+	exp_card.set_value("%d" % GameState.apartment_exp)
+	rent_card.set_value(rent_value_template % GameState.total_rent_per_minute)
+	floor_card.set_value(floor_value_template % GameState.highest_built_floor)
+	room_card.set_value(room_count_template % GameState.get_unlocked_rooms().size())
+	tenant_card.set_value(tenant_count_template % _tenant_count())
+	satisfaction_card.set_value(_average_satisfaction_text())
+	next_goal_card.set_value(_next_level_text())
+	var ratio := _next_level_ratio()
+	if ratio >= 0.0:
+		upgrade_progress_card.set_progress("%d%%" % int(round(ratio * 100.0)), ratio)
 
 func _build_floors_tab() -> void:
 	for floor_data in ConfigManager.floors:
 		var floor: Dictionary = floor_data
-		var floor_index := int(floor.get("floor_index", 0))
-		var stats := _floor_stats(floor_index)
-		add_text("%s：%s  建造费 %d\n房间 %d 间，入住 %d 人，本层租金 %.1f / 分钟" % [
-			floor.get("display_name", "%dF" % floor_index),
-			_floor_state_text(floor),
-			int(floor.get("build_cost", 0)),
-			int(stats.get("rooms", 0)),
-			int(stats.get("tenants", 0)),
-			float(stats.get("rent", 0.0))
-		])
+		var row := FLOOR_OVERVIEW_ROW_SCENE.instantiate() as FloorOverviewRow
+		list_root.add_child(row)
+		row.setup(floor)
 
 func _build_tenants_tab() -> void:
 	var count := 0
@@ -63,48 +120,32 @@ func _build_tenants_tab() -> void:
 		if room_id.is_empty():
 			continue
 		count += 1
-		var tenant_data: Dictionary = ConfigManager.get_tenant_data(str(tenant_id))
-		var room: Dictionary = GameState.rooms.get(room_id, {})
-		add_text("%s  %s\n房间：%s  满意度：%d  租金贡献 %.1f / 分钟" % [
-			tenant_data.get("name", "租客"),
-			tenant_data.get("job", ""),
-			room.get("room_name", room_id),
-			int(tenant_state.get("satisfaction", 0)),
-			float(room.get("rent_per_minute", 0.0))
-		])
+		var row := TENANT_OVERVIEW_ROW_SCENE.instantiate() as TenantOverviewRow
+		list_root.add_child(row)
+		row.setup(str(tenant_id), tenant_state)
 	if count == 0:
-		add_text("当前还没有租客入住。")
+		empty_tenant_row.visible = true
 
-func _floor_stats(floor_index: int) -> Dictionary:
-	var rooms := 0
-	var tenants := 0
-	var rent := 0.0
-	for room in GameState.rooms.values():
-		var room_data: Dictionary = room
-		if int(room_data.get("floor_index", 0)) != floor_index:
-			continue
-		rooms += 1
-		if not str(room_data.get("tenant_id", "")).is_empty():
-			tenants += 1
-		rent += float(room_data.get("rent_per_minute", 0.0))
-	return {"rooms": rooms, "tenants": tenants, "rent": rent}
+func _on_tab_selected(tab: String) -> void:
+	selected_tab = tab
+	_refresh()
 
-func _floor_state_text(floor: Dictionary) -> String:
-	var floor_index := int(floor.get("floor_index", 0))
-	var required_level := int(floor.get("required_apartment_level", 1))
-	if floor_index <= GameState.highest_built_floor:
-		return "已建成"
-	if floor_index == GameState.highest_built_floor + 1 and GameState.apartment_level >= required_level:
-		return "可建造"
-	return "Lv.%d 解锁" % required_level
+func _next_level_ratio() -> float:
+	var next_data: Dictionary = ConfigManager.get_level_data(GameState.apartment_level + 1)
+	if next_data.is_empty():
+		return -1.0
+	var required_exp := float(next_data.get("required_exp", 0))
+	if required_exp <= 0.0:
+		return 1.0
+	return clampf(float(GameState.apartment_exp) / required_exp, 0.0, 1.0)
 
 func _next_level_text() -> String:
 	var next_data: Dictionary = ConfigManager.get_level_data(GameState.apartment_level + 1)
 	if next_data.is_empty():
-		return "已达到当前最高等级"
+		return max_level_text
 	var required_exp: int = int(next_data.get("required_exp", 0))
 	var remaining: int = maxi(0, required_exp - GameState.apartment_exp)
-	return "Lv.%d 还需 %d 经验" % [GameState.apartment_level + 1, remaining]
+	return next_level_text_template % [GameState.apartment_level + 1, remaining]
 
 func _average_satisfaction_text() -> String:
 	var total := 0
@@ -116,7 +157,7 @@ func _average_satisfaction_text() -> String:
 		total += int(tenant_state.get("satisfaction", 0))
 		count += 1
 	if count == 0:
-		return "暂无租客"
+		return empty_satisfaction_text
 	return "%.1f" % (float(total) / float(count))
 
 func _tenant_count() -> int:

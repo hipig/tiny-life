@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ch2a1btw2vl2b"]
+
+[ext_resource type="Script" uid="uid://bdhfohruunitl" path="res://scripts/building/ApartmentTileMap.gd" id="1_apartment_tilemap"]
+[ext_resource type="TileSet" uid="uid://da8f30h62l4qi" path="res://tilesets/apartment_tileset.tres" id="2_apartment_tileset"]
+
+[node name="ApartmentTileMap" type="Node2D" unique_id=1545997845]
+script = ExtResource("1_apartment_tilemap")
+
+[node name="WallTileMap" type="TileMapLayer" parent="." unique_id=1048205063]
+tile_set = ExtResource("2_apartment_tileset")
+
+[node name="FloorTileMap" type="TileMapLayer" parent="." unique_id=314271563]
+tile_set = ExtResource("2_apartment_tileset")
+
+[node name="InfrastructureTileMap" type="TileMapLayer" parent="." unique_id=494177941]
+tile_set = ExtResource("2_apartment_tileset")
+
+[node name="RoofTileMap" type="TileMapLayer" parent="." unique_id=1782509696]
+visible = false
+tile_set = ExtResource("2_apartment_tileset")
+
+[node name="ConstructionTileMap" type="TileMapLayer" parent="." unique_id=819612477]
+visible = false
+tile_set = ExtResource("2_apartment_tileset")

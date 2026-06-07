@@ -1,7 +1,227 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/FloatingMenu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue.png" id="2_button_blue"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_pressed.png" id="3_button_blue_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_green.png" id="4_button_green"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_green_pressed.png" id="5_button_green_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey.png" id="6_button_grey"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_pressed.png" id="7_button_grey_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow.png" id="8_button_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_pressed.png" id="9_button_yellow_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Clipboard.png" id="10_icon_task"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Present.png" id="11_icon_reward"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Gear.png" id="12_icon_settings"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Plus.png" id="13_icon_zoom_in"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Minus.png" id="14_icon_zoom_out"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_normal"]
+texture = ExtResource("2_button_blue")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_pressed"]
+texture = ExtResource("3_button_blue_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_green_normal"]
+texture = ExtResource("4_button_green")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_green_pressed"]
+texture = ExtResource("5_button_green_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_normal"]
+texture = ExtResource("6_button_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_pressed"]
+texture = ExtResource("7_button_grey_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_normal"]
+texture = ExtResource("8_button_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_pressed"]
+texture = ExtResource("9_button_yellow_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
 
 [node name="FloatingMenu" type="VBoxContainer"]
-custom_minimum_size = Vector2(116, 0)
+custom_minimum_size = Vector2(46, 0)
+theme_override_constants/separation = 4
 script = ExtResource("1_menu")
+
+[node name="TaskButton" type="Button" parent="."]
+custom_minimum_size = Vector2(44, 42)
+layout_mode = 2
+tooltip_text = "任务"
+focus_mode = 2
+icon = ExtResource("10_icon_task")
+expand_icon = true
+icon_alignment = 1
+vertical_icon_alignment = 1
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 22
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_blue_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_blue_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="RewardButton" type="Button" parent="."]
+custom_minimum_size = Vector2(44, 42)
+layout_mode = 2
+tooltip_text = "福利"
+focus_mode = 2
+icon = ExtResource("11_icon_reward")
+expand_icon = true
+icon_alignment = 1
+vertical_icon_alignment = 1
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 22
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_green_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_green_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="SettingsButton" type="Button" parent="."]
+custom_minimum_size = Vector2(44, 42)
+layout_mode = 2
+tooltip_text = "设置"
+focus_mode = 2
+icon = ExtResource("12_icon_settings")
+expand_icon = true
+icon_alignment = 1
+vertical_icon_alignment = 1
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 22
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_grey_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_grey_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="ZoomInButton" type="Button" parent="."]
+custom_minimum_size = Vector2(44, 42)
+layout_mode = 2
+tooltip_text = "放大"
+focus_mode = 2
+icon = ExtResource("13_icon_zoom_in")
+expand_icon = true
+icon_alignment = 1
+vertical_icon_alignment = 1
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 22
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_yellow_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="ZoomOutButton" type="Button" parent="."]
+custom_minimum_size = Vector2(44, 42)
+layout_mode = 2
+tooltip_text = "缩小"
+focus_mode = 2
+icon = ExtResource("14_icon_zoom_out")
+expand_icon = true
+icon_alignment = 1
+vertical_icon_alignment = 1
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 22
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_yellow_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="ZoomTooltipTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "当前缩放 %.0f%%"

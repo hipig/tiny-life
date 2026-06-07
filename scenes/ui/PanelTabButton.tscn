@@ -1,0 +1,69 @@
+[gd_scene load_steps=10 format=3 uid="uid://panel_tab_button"]
+
+[ext_resource type="Script" path="res://scripts/ui/PanelTabButton.gd" id="1_tab_button"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long.png" id="2_button_blue"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long_pressed.png" id="3_button_blue_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_long.png" id="4_button_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_long.png" id="5_button_grey"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_normal"]
+texture = ExtResource("2_button_blue")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_pressed"]
+texture = ExtResource("3_button_blue_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_selected"]
+texture = ExtResource("4_button_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_disabled"]
+texture = ExtResource("5_button_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[node name="PanelTabButton" type="Button"]
+custom_minimum_size = Vector2(0, 44)
+size_flags_horizontal = 3
+text = "页签"
+focus_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxTexture_blue_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_selected")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_blue_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_yellow_selected")
+script = ExtResource("1_tab_button")

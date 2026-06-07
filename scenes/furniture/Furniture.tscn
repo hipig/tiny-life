@@ -4,4 +4,8 @@
 
 [node name="Furniture" type="TextureRect"]
 custom_minimum_size = Vector2(26, 26)
+mouse_filter = 0
+stretch_mode = 5
+pivot_offset = Vector2(13, 13)
 script = ExtResource("1_furniture")
+fallback_furniture_name = "家具"

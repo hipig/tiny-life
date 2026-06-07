@@ -1,49 +1,43 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cmcubmc8mutgm"]
 
-[ext_resource type="Script" path="res://scripts/building/BuildingView.gd" id="1_building"]
+[ext_resource type="Script" uid="uid://bs0x3y5d560s1" path="res://scripts/building/BuildingView.gd" id="1_building"]
+[ext_resource type="PackedScene" uid="uid://chrd6dfxw4fts" path="res://scenes/building/SceneBackdrop.tscn" id="2_backdrop_scene"]
+[ext_resource type="PackedScene" path="res://scenes/building/ApartmentBuilding.tscn" id="3_apartment_scene"]
 
-[node name="BuildingView" type="Control"]
+[node name="BuildingView" type="Control" unique_id=116694183]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 script = ExtResource("1_building")
 
-[node name="SkyBackground" type="ColorRect" parent="."]
+[node name="WorldClip" type="SubViewportContainer" parent="." unique_id=314197022]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.706, 0.827, 0.929, 1)
+mouse_filter = 1
+stretch = true
+stretch_shrink = 1
 
-[node name="GroundBand" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -96.0
-grow_horizontal = 2
-grow_vertical = 0
-color = Color(0.42, 0.62, 0.38, 1)
+[node name="WorldViewport" type="SubViewport" parent="WorldClip" unique_id=116983875]
+handle_input_locally = false
+canvas_item_default_texture_filter = 0
+size = Vector2i(360, 640)
+render_target_update_mode = 4
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_bottom = -28.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="WorldRoot" type="Node2D" parent="WorldClip/WorldViewport" unique_id=100511681]
 
-[node name="BuildingZoomShell" type="Control" parent="ScrollContainer"]
-layout_mode = 2
+[node name="SceneBackdrop" parent="WorldClip/WorldViewport/WorldRoot" unique_id=1857272845 instance=ExtResource("2_backdrop_scene")]
 
-[node name="BuildingRoot" type="VBoxContainer" parent="ScrollContainer/BuildingZoomShell"]
-layout_mode = 0
-offset_right = 560.0
-offset_bottom = 130.0
+[node name="ApartmentBuilding" parent="WorldClip/WorldViewport/WorldRoot" unique_id=366442516 instance=ExtResource("3_apartment_scene")]
+visible = false
+layout_mode = 3
+
+[node name="WorldCamera" type="Camera2D" parent="WorldClip/WorldViewport/WorldRoot" unique_id=1833234222]
+position = Vector2(180, 320)

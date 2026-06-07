@@ -3,11 +3,13 @@ extends Control
 
 var button_row: HBoxContainer
 var coin_popup_label: Label
+var level_button: Button
+var coin_button: Button
+var rent_button: Button
 var pending_auto_income := 0
 var coin_popup_timer := 0.0
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(0, 70)
 	_build_nodes()
 	_connect_events()
 	refresh_from_state()
@@ -30,37 +32,30 @@ func _process(delta: float) -> void:
 func refresh_from_state() -> void:
 	if button_row == null:
 		return
-	UIPanelFactory.clear_children(button_row)
-	var level_button := _status_button("公寓 Lv.%d" % GameState.apartment_level)
-	level_button.pressed.connect(UIManager.open_apartment_overview)
-	button_row.add_child(level_button)
-
-	var coin_button := _status_button("金币 %d" % GameState.coins)
-	coin_button.pressed.connect(UIManager.open_income_detail)
-	button_row.add_child(coin_button)
-
-	var rent_button := _status_button("租金 %.1f/分钟" % GameState.total_rent_per_minute)
-	rent_button.pressed.connect(UIManager.open_rent_detail)
-	button_row.add_child(rent_button)
+	level_button.text = "Lv.%d" % GameState.apartment_level
+	coin_button.text = str(GameState.coins)
+	rent_button.text = "%.1f/m" % GameState.total_rent_per_minute
 
 func _build_nodes() -> void:
 	button_row = get_node_or_null("ButtonRow") as HBoxContainer
 	if button_row == null:
-		button_row = HBoxContainer.new()
-		button_row.name = "ButtonRow"
-		button_row.set_anchors_preset(Control.PRESET_FULL_RECT)
-		add_child(button_row)
-	button_row.add_theme_constant_override("separation", 8)
+		push_error("TopStatusBar scene is missing ButtonRow.")
+		return
+	level_button = button_row.get_node_or_null("LevelButton") as Button
+	coin_button = button_row.get_node_or_null("CoinButton") as Button
+	rent_button = button_row.get_node_or_null("RentButton") as Button
+	if level_button == null or coin_button == null or rent_button == null:
+		push_error("TopStatusBar scene is missing LevelButton, CoinButton, or RentButton.")
+		return
+	_connect_button_once(level_button, UIManager.open_apartment_overview)
+	_connect_button_once(coin_button, UIManager.open_income_detail)
+	_connect_button_once(rent_button, UIManager.open_rent_detail)
 
 	coin_popup_label = get_node_or_null("CoinGainPopup") as Label
 	if coin_popup_label == null:
-		coin_popup_label = Label.new()
-		coin_popup_label.name = "CoinGainPopup"
-		coin_popup_label.position = Vector2(310, 48)
-		add_child(coin_popup_label)
+		push_error("TopStatusBar scene is missing CoinGainPopup.")
+		return
 	coin_popup_label.visible = false
-	coin_popup_label.add_theme_font_size_override("font_size", 30)
-	coin_popup_label.add_theme_color_override("font_color", Color("#2b9348"))
 
 func _connect_events() -> void:
 	if not GameEvents.coins_changed.is_connected(_on_coins_changed):
@@ -72,12 +67,9 @@ func _connect_events() -> void:
 	if not GameEvents.coin_gain_recorded.is_connected(_on_coin_gain_recorded):
 		GameEvents.coin_gain_recorded.connect(_on_coin_gain_recorded)
 
-func _status_button(text: String) -> Button:
-	var button := Button.new()
-	UIPanelFactory.style_button(button)
-	button.text = text
-	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return button
+func _connect_button_once(button: Button, callback: Callable) -> void:
+	if button != null and not button.pressed.is_connected(callback):
+		button.pressed.connect(callback)
 
 func _on_coins_changed(_value: int) -> void:
 	refresh_from_state()

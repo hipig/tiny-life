@@ -1,6 +1,40 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/TaskPanel.gd" id="1_task"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/TaskPanel.gd" id="2_task"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="3_info"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Clipboard.png" id="4_icon_clipboard"]
 
-[node name="TaskPanel" type="PanelContainer"]
-script = ExtResource("1_task")
+[node name="TaskPanel" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 360)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -360.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_task")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "任务"
+
+[node name="EmptyTaskRow" parent="PanelBox/ScrollContainer/ContentRoot" index="0" instance=ExtResource("3_info")]
+visible = false
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/EmptyTaskRow/Row" index="0"]
+texture = ExtResource("4_icon_clipboard")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/EmptyTaskRow/Row/Texts" index="0"]
+text = "当前没有进行中的任务"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/EmptyTaskRow/Row/Texts" index="1"]
+text = "继续经营公寓，后续目标会自动出现。"
+
+[node name="TaskListRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+layout_mode = 2
+theme_override_constants/separation = 8

@@ -9,6 +9,7 @@ var tasks: Array = []
 var levels: Array = []
 var economy: Dictionary = {}
 var ui_text: Dictionary = {}
+var behavior_aliases: Dictionary = {}
 var platform_config: Dictionary = {}
 
 var furniture_by_id: Dictionary = {}
@@ -31,6 +32,7 @@ func load_all() -> void:
 	levels = _load_json_array("res://data/apartment_levels.json")
 	economy = _load_json_dict("res://data/economy.json")
 	ui_text = _load_json_dict("res://data/ui_text.json")
+	behavior_aliases = _load_json_dict("res://data/behavior_aliases.json")
 	platform_config = _load_json_dict("res://data/platform_config.json")
 	_rebuild_indexes()
 
@@ -44,12 +46,12 @@ func _load_json_dict(path: String) -> Dictionary:
 
 func _load_json(path: String) -> Variant:
 	if not FileAccess.file_exists(path):
-		push_warning("配置不存在: %s" % path)
+		push_warning("Config file does not exist: %s" % path)
 		return null
 	var text := FileAccess.get_file_as_string(path)
 	var parsed: Variant = JSON.parse_string(text)
 	if parsed == null:
-		push_error("配置解析失败: %s" % path)
+		push_error("Config parse failed: %s" % path)
 	return parsed
 
 func _rebuild_indexes() -> void:
@@ -121,6 +123,22 @@ func get_floor_data(index: int) -> Dictionary:
 func get_room_config(id: String) -> Dictionary:
 	return room_by_id.get(id, {})
 
+func get_room_configs_for_floor(floor_index: int) -> Array:
+	var result: Array = []
+	for item in rooms:
+		var room_data: Dictionary = item
+		if int(room_data.get("floor_index", 0)) == floor_index:
+			result.append(room_data)
+	return result
+
+func get_room_layout_upgrade(room_id: String, target_level: int) -> Dictionary:
+	var room_data := get_room_config(room_id)
+	for item in room_data.get("layout_upgrades", []):
+		var upgrade: Dictionary = item
+		if int(upgrade.get("level", 0)) == target_level:
+			return upgrade
+	return {}
+
 func get_level_data(level: int) -> Dictionary:
 	return level_by_value.get(level, {})
 
@@ -129,6 +147,11 @@ func get_economy_value(key: String, default_value: Variant) -> Variant:
 
 func text(key: String, fallback := "") -> String:
 	return str(ui_text.get(key, fallback))
+
+func normalize_behavior_key(value: String, fallback := "") -> String:
+	if value.is_empty():
+		return fallback
+	return str(behavior_aliases.get(value, value))
 
 func furniture_with_tag(tag: String) -> Array:
 	var result: Array = []

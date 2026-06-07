@@ -1,6 +1,73 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/RecycleConfirmPopup.gd" id="1_recycle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/RecycleConfirmPopup.gd" id="2_recycle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelActionButton.tscn" id="3_action"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Check.png" id="4_icon_check"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Cross.png" id="5_icon_cross"]
 
-[node name="RecycleConfirmPopup" type="PanelContainer"]
-script = ExtResource("1_recycle")
+[node name="RecycleConfirmPopup" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(320, 250)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -125.0
+offset_right = 160.0
+offset_bottom = 125.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_recycle")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "确认回收"
+
+[node name="MessageLabel" type="Label" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+text = "确认回收家具？"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 2
+
+[node name="RefundLabel" type="Label" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+layout_mode = 2
+text = "将返还金币。"
+theme_override_colors/font_color = Color(0.376471, 0.282353, 0.239216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="ActionRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ConfirmButton" parent="PanelBox/ScrollContainer/ContentRoot/ActionRow" index="0" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(220, 56)
+text = "确认回收"
+icon = ExtResource("4_icon_check")
+
+[node name="CancelButton" parent="PanelBox/ScrollContainer/ContentRoot/ActionRow" index="1" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(160, 56)
+text = "取消"
+icon = ExtResource("5_icon_cross")
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="3"]
+visible = false
+layout_mode = 2
+
+[node name="MessageTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "确认回收 %s？"
+
+[node name="RefundTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "将返还 %d 金币。"
+
+[node name="FallbackFurnitureName" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "家具"

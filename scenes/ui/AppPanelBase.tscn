@@ -1,0 +1,124 @@
+[gd_scene load_steps=13 format=3 uid="uid://app_panel_base"]
+
+[ext_resource type="Script" path="res://scripts/ui/AppPanel.gd" id="1_app_panel"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Panel_white.png" id="2_panel_white"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_red.png" id="3_button_red"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_red_pressed.png" id="4_button_red_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow.png" id="5_button_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey.png" id="6_button_grey"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Close.png" id="7_icon_close"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel_white"]
+texture = ExtResource("2_panel_white")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_red_normal"]
+texture = ExtResource("3_button_red")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_red_pressed"]
+texture = ExtResource("4_button_red_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_hover"]
+texture = ExtResource("5_button_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_disabled"]
+texture = ExtResource("6_button_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[node name="AppPanelBase" type="PanelContainer"]
+custom_minimum_size = Vector2(320, 300)
+offset_right = 320.0
+offset_bottom = 300.0
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel_white")
+script = ExtResource("1_app_panel")
+
+[node name="PanelBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="PanelBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="PanelBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 24
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="PanelBox/Header"]
+custom_minimum_size = Vector2(40, 38)
+layout_mode = 2
+size_flags_horizontal = 8
+tooltip_text = "关闭"
+focus_mode = 2
+icon = ExtResource("7_icon_close")
+expand_icon = true
+icon_alignment = 1
+vertical_icon_alignment = 1
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 22
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxTexture_red_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_red_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_disabled")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContentRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8

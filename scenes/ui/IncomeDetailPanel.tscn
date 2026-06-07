@@ -1,6 +1,135 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=10 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/IncomeDetailPanel.gd" id="1_income"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/IncomeDetailPanel.gd" id="2_income"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StatCard.tscn" id="3_stat"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="4_info"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Currency.png" id="5_icon_currency"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Properties.png" id="6_icon_properties"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Boost.png" id="7_icon_boost"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Progress_bar_green_3.png" id="8_icon_buffer"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Boost_off.png" id="9_icon_boost_off"]
 
-[node name="IncomeDetailPanel" type="PanelContainer"]
-script = ExtResource("1_income")
+[node name="IncomeDetailPanel" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 330)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -330.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_income")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "收益详情"
+
+[node name="StatsGrid" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="CoinCard" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid" instance=ExtResource("3_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard/Row" index="0"]
+texture = ExtResource("5_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard/Row/Texts" index="0"]
+text = "当前金币"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard/Row/Texts" index="1"]
+text = "0"
+
+[node name="TotalRentCard" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid" instance=ExtResource("3_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/TotalRentCard/Row" index="0"]
+texture = ExtResource("6_icon_properties")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/TotalRentCard/Row/Texts" index="0"]
+text = "总租金"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/TotalRentCard/Row/Texts" index="1"]
+text = "0.0 / 分钟"
+
+[node name="PerSecondCard" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid" instance=ExtResource("3_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/PerSecondCard/Row" index="0"]
+texture = ExtResource("7_icon_boost")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/PerSecondCard/Row/Texts" index="0"]
+text = "每秒折算"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/PerSecondCard/Row/Texts" index="1"]
+text = "0.000"
+
+[node name="BufferCard" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid" instance=ExtResource("3_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/BufferCard/Row" index="0"]
+texture = ExtResource("8_icon_buffer")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/BufferCard/Row/Texts" index="0"]
+text = "整数缓冲"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/BufferCard/Row/Texts" index="1"]
+text = "0.00 / 1.00"
+
+[node name="InfoRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NextIncomeRow" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot" instance=ExtResource("4_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot/NextIncomeRow/Row" index="0"]
+texture = ExtResource("5_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot/NextIncomeRow/Row/Texts" index="0"]
+text = "当前没有自动租金收入"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot/NextIncomeRow/Row/Texts" index="1"]
+text = "自动租金只按整数金币入账，小数会继续留在缓冲中。"
+
+[node name="OfflineCapRow" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot" instance=ExtResource("4_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot/OfflineCapRow/Row" index="0"]
+texture = ExtResource("9_icon_boost_off")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot/OfflineCapRow/Row/Texts" index="0"]
+text = "离线收益上限：4 小时"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/InfoRoot/OfflineCapRow/Row/Texts" index="1"]
+text = "任务奖励、回收返还、离线收益会单独提示，不并入顶部自动收益飘字。"
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
+visible = false
+layout_mode = 2
+
+[node name="OfflineCapTitlePrefix" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "离线收益上限："
+
+[node name="NextIncomeTickTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "约 %.1f 秒后入账下 1 个整数金币"
+
+[node name="OfflineCapHoursTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%d 小时"
+
+[node name="OfflineCapHoursMinutesTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%d 小时 %d 分钟"
+
+[node name="RentValueTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%.1f / 分钟"

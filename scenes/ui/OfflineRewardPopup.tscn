@@ -1,6 +1,76 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=9 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/OfflineRewardPopup.gd" id="1_offline"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/OfflineRewardPopup.gd" id="2_offline"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelActionButton.tscn" id="3_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="4_info"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StatCard.tscn" id="5_stat"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Boost_off.png" id="6_icon_boost_off"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Currency.png" id="7_icon_currency"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Boost.png" id="8_icon_boost"]
 
-[node name="OfflineRewardPopup" type="PanelContainer"]
-script = ExtResource("1_offline")
+[node name="OfflineRewardPopup" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(320, 300)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -150.0
+offset_right = 160.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_offline")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "离线收益"
+
+[node name="ListRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OfflineInfoRow" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("4_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineInfoRow/Row" index="0"]
+texture = ExtResource("6_icon_boost_off")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineInfoRow/Row/Texts" index="0"]
+text = "你离线了 0 分钟"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineInfoRow/Row/Texts" index="1"]
+text = "离线收益按当前总租金折算，并受离线时长上限限制。"
+
+[node name="AmountCard" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("5_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/AmountCard/Row" index="0"]
+texture = ExtResource("7_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/AmountCard/Row/Texts" index="0"]
+text = "获得金币"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/AmountCard/Row/Texts" index="1"]
+text = "0"
+
+[node name="ClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
+text = "领取"
+icon = ExtResource("7_icon_currency")
+
+[node name="DoubleClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
+text = "看广告双倍领取"
+icon = ExtResource("8_icon_boost")
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+visible = false
+layout_mode = 2
+
+[node name="OfflineDurationTitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "你离线了 %s"

@@ -1,6 +1,93 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=9 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/RewardPanel.gd" id="1_reward"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/RewardPanel.gd" id="2_reward"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelActionButton.tscn" id="3_action"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StatCard.tscn" id="4_stat"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="5_info"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Currency.png" id="6_icon_currency"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Boost.png" id="7_icon_boost"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Mail.png" id="8_icon_mail"]
 
-[node name="RewardPanel" type="PanelContainer"]
-script = ExtResource("1_reward")
+[node name="RewardPanel" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 390)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -390.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_reward")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "福利"
+
+[node name="ListRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OfflineIncomeCard" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineIncomeCard/Row" index="0"]
+texture = ExtResource("6_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineIncomeCard/Row/Texts" index="0"]
+text = "可领取离线收益"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineIncomeCard/Row/Texts" index="1"]
+text = "0 金币"
+
+[node name="OfflineDoubleRow" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("5_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineDoubleRow/Row" index="0"]
+texture = ExtResource("7_icon_boost")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineDoubleRow/Row/Texts" index="0"]
+text = "双倍离线收益"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/OfflineDoubleRow/Row/Texts" index="1"]
+text = "观看激励广告后领取双倍离线金币。"
+
+[node name="OfflineClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
+text = "领取离线收益"
+icon = ExtResource("6_icon_currency")
+
+[node name="OfflineDoubleButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
+text = "看广告双倍领取"
+icon = ExtResource("7_icon_boost")
+
+[node name="TenantRefreshRow" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("5_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/TenantRefreshRow/Row" index="0"]
+texture = ExtResource("8_icon_mail")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/TenantRefreshRow/Row/Texts" index="0"]
+text = "刷新租客申请"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/TenantRefreshRow/Row/Texts" index="1"]
+text = "重新生成当前房间招募区域中的申请列表。"
+
+[node name="TenantRefreshButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(220, 52)
+layout_mode = 2
+text = "看广告刷新租客申请"
+icon = ExtResource("8_icon_mail")
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+visible = false
+layout_mode = 2
+
+[node name="OfflineIncomeValueTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%d 金币"

@@ -1,0 +1,95 @@
+[gd_scene format=4 uid="uid://chrd6dfxw4fts"]
+
+[ext_resource type="Script" uid="uid://spt88bgl0lp0" path="res://scripts/building/SceneBackdrop.gd" id="1_backdrop"]
+[ext_resource type="Texture2D" uid="uid://bm2hmxo5it4dc" path="res://assets/pixel_spaces/tileset/Backgrounds.png" id="2_backgrounds"]
+[ext_resource type="TileSet" uid="uid://dydtx8k5m80ln" path="res://tilesets/background_tileset.tres" id="3_background_tileset"]
+
+[node name="SceneBackdrop" type="Node2D" unique_id=389117932]
+script = ExtResource("1_backdrop")
+
+[node name="SkySprite" type="Sprite2D" parent="." unique_id=1070850058]
+z_index = -70
+scale = Vector2(22.5, 5.71429)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 112)
+
+[node name="Tiles" type="Node2D" parent="." unique_id=1435295012]
+
+[node name="MountainTileMap" type="TileMapLayer" parent="Tiles" unique_id=1961708682]
+z_index = -50
+tile_map_data = PackedByteArray("AAACACQAAAAAACAAAAAHACQAAAAAACwAAAAVACQAAAAAACwAAAATACQAAAAAACAAAAAJACQAAAAAACcAAAA=")
+tile_set = ExtResource("3_background_tileset")
+
+[node name="BackgroundBuildingTileMap" type="TileMapLayer" parent="Tiles" unique_id=812835692]
+z_index = -40
+tile_map_data = PackedByteArray("AAABACQAAAAEABgAAAADACQAAAAhABkAAAAFACQAAAAKABgAAAANACQAAAABABgAAAAQACQAAAAaABcAAAARACQAAAAiABsAAAATACQAAAABAB0AAAAUACQAAAAEABgAAAACACQAAAAUABoAAAAJACQAAAAUABoAAAA=")
+tile_set = ExtResource("3_background_tileset")
+
+[node name="TreeTileMap" type="TileMapLayer" parent="Tiles" unique_id=2110995892]
+z_index = -15
+tile_map_data = PackedByteArray("AAAAACQAAAALABEAAAABACQAAAAAAA8AAAAEACQAAAALABEAAAAJACQAAAADAA8AAAAKACQAAAALABEAAAAVACQAAAADAA8AAAADACQAAAANABEAAAAIACQAAAALABEAAAAPACQAAAADAA8AAAARACQAAAANABEAAAAMACQAAAAAAA8AAAAUACQAAAALABEAAAATACQAAAAAAA8AAAA=")
+tile_set = ExtResource("3_background_tileset")
+
+[node name="DecorationTileMap" type="TileMapLayer" parent="Tiles" unique_id=1978414810]
+tile_map_data = PackedByteArray("AAAAACQAAAAMABAAAAAEACQAAAAFAAQAAAAGACQAAAAMABAAAAAIACQAAAAOAA4AAAAJACQAAAAGAA4AAAALACQAAAALABAAAAAOACQAAAAOABAAAAAQACQAAAAIAAQAAAATACQAAAAFAAQAAAAVACQAAAAGAA4AAAASACQAAAAEAAQAAAADACQAAAAEAAQAAAARACQAAAADAAQAAAACACQAAAADAAQAAAAFACQAAAACAAQAAAAHACQAAAAIAAQAAAANACQAAAAKABAAAAAMACQAAAAJAA8AAAABACQAAAAJAA8AAAA=")
+tile_set = ExtResource("3_background_tileset")
+
+[node name="GroundTileMap" type="TileMapLayer" parent="Tiles" unique_id=1429143275]
+z_index = -25
+tile_map_data = PackedByteArray("AAACACcAAAADABUAAAACACYAAAADABUAAAABACcAAAADABUAAAABACYAAAADABUAAAAAACcAAAADABUAAAAAACYAAAADABUAAAAAACUAAAADABQAAAABACUAAAADABQAAAACACUAAAADABQAAAAVACYAAAADABUAAAAUACYAAAADABUAAAATACYAAAADABUAAAASACYAAAADABUAAAARACYAAAADABUAAAAQACYAAAADABUAAAAPACYAAAADABUAAAAOACYAAAADABUAAAANACYAAAADABUAAAAMACYAAAADABUAAAALACYAAAADABUAAAAKACYAAAADABUAAAAJACYAAAADABUAAAAIACYAAAADABUAAAAHACYAAAADABUAAAAGACYAAAADABUAAAAFACYAAAADABUAAAAEACYAAAADABUAAAADACYAAAADABUAAAADACUAAAADABQAAAAEACUAAAADABQAAAAFACUAAAADABQAAAAGACUAAAADABQAAAAHACUAAAADABQAAAAIACUAAAADABQAAAAJACUAAAADABQAAAAKACUAAAADABQAAAALACUAAAADABQAAAAMACUAAAADABQAAAANACUAAAADABQAAAAOACUAAAADABQAAAAPACUAAAADABQAAAAQACUAAAADABQAAAARACUAAAADABQAAAASACUAAAADABQAAAATACUAAAADABQAAAAUACUAAAADABQAAAAVACUAAAADABQAAAAVACcAAAADABUAAAAUACcAAAADABUAAAATACcAAAADABUAAAASACcAAAADABUAAAARACcAAAADABUAAAAQACcAAAADABUAAAAPACcAAAADABUAAAAOACcAAAADABUAAAANACcAAAADABUAAAAMACcAAAADABUAAAALACcAAAADABUAAAAKACcAAAADABUAAAAJACcAAAADABUAAAAIACcAAAADABUAAAAHACcAAAADABUAAAAGACcAAAADABUAAAAFACcAAAADABUAAAAEACcAAAADABUAAAADACcAAAADABUAAAAWACcAAAADABUAAAAWACYAAAADABUAAAAWACUAAAADABQAAAD//yYAAAADABUAAAD//yUAAAADABQAAAD//ycAAAADABUAAAA=")
+tile_set = ExtResource("3_background_tileset")
+
+[node name="CloudParallax" type="Parallax2D" parent="." unique_id=831076218]
+z_index = -60
+scroll_scale = Vector2(0.18, 0)
+repeat_size = Vector2(360, 0)
+
+[node name="Cloud_01" type="Sprite2D" parent="CloudParallax" unique_id=1685726540]
+position = Vector2(36, 44)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(48, 3, 32, 23)
+
+[node name="Cloud_02" type="Sprite2D" parent="CloudParallax" unique_id=1929816189]
+position = Vector2(138, 84)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(80, 3, 32, 21)
+
+[node name="Cloud_03" type="Sprite2D" parent="CloudParallax" unique_id=1510875500]
+position = Vector2(249, 127)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(112, 3, 32, 20)
+
+[node name="Cloud_04" type="Sprite2D" parent="CloudParallax" unique_id=2041934537]
+position = Vector2(15, 115)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(48, 34, 16, 12)
+
+[node name="Cloud_05" type="Sprite2D" parent="CloudParallax" unique_id=2082178474]
+position = Vector2(105, 160)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(64, 34, 16, 12)
+
+[node name="Cloud_06" type="Sprite2D" parent="CloudParallax" unique_id=2093959467]
+position = Vector2(304, 63)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_backgrounds")
+centered = false
+region_enabled = true
+region_rect = Rect2(80, 34, 16, 12)

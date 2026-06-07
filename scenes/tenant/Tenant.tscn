@@ -1,34 +1,141 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://dlm142w4x84dk"]
 
-[ext_resource type="Script" path="res://scripts/tenant/Tenant.gd" id="1_tenant"]
-[ext_resource type="PackedScene" path="res://scenes/tenant/NeedBubble.tscn" id="2_need_bubble"]
+[ext_resource type="Script" uid="uid://conso786sth1f" path="res://scripts/tenant/Tenant.gd" id="1_tenant"]
+[ext_resource type="Texture2D" uid="uid://b2fca46mdm5c" path="res://assets/pixel_spaces/npc/Pre-made NPCs/Male/NPC 1.png" id="2_ki6lv"]
+[ext_resource type="PackedScene" uid="uid://bc62iumnan5yo" path="res://scenes/tenant/NeedBubble.tscn" id="2_need_bubble"]
 [ext_resource type="PackedScene" path="res://scenes/tenant/TenantEmote.tscn" id="3_tenant_emote"]
 
-[node name="Tenant" type="Control"]
-custom_minimum_size = Vector2(40, 44)
+[sub_resource type="AtlasTexture" id="AtlasTexture_ox65g"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ytmlt"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k7qrr"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ki6lv"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(0, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dqi23"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vfr6b"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yl8ly"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8uf3y"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l211a"]
+atlas = ExtResource("2_ki6lv")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dqi23"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ox65g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ytmlt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k7qrr")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ki6lv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dqi23")
+}],
+"loop": true,
+"name": &"jump",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vfr6b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yl8ly")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8uf3y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l211a")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 4.0
+}]
+
+[node name="Tenant" type="Control" unique_id=1195394466]
+custom_minimum_size = Vector2(64, 92)
+layout_mode = 3
+anchors_preset = 0
+focus_mode = 2
+mouse_filter = 0
 script = ExtResource("1_tenant")
 
-[node name="ColorFallback" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -12.0
-offset_top = -16.0
-offset_right = 12.0
-offset_bottom = 16.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="ColorFallback" type="ColorRect" parent="." unique_id=1965088416]
+visible = false
+custom_minimum_size = Vector2(36, 48)
+layout_mode = 0
+offset_left = 2.0
+offset_top = 52.0
+offset_right = 38.0
+offset_bottom = 100.0
 mouse_filter = 2
 color = Color(0.361, 0.651, 1, 1)
 
-[node name="AvatarSprite" type="AnimatedSprite2D" parent="."]
-position = Vector2(20, 24)
+[node name="AvatarSprite" type="AnimatedSprite2D" parent="." unique_id=755068810]
+position = Vector2(20, 76)
+scale = Vector2(1.5, 1.5)
+sprite_frames = SubResource("SpriteFrames_dqi23")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.25714666
 
-[node name="NeedBubble" parent="." instance=ExtResource("2_need_bubble")]
+[node name="NeedBubble" parent="." unique_id=1790016221 instance=ExtResource("2_need_bubble")]
+layout_mode = 1
+offset_left = 14.0
+offset_top = -15.0
+offset_right = 14.0
+offset_bottom = -15.0
 
-[node name="TenantEmote" parent="." instance=ExtResource("3_tenant_emote")]
+[node name="TenantEmote" parent="." unique_id=598181074 instance=ExtResource("3_tenant_emote")]
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="BehaviorAnimationMap" type="Node" parent="."]
+metadata/default_avatar_animation = "idle"
+
+[node name="Idle" type="Node" parent="BehaviorAnimationMap"]
+metadata/behavior_keys = "idle,sleep"
+metadata/avatar_animation = "idle"
+
+[node name="Walk" type="Node" parent="BehaviorAnimationMap"]
+metadata/behavior_keys = "wander,recruited,entertainment,eat,clean,study,relax"
+metadata/avatar_animation = "walk"
+metadata/moves = true
+
+[node name="Happy" type="Node" parent="BehaviorAnimationMap"]
+metadata/behavior_key = "happy"
+metadata/avatar_animation = "jump"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=249509520]

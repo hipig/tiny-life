@@ -7,6 +7,5 @@ func format_duration(seconds: int) -> String:
 	var hours := seconds / 3600
 	var minutes := (seconds % 3600) / 60
 	if hours > 0:
-		return "%d 小时 %d 分钟" % [hours, minutes]
-	return "%d 分钟" % max(1, minutes)
-
+		return ConfigManager.text("time_duration_hours_minutes", "%d hours %d minutes") % [hours, minutes]
+	return ConfigManager.text("time_duration_minutes", "%d minutes") % max(1, minutes)

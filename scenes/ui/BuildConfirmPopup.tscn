@@ -1,6 +1,176 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=17 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/BuildConfirmPopup.gd" id="1_build"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/BuildConfirmPopup.gd" id="2_build"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StatCard.tscn" id="3_stat"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="4_info"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_green_long.png" id="5_button_green"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_green_long_pressed.png" id="6_button_green_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_long.png" id="7_button_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_long.png" id="8_button_grey"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Check.png" id="9_icon_check"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Hammer.png" id="10_icon_hammer"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Currency.png" id="11_icon_currency"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Cross.png" id="12_icon_cross"]
 
-[node name="BuildConfirmPopup" type="PanelContainer"]
-script = ExtResource("1_build")
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_green_normal"]
+texture = ExtResource("5_button_green")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_green_pressed"]
+texture = ExtResource("6_button_green_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_hover"]
+texture = ExtResource("7_button_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_disabled"]
+texture = ExtResource("8_button_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[node name="BuildConfirmPopup" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 280)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -280.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_build")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "建造楼层"
+
+[node name="StatsGrid" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="CostCard" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid" instance=ExtResource("3_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CostCard/Row" index="0"]
+texture = ExtResource("10_icon_hammer")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CostCard/Row/Texts" index="0"]
+text = "需要金币"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CostCard/Row/Texts" index="1"]
+text = "0"
+
+[node name="CoinCard" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid" instance=ExtResource("3_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard/Row" index="0"]
+texture = ExtResource("11_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard/Row/Texts" index="0"]
+text = "当前金币"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/StatsGrid/CoinCard/Row/Texts" index="1"]
+text = "0"
+
+[node name="MessageRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatusRow" parent="PanelBox/ScrollContainer/ContentRoot/MessageRoot" instance=ExtResource("4_info")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/MessageRoot/StatusRow/Row" index="0"]
+texture = ExtResource("9_icon_check")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/MessageRoot/StatusRow/Row/Texts" index="0"]
+text = "可以建造"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/MessageRoot/StatusRow/Row/Texts" index="1"]
+text = "建成后会开放这一层的房间。"
+
+[node name="ConfirmButton" type="Button" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "确认建造"
+tooltip_text = "确认建造"
+focus_mode = 2
+icon = ExtResource("9_icon_check")
+expand_icon = true
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 18
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxTexture_green_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_green_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_disabled")
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="3"]
+visible = false
+layout_mode = 2
+
+[node name="TitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "建造第 %d 层"
+
+[node name="CanBuildTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "可以建造"
+
+[node name="CanBuildDetail" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "建成后会开放这一层的房间。"
+
+[node name="CanBuildIconFile" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "Check.png"
+
+[node name="InsufficientTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "金币不足"
+
+[node name="InsufficientDetailTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "还差 %d 金币"
+
+[node name="InsufficientIconFile" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "Cross.png"

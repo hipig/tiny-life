@@ -1,0 +1,77 @@
+[gd_scene load_steps=4 format=3 uid="uid://rent_room_row"]
+
+[ext_resource type="Script" path="res://scripts/ui/RentRoomRow.gd" id="1_rent_room_row"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Panel_white.png" id="2_panel_white"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel_white"]
+texture = ExtResource("2_panel_white")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[node name="RentRoomRow" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 72)
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel_white")
+script = ExtResource("1_rent_room_row")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="Row"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 5
+
+[node name="Texts" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="TitleLabel" type="Label" parent="Row/Texts"]
+layout_mode = 2
+text = "房间租金"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="DetailLabel" type="Label" parent="Row/Texts"]
+layout_mode = 2
+text = "租金构成"
+theme_override_colors/font_color = Color(0.376471, 0.282353, 0.239216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 2
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="EmptyTitleTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "%s  空房"
+
+[node name="EmptyDetailText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "没有租客入住，不产生租金。"
+
+[node name="OccupiedTitleTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "%s  %.1f / 分钟"
+
+[node name="DetailTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "基础 %.1f + 评分 %.1f\n租客 %s 倍率 %.2f，满意度倍率 %.2f"
+
+[node name="FallbackTenantName" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "租客"

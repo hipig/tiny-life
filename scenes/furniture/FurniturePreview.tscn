@@ -6,4 +6,5 @@
 custom_minimum_size = Vector2(56, 56)
 mouse_filter = 2
 stretch_mode = 5
+pivot_offset = Vector2(28, 28)
 script = ExtResource("1_preview")

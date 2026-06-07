@@ -4,5 +4,19 @@
   "label_rent_per_minute":"租金 / 分钟",
   "label_apartment_level":"公寓 Lv.",
   "button_claim":"领取",
-  "button_ad_double":"看广告双倍领取"
+  "button_ad_double":"看广告双倍领取",
+  "toast_task_completed":"任务完成：%s",
+  "toast_insufficient_coins":"金币不足",
+  "toast_furniture_placed":"已摆放 %s",
+  "toast_furniture_moved":"家具已移动",
+  "toast_furniture_recycled":"回收成功，返还 %d 金币",
+  "toast_tenant_recruited":"租客已入住",
+  "toast_floor_built":"第 %d 层已建成",
+  "toast_offline_double_claim":"双倍领取 %d 金币",
+  "toast_offline_claim":"领取 %d 金币",
+  "toast_tenant_applications_refreshed":"租客申请已刷新",
+  "toast_save_done":"已存档",
+  "toast_reset_done":"已重置",
+  "time_duration_hours_minutes":"%d 小时 %d 分钟",
+  "time_duration_minutes":"%d 分钟"
 }

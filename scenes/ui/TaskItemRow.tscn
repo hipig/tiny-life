@@ -1,0 +1,107 @@
+[gd_scene load_steps=7 format=3 uid="uid://task_item_row"]
+
+[ext_resource type="Script" path="res://scripts/ui/TaskItemRow.gd" id="1_task_item_row"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Panel_white.png" id="2_panel_white"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Clipboard.png" id="3_icon_clipboard"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel_white"]
+texture = ExtResource("2_panel_white")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_background"]
+bg_color = Color(0.427451, 0.458824, 0.388235, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
+bg_color = Color(0.454902, 0.784314, 0.411765, 1)
+
+[node name="TaskItemRow" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 112)
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel_white")
+script = ExtResource("1_task_item_row")
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="Body/Header"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("3_icon_clipboard")
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "任务"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="ProgressLabel" type="Label" parent="Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "0/1"
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 18
+
+[node name="ProgressBar" type="ProgressBar" parent="Body"]
+custom_minimum_size = Vector2(0, 9)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+max_value = 1.0
+step = 0.01
+value = 0.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_background")
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+
+[node name="DescriptionLabel" type="Label" parent="Body"]
+layout_mode = 2
+text = "任务描述"
+theme_override_colors/font_color = Color(0.376471, 0.282353, 0.239216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 2
+
+[node name="RewardLabel" type="Label" parent="Body"]
+layout_mode = 2
+text = "奖励"
+theme_override_colors/font_color = Color(0.376471, 0.282353, 0.239216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 2
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+layout_mode = 2
+
+[node name="CompletedText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "完成"
+
+[node name="ProgressTextTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "%d/%d"
+
+[node name="RewardTextTemplate" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "奖励：%d 金币 / %d 经验"

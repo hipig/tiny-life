@@ -1,6 +1,193 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/PlacementOverlay.gd" id="1_place"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Panel_yellow.png" id="2_panel_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_orange_long.png" id="3_button_orange"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_orange_long_pressed.png" id="4_button_orange_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_long.png" id="5_button_grey"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_long_pressed.png" id="6_button_grey_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_long.png" id="7_button_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Check.png" id="8_icon_check"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Close.png" id="9_icon_close"]
 
-[node name="PlacementOverlay" type="PanelContainer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel_yellow"]
+texture = ExtResource("2_panel_yellow")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_orange_normal"]
+texture = ExtResource("3_button_orange")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_orange_pressed"]
+texture = ExtResource("4_button_orange_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_normal"]
+texture = ExtResource("5_button_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_grey_pressed"]
+texture = ExtResource("6_button_grey_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_yellow_hover"]
+texture = ExtResource("7_button_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+
+[node name="PlacementOverlay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_place")
+
+[node name="PlacementControls" type="PanelContainer" parent="."]
+z_index = 110
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -150.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel_yellow")
+
+[node name="ControlBox" type="VBoxContainer" parent="PlacementControls"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="PlacementControls/ControlBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 22
+
+[node name="HintLabel" type="Label" parent="PlacementControls/ControlBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.309804, 0.231373, 0.192157, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 16
+text = "点房间内的格子调整位置。绿色可摆放，红色不可摆放；确认后会回到房间面板。"
+autowrap_mode = 2
+
+[node name="ActionRow" type="HBoxContainer" parent="PlacementControls/ControlBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ConfirmButton" type="Button" parent="PlacementControls/ControlBox/ActionRow"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "确认摆放并扣金币"
+focus_mode = 2
+icon = ExtResource("8_icon_check")
+expand_icon = true
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 18
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxTexture_orange_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_orange_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="CancelButton" type="Button" parent="PlacementControls/ControlBox/ActionRow"]
+custom_minimum_size = Vector2(88, 48)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "取消"
+focus_mode = 2
+icon = ExtResource("9_icon_close")
+expand_icon = true
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/icon_max_width = 18
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxTexture_grey_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_grey_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+layout_mode = 1
+
+[node name="PlaceTitlePrefix" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "摆放"
+
+[node name="MoveTitlePrefix" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "移动"
+
+[node name="FallbackFurnitureName" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "家具"
+
+[node name="PlaceConfirmText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "确认摆放并扣金币"
+
+[node name="MoveConfirmText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "确认移动"

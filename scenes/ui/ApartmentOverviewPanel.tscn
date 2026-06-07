@@ -1,6 +1,213 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=15 format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/ApartmentOverviewPanel.gd" id="1_overview"]
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/ApartmentOverviewPanel.gd" id="2_overview"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelTabButton.tscn" id="3_tab"]
+[ext_resource type="PackedScene" path="res://scenes/ui/StatCard.tscn" id="4_stat"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ProgressCard.tscn" id="5_progress"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IconInfoRow.tscn" id="6_info"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Properties.png" id="7_icon_properties"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/XP_bar_5.png" id="8_icon_xp"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Currency.png" id="9_icon_currency"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Hammer.png" id="10_icon_hammer"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Package.png" id="11_icon_package"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Population.png" id="12_icon_population"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Thumbs_up.png" id="13_icon_thumbs"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Frame Icons/Star_full.png" id="14_icon_star"]
 
-[node name="ApartmentOverviewPanel" type="PanelContainer"]
-script = ExtResource("1_overview")
+[node name="ApartmentOverviewPanel" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 430)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -430.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_overview")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "公寓总览"
+
+[node name="TabRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="OverviewTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="0" instance=ExtResource("3_tab")]
+text = "概览"
+metadata/tab_id = "overview"
+
+[node name="FloorsTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="1" instance=ExtResource("3_tab")]
+text = "楼层"
+metadata/tab_id = "floors"
+
+[node name="TenantsTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="2" instance=ExtResource("3_tab")]
+text = "租客"
+metadata/tab_id = "tenants"
+
+[node name="SummaryGrid" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="LevelCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/LevelCard/Row" index="0"]
+texture = ExtResource("7_icon_properties")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/LevelCard/Row/Texts" index="0"]
+text = "公寓等级"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/LevelCard/Row/Texts" index="1"]
+text = "Lv.1"
+
+[node name="ExpCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/ExpCard/Row" index="0"]
+texture = ExtResource("8_icon_xp")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/ExpCard/Row/Texts" index="0"]
+text = "公寓经验"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/ExpCard/Row/Texts" index="1"]
+text = "0"
+
+[node name="RentCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RentCard/Row" index="0"]
+texture = ExtResource("9_icon_currency")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RentCard/Row/Texts" index="0"]
+text = "总租金"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RentCard/Row/Texts" index="1"]
+text = "0 / 分钟"
+
+[node name="FloorCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/FloorCard/Row" index="0"]
+texture = ExtResource("10_icon_hammer")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/FloorCard/Row/Texts" index="0"]
+text = "已建楼层"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/FloorCard/Row/Texts" index="1"]
+text = "1F"
+
+[node name="RoomCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RoomCard/Row" index="0"]
+texture = ExtResource("11_icon_package")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RoomCard/Row/Texts" index="0"]
+text = "房间数量"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/RoomCard/Row/Texts" index="1"]
+text = "0 间"
+
+[node name="TenantCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/TenantCard/Row" index="0"]
+texture = ExtResource("12_icon_population")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/TenantCard/Row/Texts" index="0"]
+text = "入住人数"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/TenantCard/Row/Texts" index="1"]
+text = "0 人"
+
+[node name="SatisfactionCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/SatisfactionCard/Row" index="0"]
+texture = ExtResource("13_icon_thumbs")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/SatisfactionCard/Row/Texts" index="0"]
+text = "平均满意度"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/SatisfactionCard/Row/Texts" index="1"]
+text = "暂无租客"
+
+[node name="NextGoalCard" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid" instance=ExtResource("4_stat")]
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/NextGoalCard/Row" index="0"]
+texture = ExtResource("14_icon_star")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/NextGoalCard/Row/Texts" index="0"]
+text = "下一目标"
+
+[node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/SummaryGrid/NextGoalCard/Row/Texts" index="1"]
+text = "Lv.2 还需经验"
+
+[node name="UpgradeProgressCard" parent="PanelBox/ScrollContainer/ContentRoot" index="2" instance=ExtResource("5_progress")]
+visible = false
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/UpgradeProgressCard/Body/Header" index="0"]
+texture = ExtResource("8_icon_xp")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/UpgradeProgressCard/Body/Header" index="1"]
+text = "升级进度"
+
+[node name="ListRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="3"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EmptyTenantRow" parent="PanelBox/ScrollContainer/ContentRoot" index="4" instance=ExtResource("6_info")]
+visible = false
+layout_mode = 2
+
+[node name="Icon" parent="PanelBox/ScrollContainer/ContentRoot/EmptyTenantRow/Row" index="0"]
+texture = ExtResource("12_icon_population")
+
+[node name="TitleLabel" parent="PanelBox/ScrollContainer/ContentRoot/EmptyTenantRow/Row/Texts" index="0"]
+text = "当前还没有租客入住"
+
+[node name="DetailLabel" parent="PanelBox/ScrollContainer/ContentRoot/EmptyTenantRow/Row/Texts" index="1"]
+text = "从房间的租客页进入区域招募。"
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="5"]
+visible = false
+layout_mode = 2
+
+[node name="RentValueTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%.1f / 分钟"
+
+[node name="FloorValueTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%dF"
+
+[node name="RoomCountTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%d 间"
+
+[node name="TenantCountTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%d 人"
+
+[node name="MaxLevelText" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "已达到当前最高等级"
+
+[node name="NextLevelTextTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "Lv.%d 还需 %d 经验"
+
+[node name="EmptySatisfactionText" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "暂无租客"

@@ -1,5 +1,24 @@
 extends Node
 
+const DEFAULT_ROOM_SIZE := [224, 88]
+const DEFAULT_GRID_SIZE := [8, 5]
+const DEFAULT_GRID_RECT := [21, 24, 187, 40]
+const DEFAULT_TENANT_BEHAVIOR := "wander"
+const RECRUITED_TENANT_BEHAVIOR := "recruited"
+const IDLE_TENANT_BEHAVIOR := "idle"
+const VALID_TENANT_BEHAVIORS := {
+	"wander": true,
+	"recruited": true,
+	"idle": true,
+	"sleep": true,
+	"eat": true,
+	"entertainment": true,
+	"clean": true,
+	"study": true,
+	"relax": true,
+	"happy": true
+}
+
 var coins: int = 0
 var total_rent_per_minute: float = 0.0
 var apartment_level: int = 1
@@ -37,12 +56,15 @@ func reset_new_game() -> void:
 	for room_config in ConfigManager.rooms:
 		var room_data: Dictionary = room_config
 		var floor_index: int = int(room_data.get("floor_index", 1))
+		var initially_unlocked := bool(room_data.get("initial_unlocked", true))
 		rooms[room_data.get("id", "")] = {
 			"id": room_data.get("id", ""),
 			"floor_index": floor_index,
 			"room_name": room_data.get("room_name", ""),
-			"grid_size": room_data.get("grid_size", [8, 5]),
-			"unlocked": floor_index <= highest_built_floor,
+			"room_size": _number_pair(room_data.get("room_size", DEFAULT_ROOM_SIZE), DEFAULT_ROOM_SIZE),
+			"grid_size": _int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE),
+			"grid_rect": _number_rect(room_data.get("grid_rect", DEFAULT_GRID_RECT), DEFAULT_GRID_RECT),
+			"unlocked": initially_unlocked and floor_index <= highest_built_floor,
 			"level": 1,
 			"tenant_id": "",
 			"furniture_instances": [],
@@ -59,7 +81,7 @@ func reset_new_game() -> void:
 			"id": tenant_data.get("id", ""),
 			"satisfaction": int(tenant_data.get("initial_satisfaction", 60)),
 			"current_need": "",
-			"current_behavior": "闲逛",
+			"current_behavior": DEFAULT_TENANT_BEHAVIOR,
 			"room_id": ""
 		}
 	for task_config in ConfigManager.tasks:
@@ -116,6 +138,58 @@ func get_unlocked_rooms() -> Array:
 		if bool(room.get("unlocked", false)):
 			result.append(room)
 	return result
+
+func get_unlocked_rooms_on_floor(floor_index: int) -> Array:
+	var result: Array = []
+	for room in rooms.values():
+		var room_data: Dictionary = room
+		if int(room_data.get("floor_index", 0)) == floor_index and bool(room_data.get("unlocked", false)):
+			result.append(room_data)
+	return result
+
+func unlock_room(room_id: String) -> bool:
+	var room: Dictionary = rooms.get(room_id, {})
+	if room.is_empty() or bool(room.get("unlocked", false)):
+		return false
+	room["unlocked"] = true
+	rooms[room_id] = room
+	GameEvents.room_unlocked.emit(room_id)
+	GameEvents.room_updated.emit(room_id)
+	return true
+
+func upgrade_room_layout(room_id: String, room_size: Array = [], grid_size: Array = [], grid_rect: Array = []) -> bool:
+	var room: Dictionary = rooms.get(room_id, {})
+	if room.is_empty():
+		return false
+	if room_size.size() >= 2:
+		room["room_size"] = [float(room_size[0]), float(room_size[1])]
+	if grid_size.size() >= 2:
+		room["grid_size"] = [int(grid_size[0]), int(grid_size[1])]
+	if grid_rect.size() >= 4:
+		room["grid_rect"] = [float(grid_rect[0]), float(grid_rect[1]), float(grid_rect[2]), float(grid_rect[3])]
+	rooms[room_id] = room
+	GameEvents.room_layout_changed.emit(room_id)
+	GameEvents.room_updated.emit(room_id)
+	return true
+
+func apply_room_layout_upgrade(room_id: String, target_level := 0) -> bool:
+	var room: Dictionary = rooms.get(room_id, {})
+	if room.is_empty():
+		return false
+	var next_level := target_level
+	if next_level <= 0:
+		next_level = int(room.get("level", 1)) + 1
+	var upgrade: Dictionary = ConfigManager.get_room_layout_upgrade(room_id, next_level)
+	if upgrade.is_empty():
+		return false
+	room["level"] = next_level
+	rooms[room_id] = room
+	return upgrade_room_layout(
+		room_id,
+		upgrade.get("room_size", []),
+		upgrade.get("grid_size", []),
+		upgrade.get("grid_rect", [])
+	)
 
 func recalculate_room_stats(room_id: String) -> void:
 	if not rooms.has(room_id):
@@ -203,7 +277,7 @@ func recruit_tenant(room_id: String, tenant_id: String) -> bool:
 		return false
 	room["tenant_id"] = tenant_id
 	tenant["room_id"] = room_id
-	tenant["current_behavior"] = "入住"
+	tenant["current_behavior"] = RECRUITED_TENANT_BEHAVIOR
 	rooms[room_id] = room
 	tenants[tenant_id] = tenant
 	stats["tenant_recruited_count"] = int(stats.get("tenant_recruited_count", 0)) + 1
@@ -228,7 +302,9 @@ func build_floor(floor_index: int) -> bool:
 	highest_built_floor = floor_index
 	for room_id in rooms.keys():
 		var room: Dictionary = rooms[room_id]
-		if int(room.get("floor_index", 0)) <= highest_built_floor:
+		var room_config: Dictionary = ConfigManager.get_room_config(str(room_id))
+		var initially_unlocked := bool(room_config.get("initial_unlocked", true))
+		if int(room.get("floor_index", 0)) <= highest_built_floor and initially_unlocked:
 			room["unlocked"] = true
 			rooms[room_id] = room
 	GameEvents.floor_built.emit(floor_index)
@@ -241,7 +317,7 @@ func observe_tenant_behavior(tenant_id: String, need: String) -> void:
 	if tenant.is_empty():
 		return
 	tenant["current_need"] = need
-	tenant["current_behavior"] = _need_to_behavior(need)
+	tenant["current_behavior"] = _need_to_behavior_key(need)
 	tenant["satisfaction"] = clampi(int(tenant.get("satisfaction", 60)) + 1, 0, 100)
 	tenants[tenant_id] = tenant
 	GameEvents.tenant_behavior_observed.emit(tenant_id, need)
@@ -249,22 +325,22 @@ func observe_tenant_behavior(tenant_id: String, need: String) -> void:
 	TaskManager.notify_event("tenant_behavior_observed", {"tenant_id": tenant_id, "behavior": need})
 	EconomyManager.recalculate_total_rent()
 
-func _need_to_behavior(need: String) -> String:
+func _need_to_behavior_key(need: String) -> String:
 	match need:
 		"energy":
-			return "睡觉"
+			return "sleep"
 		"hunger":
-			return "吃东西"
+			return "eat"
 		"entertainment":
-			return "娱乐"
+			return "entertainment"
 		"hygiene":
-			return "清洁"
+			return "clean"
 		"study":
-			return "学习/工作"
+			return "study"
 		"comfort":
-			return "放松"
+			return "relax"
 		_:
-			return "闲逛"
+			return DEFAULT_TENANT_BEHAVIOR
 
 func to_save_data() -> Dictionary:
 	return {
@@ -313,19 +389,26 @@ func _ensure_runtime_defaults() -> void:
 	if last_save_timestamp <= 0:
 		last_save_timestamp = TimeManager.now_unix()
 	_ensure_stats_defaults()
+	var valid_room_ids := {}
 	for room_config in ConfigManager.rooms:
 		var room_data: Dictionary = room_config
 		var room_id := str(room_data.get("id", ""))
 		if room_id.is_empty():
 			continue
+		valid_room_ids[room_id] = true
 		var room: Dictionary = rooms.get(room_id, {})
 		var floor_index := int(room_data.get("floor_index", room.get("floor_index", 1)))
+		var initially_unlocked := bool(room_data.get("initial_unlocked", true))
+		var room_level := int(room.get("level", 1))
+		var configured_layout := _configured_room_layout_for_level(room_data, room_level)
 		room["id"] = room_id
 		room["floor_index"] = floor_index
 		room["room_name"] = str(room.get("room_name", room_data.get("room_name", "")))
-		room["grid_size"] = room.get("grid_size", room_data.get("grid_size", [8, 5]))
-		room["unlocked"] = bool(room.get("unlocked", floor_index <= highest_built_floor))
-		room["level"] = int(room.get("level", 1))
+		room["level"] = room_level
+		room["room_size"] = configured_layout.get("room_size", DEFAULT_ROOM_SIZE).duplicate()
+		room["grid_size"] = configured_layout.get("grid_size", DEFAULT_GRID_SIZE).duplicate()
+		room["grid_rect"] = configured_layout.get("grid_rect", DEFAULT_GRID_RECT).duplicate()
+		room["unlocked"] = bool(room.get("unlocked", initially_unlocked and floor_index <= highest_built_floor))
 		room["tenant_id"] = str(room.get("tenant_id", ""))
 		room["furniture_instances"] = room.get("furniture_instances", [])
 		room["score"] = int(room.get("score", 0))
@@ -335,6 +418,10 @@ func _ensure_runtime_defaults() -> void:
 		room["food"] = int(room.get("food", 0))
 		room["rent_per_minute"] = float(room.get("rent_per_minute", 0.0))
 		rooms[room_id] = room
+	for saved_room_id in rooms.keys():
+		var room_id := str(saved_room_id)
+		if not valid_room_ids.has(room_id):
+			rooms.erase(room_id)
 	for tenant_config in ConfigManager.tenants:
 		var tenant_data: Dictionary = tenant_config
 		var tenant_id := str(tenant_data.get("id", ""))
@@ -344,8 +431,10 @@ func _ensure_runtime_defaults() -> void:
 		tenant["id"] = tenant_id
 		tenant["satisfaction"] = int(tenant.get("satisfaction", int(tenant_data.get("initial_satisfaction", 60))))
 		tenant["current_need"] = str(tenant.get("current_need", ""))
-		tenant["current_behavior"] = str(tenant.get("current_behavior", "闲逛"))
+		tenant["current_behavior"] = _normalize_tenant_behavior(str(tenant.get("current_behavior", DEFAULT_TENANT_BEHAVIOR)))
 		tenant["room_id"] = str(tenant.get("room_id", ""))
+		if not tenant["room_id"].is_empty() and not rooms.has(tenant["room_id"]):
+			tenant["room_id"] = ""
 		tenants[tenant_id] = tenant
 	for task_config in ConfigManager.tasks:
 		var task_data: Dictionary = task_config
@@ -363,3 +452,39 @@ func _ensure_stats_defaults() -> void:
 	stats["furniture_placed_count"] = int(stats.get("furniture_placed_count", 0))
 	stats["tenant_recruited_count"] = int(stats.get("tenant_recruited_count", 0))
 	stats["offline_claimed_count"] = int(stats.get("offline_claimed_count", 0))
+
+func _normalize_tenant_behavior(value: String) -> String:
+	var key := ConfigManager.normalize_behavior_key(value, DEFAULT_TENANT_BEHAVIOR)
+	if VALID_TENANT_BEHAVIORS.has(key):
+		return key
+	return DEFAULT_TENANT_BEHAVIOR
+
+func _configured_room_layout_for_level(room_data: Dictionary, room_level: int) -> Dictionary:
+	var layout := {
+		"room_size": _number_pair(room_data.get("room_size", DEFAULT_ROOM_SIZE), DEFAULT_ROOM_SIZE),
+		"grid_size": _int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE),
+		"grid_rect": _number_rect(room_data.get("grid_rect", DEFAULT_GRID_RECT), DEFAULT_GRID_RECT)
+	}
+	for item in room_data.get("layout_upgrades", []):
+		var upgrade: Dictionary = item
+		if int(upgrade.get("level", 0)) > room_level:
+			continue
+		layout["room_size"] = _number_pair(upgrade.get("room_size", layout["room_size"]), layout["room_size"])
+		layout["grid_size"] = _int_pair(upgrade.get("grid_size", layout["grid_size"]), layout["grid_size"])
+		layout["grid_rect"] = _number_rect(upgrade.get("grid_rect", layout["grid_rect"]), layout["grid_rect"])
+	return layout
+
+func _number_pair(value: Variant, fallback: Array) -> Array:
+	if value is Array and value.size() >= 2:
+		return [float(value[0]), float(value[1])]
+	return fallback.duplicate()
+
+func _int_pair(value: Variant, fallback: Array) -> Array:
+	if value is Array and value.size() >= 2:
+		return [int(value[0]), int(value[1])]
+	return fallback.duplicate()
+
+func _number_rect(value: Variant, fallback: Array) -> Array:
+	if value is Array and value.size() >= 4:
+		return [float(value[0]), float(value[1]), float(value[2]), float(value[3])]
+	return fallback.duplicate()
