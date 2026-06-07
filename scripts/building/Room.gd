@@ -3,21 +3,25 @@ extends Button
 const DEFAULT_ROOM_WIDTH := 224.0
 const DEFAULT_ROOM_HEIGHT := 88.0
 
-@export_group("Scene Templates")
-@export var tenant_scene: PackedScene
-@export var furniture_scene: PackedScene
+const META_TENANT_SCENE_PATH := &"tenant_scene_path"
+const META_FURNITURE_SCENE_PATH := &"furniture_scene_path"
+const META_DEFAULT_ROOM_SIZE := &"default_room_size"
+const META_DEFAULT_GRID_RECT := &"default_grid_rect"
+const META_WALL_INSET := &"wall_inset"
+const META_FLOOR_HEIGHT := &"floor_height"
+const META_TENANT_OFFSET := &"tenant_offset"
+const META_ROOF_HEIGHT := &"roof_height"
 
-@export_group("Layout")
-@export var default_room_size := Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT)
-@export var default_grid_rect := Rect2(21.0, 24.0, 187.0, 40.0)
-@export_range(0.0, 24.0, 1.0) var wall_inset := 9.0
-@export_range(8.0, 44.0, 1.0) var floor_height := 22.0
-@export var tenant_offset := Vector2(166.0, 37.0)
-@export_range(4.0, 24.0, 1.0) var roof_height := 13.0
-
-@export_group("Scene Text")
-@export var fallback_room_name := ""
-@export var rent_badge_template := "%d %.1f"
+var tenant_scene: PackedScene
+var furniture_scene: PackedScene
+var default_room_size := Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT)
+var default_grid_rect := Rect2(21.0, 24.0, 187.0, 40.0)
+var wall_inset := 9.0
+var floor_height := 22.0
+var tenant_offset := Vector2(166.0, 37.0)
+var roof_height := 13.0
+var fallback_room_name := ""
+var rent_badge_template := ""
 
 var room_id := ""
 var show_roof_eaves := false
@@ -30,6 +34,7 @@ var placement_grid_pos: Array = [0, 0]
 var placement_ignored_instance_id := ""
 
 func _ready() -> void:
+	_bind_scene_config()
 	custom_minimum_size = _room_size()
 	clip_contents = true
 	clip_text = true
@@ -47,6 +52,7 @@ func setup(id: String, has_roof_eaves := false) -> void:
 		_rebuild()
 
 func _rebuild() -> void:
+	_bind_scene_config()
 	_ensure_shell()
 	if room_shell == null:
 		return
@@ -67,8 +73,12 @@ func _ensure_shell() -> void:
 		push_error("Room.tscn must expose a RoomShell child.")
 
 func _apply_room_badges(room: Dictionary) -> void:
-	room_shell.name_badge.text = str(room.get("room_name", fallback_room_name))
-	room_shell.rent_badge.text = rent_badge_template % [int(room.get("score", 0)), float(room.get("rent_per_minute", 0.0))]
+	var room_name := str(room.get("room_name", "")).strip_edges()
+	room_shell.name_badge.text = room_name if not room_name.is_empty() else fallback_room_name
+	if rent_badge_template.is_empty():
+		room_shell.rent_badge.text = ""
+	else:
+		room_shell.rent_badge.text = rent_badge_template % [int(room.get("score", 0)), float(room.get("rent_per_minute", 0.0))]
 
 func _bind_visual_layer(room: Dictionary) -> void:
 	visual_layer = room_shell.visual_layer
@@ -256,6 +266,68 @@ func _asset_region_size(asset: Dictionary) -> Vector2:
 		if texture != null:
 			return Vector2(texture.get_width(), texture.get_height())
 	return Vector2.ZERO
+
+func _bind_scene_config() -> void:
+	var config := get_node_or_null("SceneConfig")
+	if config == null:
+		push_error("Room.tscn must expose a SceneConfig node.")
+		return
+	tenant_scene = _scene_from_path(_scene_meta_text(config, META_TENANT_SCENE_PATH), tenant_scene)
+	furniture_scene = _scene_from_path(_scene_meta_text(config, META_FURNITURE_SCENE_PATH), furniture_scene)
+	default_room_size = _scene_meta_vector2(config, META_DEFAULT_ROOM_SIZE, Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT))
+	default_grid_rect = _scene_meta_rect2(config, META_DEFAULT_GRID_RECT, Rect2(21.0, 24.0, 187.0, 40.0))
+	wall_inset = _scene_meta_float(config, META_WALL_INSET, 9.0)
+	floor_height = _scene_meta_float(config, META_FLOOR_HEIGHT, 22.0)
+	tenant_offset = _scene_meta_vector2(config, META_TENANT_OFFSET, Vector2(166.0, 37.0))
+	roof_height = _scene_meta_float(config, META_ROOF_HEIGHT, 13.0)
+	fallback_room_name = _template_text("FallbackRoomName")
+	rent_badge_template = _template_text("RentBadgeTemplate")
+
+func _scene_from_path(path: String, fallback: PackedScene) -> PackedScene:
+	if path.is_empty():
+		return fallback
+	var loaded := ResourceLoader.load(path) as PackedScene
+	if loaded == null:
+		push_warning("Room scene template could not be loaded: %s" % path)
+		return fallback
+	return loaded
+
+func _template_text(node_name: String) -> String:
+	var template_label := get_node_or_null("TemplateText/%s" % node_name) as Label
+	if template_label == null:
+		push_error("Room scene is missing TemplateText/%s." % node_name)
+		return ""
+	return template_label.text
+
+func _scene_meta_text(node: Node, meta_key: StringName) -> String:
+	if node == null or not node.has_meta(meta_key):
+		return ""
+	return str(node.get_meta(meta_key)).strip_edges()
+
+func _scene_meta_float(node: Node, meta_key: StringName, fallback: float) -> float:
+	if node == null or not node.has_meta(meta_key):
+		return fallback
+	return float(node.get_meta(meta_key))
+
+func _scene_meta_vector2(node: Node, meta_key: StringName, fallback: Vector2) -> Vector2:
+	if node == null or not node.has_meta(meta_key):
+		return fallback
+	var value: Variant = node.get_meta(meta_key)
+	if value is Vector2:
+		return value
+	if value is Array and value.size() >= 2:
+		return Vector2(float(value[0]), float(value[1]))
+	return fallback
+
+func _scene_meta_rect2(node: Node, meta_key: StringName, fallback: Rect2) -> Rect2:
+	if node == null or not node.has_meta(meta_key):
+		return fallback
+	var value: Variant = node.get_meta(meta_key)
+	if value is Rect2:
+		return value
+	if value is Array and value.size() >= 4:
+		return Rect2(float(value[0]), float(value[1]), float(value[2]), float(value[3]))
+	return fallback
 
 func _on_pressed() -> void:
 	if UIManager.current_state != UIManager.UIState.NORMAL and UIManager.current_state != UIManager.UIState.ROOM_PANEL:

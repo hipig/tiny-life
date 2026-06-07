@@ -1,9 +1,7 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/building/Room.gd" id="1_room"]
 [ext_resource type="PackedScene" path="res://scenes/building/RoomShell.tscn" id="2_room_shell"]
-[ext_resource type="PackedScene" path="res://scenes/furniture/Furniture.tscn" id="3_furniture"]
-[ext_resource type="PackedScene" path="res://scenes/tenant/Tenant.tscn" id="4_tenant"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_room_normal"]
 bg_color = Color(0, 0, 0, 0)
@@ -41,9 +39,25 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_room_pressed")
 theme_override_styles/focus = SubResource("StyleBoxFlat_room_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_room_normal")
 script = ExtResource("1_room")
-tenant_scene = ExtResource("4_tenant")
-furniture_scene = ExtResource("3_furniture")
-fallback_room_name = "房间"
-rent_badge_template = "评分 %d  租金 %.1f"
+
+[node name="SceneConfig" type="Node" parent="."]
+metadata/tenant_scene_path = "res://scenes/tenant/Tenant.tscn"
+metadata/furniture_scene_path = "res://scenes/furniture/Furniture.tscn"
+metadata/default_room_size = Vector2(224, 88)
+metadata/default_grid_rect = Rect2(21, 24, 187, 40)
+metadata/wall_inset = 9.0
+metadata/floor_height = 22.0
+metadata/tenant_offset = Vector2(166, 37)
+metadata/roof_height = 13.0
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+mouse_filter = 2
+
+[node name="FallbackRoomName" type="Label" parent="TemplateText"]
+text = "房间"
+
+[node name="RentBadgeTemplate" type="Label" parent="TemplateText"]
+text = "评分 %d  租金 %.1f"
 
 [node name="RoomShell" parent="." instance=ExtResource("2_room_shell")]

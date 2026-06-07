@@ -26,7 +26,22 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_slot_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_slot_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_slot_normal")
 script = ExtResource("1_slot")
-locked_label_template = "%s  Lv.%d 解锁"
-buildable_label_template = "%s  待修建  金币 %d"
+
+[node name="SceneConfig" type="Node" parent="."]
+metadata/service_width = 48.0
+metadata/default_room_size = Vector2(224, 88)
+metadata/wall_inset = 9.0
+metadata/floor_height = 22.0
+metadata/roof_height = 13.0
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+mouse_filter = 2
+
+[node name="LockedLabelTemplate" type="Label" parent="TemplateText"]
+text = "%s  Lv.%d 解锁"
+
+[node name="BuildableLabelTemplate" type="Label" parent="TemplateText"]
+text = "%s  待修建  金币 %d"
 
 [node name="BuildSlotShell" parent="." instance=ExtResource("2_slot_shell")]

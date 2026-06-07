@@ -5,15 +5,21 @@ const DEFAULT_SERVICE_CORE_WIDTH := 48.0
 const DEFAULT_ROOM_WIDTH := 224.0
 const DEFAULT_ROOM_HEIGHT := 88.0
 
-@export_group("Scene Templates")
-@export var floor_scene: PackedScene
-@export var build_slot_scene: PackedScene
+const META_FLOOR_SCENE_PATH := &"floor_scene_path"
+const META_BUILD_SLOT_SCENE_PATH := &"build_slot_scene_path"
+const META_SERVICE_CORE_WIDTH := &"service_core_width"
+const META_DEFAULT_ROOM_SIZE := &"default_room_size"
 
-@export_group("Expandable Building Layout")
-@export var service_core_width := DEFAULT_SERVICE_CORE_WIDTH
-@export var default_room_size := Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT)
+var floor_scene: PackedScene
+var build_slot_scene: PackedScene
+var service_core_width := DEFAULT_SERVICE_CORE_WIDTH
+var default_room_size := Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT)
+
+func _ready() -> void:
+	_bind_scene_config()
 
 func refresh() -> void:
+	_bind_scene_config()
 	UIPanelFactory.clear_children(self)
 	for floor_index in range(_max_floor_index(), 0, -1):
 		var floor_data: Dictionary = ConfigManager.get_floor_data(floor_index)
@@ -39,6 +45,7 @@ func refresh() -> void:
 	update_minimum_size()
 
 func get_building_size() -> Vector2:
+	_bind_scene_config()
 	var width: float = service_core_width + default_room_size.x
 	var height: float = 0.0
 	for floor_index in range(_max_floor_index(), 0, -1):
@@ -118,6 +125,16 @@ func _vector2_from_array(value: Variant, fallback: Vector2) -> Vector2:
 		return Vector2(float(value[0]), float(value[1]))
 	return fallback
 
+func _bind_scene_config() -> void:
+	var config := get_node_or_null("SceneConfig")
+	if config == null:
+		push_error("ApartmentBuilding.tscn must expose a SceneConfig node.")
+		return
+	floor_scene = _scene_from_path(_scene_meta_text(config, META_FLOOR_SCENE_PATH), floor_scene)
+	build_slot_scene = _scene_from_path(_scene_meta_text(config, META_BUILD_SLOT_SCENE_PATH), build_slot_scene)
+	service_core_width = _scene_meta_float(config, META_SERVICE_CORE_WIDTH, DEFAULT_SERVICE_CORE_WIDTH)
+	default_room_size = _scene_meta_vector2(config, META_DEFAULT_ROOM_SIZE, Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT))
+
 func _scene_from_path(path: String, fallback: PackedScene) -> PackedScene:
 	if path.is_empty():
 		return fallback
@@ -126,3 +143,23 @@ func _scene_from_path(path: String, fallback: PackedScene) -> PackedScene:
 		push_warning("Building scene template could not be loaded: %s" % path)
 		return fallback
 	return loaded
+
+func _scene_meta_text(node: Node, meta_key: StringName) -> String:
+	if node == null or not node.has_meta(meta_key):
+		return ""
+	return str(node.get_meta(meta_key)).strip_edges()
+
+func _scene_meta_float(node: Node, meta_key: StringName, fallback: float) -> float:
+	if node == null or not node.has_meta(meta_key):
+		return fallback
+	return float(node.get_meta(meta_key))
+
+func _scene_meta_vector2(node: Node, meta_key: StringName, fallback: Vector2) -> Vector2:
+	if node == null or not node.has_meta(meta_key):
+		return fallback
+	var value: Variant = node.get_meta(meta_key)
+	if value is Vector2:
+		return value
+	if value is Array and value.size() >= 2:
+		return Vector2(float(value[0]), float(value[1]))
+	return fallback
