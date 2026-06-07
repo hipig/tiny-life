@@ -8,4 +8,10 @@ mouse_filter = 0
 stretch_mode = 5
 pivot_offset = Vector2(13, 13)
 script = ExtResource("1_furniture")
-fallback_furniture_name = "家具"
+
+[node name="TemplateText" type="Control" parent="."]
+visible = false
+mouse_filter = 2
+
+[node name="FallbackFurnitureName" type="Label" parent="TemplateText"]
+text = "家具"

@@ -1,15 +1,6 @@
 extends TextureRect
 
 const LONG_PRESS_SECONDS := 0.5
-const DEFAULT_FURNITURE_TEXTURE := preload("res://assets/pixel_spaces/furniture/Furniture.png")
-
-@export_group("Asset Overrides")
-@export var override_configured_asset := false
-@export var asset_texture: Texture2D = DEFAULT_FURNITURE_TEXTURE
-@export var asset_region := Rect2(0.0, 49.0, 28.0, 14.0)
-
-@export_group("Scene Text")
-@export var fallback_furniture_name := ""
 
 var instance_data: Dictionary = {}
 var furniture_id := ""
@@ -61,21 +52,18 @@ func setup(data: Dictionary) -> void:
 	room_id = str(instance_data.get("room_id", room_id))
 	var furniture_data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var asset: Dictionary = furniture_data.get("asset", {})
-	_apply_asset_or_export(asset, Color("#b9784a"), Vector2i(26, 26))
-	tooltip_text = str(furniture_data.get("name", fallback_furniture_name))
+	AssetResolver.apply_asset_to_texture_rect(self, asset, Color("#b9784a"), Vector2i(26, 26))
+	tooltip_text = _furniture_name(furniture_data)
 
-func _apply_asset_or_export(asset_config: Dictionary, fallback: Color, placeholder_size := Vector2i(26, 26)) -> void:
-	if not override_configured_asset:
-		AssetResolver.apply_asset_to_texture_rect(self, asset_config, fallback, placeholder_size)
-		return
-	texture = _atlas_texture_from_export(asset_texture, asset_region)
-	if texture == null:
-		texture = AssetResolver.texture_from_asset(asset_config, fallback, placeholder_size)
+func _furniture_name(furniture_data: Dictionary) -> String:
+	var configured_name := str(furniture_data.get("name", "")).strip_edges()
+	if not configured_name.is_empty():
+		return configured_name
+	return _template_text("FallbackFurnitureName")
 
-func _atlas_texture_from_export(source_texture: Texture2D, region: Rect2) -> Texture2D:
-	if source_texture == null:
-		return null
-	var atlas := AtlasTexture.new()
-	atlas.atlas = source_texture
-	atlas.region = region
-	return atlas
+func _template_text(node_name: String) -> String:
+	var template_label := get_node_or_null("TemplateText/%s" % node_name) as Label
+	if template_label == null:
+		push_error("Furniture scene is missing TemplateText/%s." % node_name)
+		return ""
+	return template_label.text
