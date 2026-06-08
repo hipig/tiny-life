@@ -11,7 +11,7 @@
     "asset": {
       "type": "spritesheet_animation",
       "texture": "res://assets/pixel_spaces/npc/Pre-made NPCs/Male/NPC 1.png",
-      "frame_size": [16, 32],
+      "frame_size": [32, 32],
       "default_animation": "idle",
       "fps": 5.0,
       "loop": true,
@@ -34,7 +34,7 @@
     "asset": {
       "type": "spritesheet_animation",
       "texture": "res://assets/pixel_spaces/npc/Pre-made NPCs/Male/NPC 6.png",
-      "frame_size": [16, 32],
+      "frame_size": [32, 32],
       "default_animation": "idle",
       "fps": 5.0,
       "loop": true,
@@ -57,7 +57,7 @@
     "asset": {
       "type": "spritesheet_animation",
       "texture": "res://assets/pixel_spaces/npc/Pre-made NPCs/Female/NPC 1.png",
-      "frame_size": [16, 32],
+      "frame_size": [32, 32],
       "default_animation": "idle",
       "fps": 5.0,
       "loop": true,
@@ -80,7 +80,7 @@
     "asset": {
       "type": "spritesheet_animation",
       "texture": "res://assets/pixel_spaces/npc/Pre-made NPCs/Female/NPC 2.png",
-      "frame_size": [16, 32],
+      "frame_size": [32, 32],
       "default_animation": "idle",
       "fps": 5.0,
       "loop": true,
@@ -103,7 +103,7 @@
     "asset": {
       "type": "spritesheet_animation",
       "texture": "res://assets/pixel_spaces/npc/Pre-made NPCs/Female/NPC 10.png",
-      "frame_size": [16, 32],
+      "frame_size": [32, 32],
       "default_animation": "idle",
       "fps": 5.0,
       "loop": true,

@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/FloatingMenu.gd" id="1_menu"]
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue.png" id="2_button_blue"]
@@ -12,8 +12,6 @@
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Clipboard.png" id="10_icon_task"]
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Present.png" id="11_icon_reward"]
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Gear.png" id="12_icon_settings"]
-[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Plus.png" id="13_icon_zoom_in"]
-[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Minus.png" id="14_icon_zoom_out"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_blue_normal"]
 texture = ExtResource("2_button_blue")
@@ -173,55 +171,3 @@ theme_override_styles/normal = SubResource("StyleBoxTexture_grey_normal")
 theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_grey_pressed")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
-
-[node name="ZoomInButton" type="Button" parent="."]
-custom_minimum_size = Vector2(44, 42)
-layout_mode = 2
-tooltip_text = "放大"
-focus_mode = 2
-icon = ExtResource("13_icon_zoom_in")
-expand_icon = true
-icon_alignment = 1
-vertical_icon_alignment = 1
-theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
-theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
-theme_override_constants/icon_max_width = 22
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxTexture_yellow_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_yellow_pressed")
-theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
-
-[node name="ZoomOutButton" type="Button" parent="."]
-custom_minimum_size = Vector2(44, 42)
-layout_mode = 2
-tooltip_text = "缩小"
-focus_mode = 2
-icon = ExtResource("14_icon_zoom_out")
-expand_icon = true
-icon_alignment = 1
-vertical_icon_alignment = 1
-theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
-theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
-theme_override_constants/icon_max_width = 22
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxTexture_yellow_normal")
-theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_yellow_pressed")
-theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_normal")
-
-[node name="TemplateText" type="Control" parent="."]
-visible = false
-layout_mode = 2
-
-[node name="ZoomTooltipTemplate" type="Label" parent="TemplateText"]
-layout_mode = 1
-text = "当前缩放 %.0f%%"

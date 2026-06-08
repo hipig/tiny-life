@@ -46,7 +46,6 @@ metadata/furniture_scene_path = "res://scenes/furniture/Furniture.tscn"
 metadata/default_frame_tiles = Vector2i(8, 4)
 metadata/wall_inset = 9.0
 metadata/floor_height = 22.0
-metadata/tenant_offset = Vector2(86, 28)
 metadata/roof_height = 13.0
 
 [node name="TemplateText" type="Control" parent="."]

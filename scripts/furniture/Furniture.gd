@@ -6,19 +6,7 @@ var instance_data: Dictionary = {}
 var furniture_id := ""
 var room_id := ""
 var _pressing := false
-var _press_time := 0.0
-
-func _process(delta: float) -> void:
-	if not _pressing:
-		return
-	_press_time += delta
-	if _press_time < LONG_PRESS_SECONDS:
-		return
-	_pressing = false
-	if UIManager.current_state != UIManager.UIState.NORMAL and UIManager.current_state != UIManager.UIState.ROOM_PANEL:
-		return
-	if not room_id.is_empty():
-		UIManager.start_move_existing(room_id, str(instance_data.get("instance_id", "")))
+var _press_token := 0
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -26,10 +14,9 @@ func _gui_input(event: InputEvent) -> void:
 		if mouse_event.button_index != MOUSE_BUTTON_LEFT:
 			return
 		if mouse_event.pressed:
-			_pressing = true
-			_press_time = 0.0
+			_start_long_press_watch()
 		else:
-			var was_short := _pressing and _press_time < LONG_PRESS_SECONDS
+			var was_short := _pressing
 			_pressing = false
 			if was_short:
 				UIManager.show_toast(str(tooltip_text))
@@ -37,10 +24,9 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventScreenTouch:
 		var touch_event := event as InputEventScreenTouch
 		if touch_event.pressed:
-			_pressing = true
-			_press_time = 0.0
+			_start_long_press_watch()
 		else:
-			var was_short_touch := _pressing and _press_time < LONG_PRESS_SECONDS
+			var was_short_touch := _pressing
 			_pressing = false
 			if was_short_touch:
 				UIManager.show_toast(str(tooltip_text))
@@ -60,6 +46,22 @@ func _furniture_name(furniture_data: Dictionary) -> String:
 	if not configured_name.is_empty():
 		return configured_name
 	return _template_text("FallbackFurnitureName")
+
+func _start_long_press_watch() -> void:
+	_pressing = true
+	_press_token += 1
+	var token := _press_token
+	var timer := get_tree().create_timer(LONG_PRESS_SECONDS)
+	timer.timeout.connect(_on_long_press_timeout.bind(token), CONNECT_ONE_SHOT)
+
+func _on_long_press_timeout(token: int) -> void:
+	if not _pressing or token != _press_token:
+		return
+	_pressing = false
+	if UIManager.current_state != UIManager.UIState.NORMAL and UIManager.current_state != UIManager.UIState.ROOM_PANEL:
+		return
+	if not room_id.is_empty():
+		UIManager.start_move_existing(room_id, str(instance_data.get("instance_id", "")))
 
 func _template_text(node_name: String) -> String:
 	var template_label := get_node_or_null("TemplateText/%s" % node_name) as Label

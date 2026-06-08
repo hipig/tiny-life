@@ -55,6 +55,122 @@ func test_initial_building_starts_with_one_room_and_second_floor_build_slot() ->
 	assert_eq(int(second_floor.get("required_apartment_level", 0)), 1, "second floor build slot should be visible at Lv.1")
 	assert_true(int(second_floor.get("build_cost", 0)) > 0, "second floor build slot should have a construction cost")
 
+func test_furniture_placement_grid_cells_are_16_pixels() -> void:
+	var tile_size := 16
+	for room in rooms:
+		var room_data: Dictionary = room
+		var layouts: Array = [
+			{
+				"label": str(room_data.get("id", "")),
+				"frame_tiles": room_data.get("frame_tiles", []),
+				"grid_size": room_data.get("grid_size", [])
+			}
+		]
+		for item in room_data.get("layout_upgrades", []):
+			var upgrade: Dictionary = item
+			layouts.append({
+				"label": "%s upgrade Lv.%d" % [str(room_data.get("id", "")), int(upgrade.get("level", 0))],
+				"frame_tiles": upgrade.get("frame_tiles", []),
+				"grid_size": upgrade.get("grid_size", [])
+			})
+		for layout in layouts:
+			var layout_data: Dictionary = layout
+			var frame_tiles: Array = layout_data.get("frame_tiles", [])
+			var grid_size: Array = layout_data.get("grid_size", [])
+			assert_true(frame_tiles.size() >= 2, "%s should define frame tiles" % str(layout_data.get("label", "")))
+			assert_true(grid_size.size() >= 2, "%s should define grid size" % str(layout_data.get("label", "")))
+			if frame_tiles.size() < 2 or grid_size.size() < 2:
+				continue
+			var cell_width := float(maxi(1, int(frame_tiles[0]) - 2) * tile_size) / float(maxi(1, int(grid_size[0])))
+			var cell_height := float(maxi(1, int(frame_tiles[1])) * tile_size) / float(maxi(1, int(grid_size[1])))
+			assert_eq(Vector2(cell_width, cell_height), Vector2(16.0, 16.0), "%s placement cells should be 16x16 pixels" % str(layout_data.get("label", "")))
+
+func test_furniture_placement_rules_keep_core_restrictions() -> void:
+	var rules_source := FileAccess.get_file_as_string("res://scripts/furniture/FurniturePlacementRules.gd")
+	assert_true(rules_source.contains("gx + w > int(grid_size[0])"), "placement rules should reject furniture beyond the right edge")
+	assert_true(rules_source.contains("gy + h > int(grid_size[1])"), "placement rules should reject furniture beyond the lower edge")
+	assert_true(rules_source.contains("placement_layer_for"), "placement rules should separate wall and floor furniture layers")
+	assert_true(rules_source.contains("LAYER_WALL"), "placement rules should expose a wall placement layer")
+	assert_true(rules_source.contains("LAYER_FLOOR"), "placement rules should expose a floor placement layer")
+	assert_true(rules_source.contains("wall_item"), "wall-item furniture should use the wall placement layer")
+	assert_true(rules_source.contains("floor_grid_y_for"), "floor furniture should snap to the bottom floor line in the side-view room")
+	assert_true(rules_source.contains("placement_layer_for(other_data) != layer"), "wall and floor furniture should not collide with each other")
+	assert_true(rules_source.contains("door_cells_for_layer"), "placement rules should reserve door cells by layer")
+	assert_true(rules_source.contains("_rects_overlap"), "placement rules should reject overlapping furniture footprints")
+	assert_true(rules_source.contains("ignored_instance_id"), "moving furniture should ignore its original footprint")
+
+func test_furniture_placement_rules_validate_floor_and_wall_layers() -> void:
+	var room := {
+		"id": "__test_placement_layers",
+		"grid_size": [6, 4],
+		"furniture_instances": []
+	}
+	var furniture_lookup := Callable(self, "_furniture_data")
+
+	assert_eq(FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR), [6, 4], "floor layer should use the full side-view placement grid")
+	assert_eq(FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_WALL), [6, 3], "wall layer should use the cells above the bottom floor line")
+	assert_eq(FurniturePlacementRules.placement_layer_for(_furniture_data("chair_basic")), FurniturePlacementRules.LAYER_FLOOR, "chair should be a floor item")
+	assert_eq(FurniturePlacementRules.placement_layer_for(_furniture_data("painting_small")), FurniturePlacementRules.LAYER_WALL, "painting should be a wall item")
+	assert_eq(FurniturePlacementRules.floor_grid_y_for([6, 4], [2, 2]), 2, "a two-cell-high bed should bottom-align to the floor line")
+	assert_eq(FurniturePlacementRules.floor_grid_y_for([6, 4], [1, 1]), 3, "a one-cell-high chair should sit on the bottom row")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [1, 2]), "bed should be valid only when it is bottom-aligned to the floor")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [1, 0]), "bed should not be valid near the ceiling")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [1, 1]), "bed should not float above the floor line")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, [1, 3]), "chair should be valid on the floor line")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "sofa_green", _furniture_data("sofa_green"), furniture_lookup, [2, 3]), "sofa should be valid on the floor line")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [1, 0]), "painting should be valid on the wall layer")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "wall_clock", _furniture_data("wall_clock"), furniture_lookup, [2, 2]), "wall clock should be valid on lower wall cells above the floor")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [1, 3]), "wall items should not sit on the floor line")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, [0, 3]), "floor door cell should block floor furniture at the left bottom")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [0, 0]), "door cell should not block wall furniture")
+
+	room["furniture_instances"] = [
+		{"instance_id": "wall_a", "furniture_id": "painting_small", "grid_pos": [1, 0]}
+	]
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [1, 2]), "wall and floor layers should not collide with each other")
+
+	room["furniture_instances"] = [
+		{"instance_id": "floor_a", "furniture_id": "chair_basic", "grid_pos": [2, 3]},
+		{"instance_id": "wall_a", "furniture_id": "painting_small", "grid_pos": [2, 0]}
+	]
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "sofa_green", _furniture_data("sofa_green"), furniture_lookup, [1, 3]), "floor furniture should still collide with floor furniture")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "wall_clock", _furniture_data("wall_clock"), furniture_lookup, [3, 0]), "wall furniture should ignore floor furniture collision")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "wall_clock", _furniture_data("wall_clock"), furniture_lookup, [2, 0]), "wall furniture should still collide with wall furniture")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, [2, 3], "floor_a"), "moving furniture should ignore its own original footprint")
+
+func test_building_view_min_zoom_keeps_visible_world_inside_bounds() -> void:
+	var viewport_sizes: Array = [Vector2(360.0, 640.0), Vector2(720.0, 1280.0)]
+	for item in viewport_sizes:
+		var viewport: Vector2 = item
+		var bounds: Vector2 = viewport
+		var min_zoom := clampf(maxf(viewport.x / bounds.x, viewport.y / bounds.y), 0.7, 1.4)
+		var visible_world := viewport / min_zoom
+		assert_true(visible_world.x <= bounds.x + 0.001, "minimum zoom should not reveal outside horizontal bounds for %s" % str(viewport))
+		assert_true(visible_world.y <= bounds.y + 0.001, "minimum zoom should not reveal outside vertical bounds for %s" % str(viewport))
+
+func test_world_camera_input_is_gesture_based_and_ui_isolated() -> void:
+	var building_source := FileAccess.get_file_as_string("res://scripts/building/BuildingView.gd")
+	var ui_manager_source := FileAccess.get_file_as_string("res://scripts/autoload/UIManager.gd")
+	var app_panel_source := FileAccess.get_file_as_string("res://scripts/ui/AppPanel.gd")
+	var popup_layer_source := FileAccess.get_file_as_string("res://scripts/ui/PopupLayer.gd")
+	var placement_source := FileAccess.get_file_as_string("res://scripts/ui/PlacementOverlay.gd")
+	var main_source := FileAccess.get_file_as_string("res://scenes/main/Main.gd")
+	assert_true(ui_manager_source.contains("func allows_world_camera_input()"), "UIManager should expose a single world-camera input gate")
+	assert_true(ui_manager_source.contains("UIState.PLACING_NEW_FURNITURE"), "placement states should be allowed to request camera gestures")
+	assert_true(building_source.contains("func handle_camera_input"), "BuildingView should expose a reusable camera input handler")
+	assert_true(building_source.contains("CameraInputMode.PLACEMENT"), "BuildingView should distinguish placement camera input from normal browsing")
+	assert_true(building_source.contains("_active_touch_points"), "BuildingView should track active touch points for mobile gestures")
+	assert_true(building_source.contains("_apply_touch_pinch"), "BuildingView should implement explicit two-finger pinch zoom")
+	assert_true(building_source.contains("MOUSE_BUTTON_WHEEL_UP"), "desktop wheel zoom should remain supported")
+	assert_true(building_source.contains("_has_blocking_panel"), "BuildingView should block camera input while panels are active")
+	assert_true(app_panel_source.contains("func _is_world_camera_event"), "AppPanel should defensively intercept leaked camera events")
+	assert_true(popup_layer_source.contains("func has_blocking_panel()"), "PopupLayer should expose active-panel blocking state")
+	assert_true(placement_source.contains("_forward_camera_input"), "PlacementOverlay should forward wheel and multi-touch camera input")
+	assert_true(placement_source.contains("_pause_preview_drag_for_camera"), "PlacementOverlay should pause furniture dragging when two-finger camera control starts")
+	assert_true(main_source.contains("UIManager.set_state(UIManager.UIState.POPUP)"), "event-driven popups should set a blocking UI state")
+	assert_false(main_source.contains("zoom_in_requested"), "Main should not connect removed zoom-in buttons")
+	assert_false(main_source.contains("zoom_out_requested"), "Main should not connect removed zoom-out buttons")
+
 func test_main_ui_panel_scenes_are_split_out() -> void:
 	for path in _panel_scene_paths():
 		assert_true(ResourceLoader.exists(path), "%s should exist as a split UI scene" % path)
@@ -177,20 +293,35 @@ func test_ui_scenes_are_editor_authored_for_360_viewport() -> void:
 	assert_true(top_scene.contains("CoinButton"), "TopStatusBar should expose its coin button in the scene")
 	assert_true(top_scene.contains("RentButton"), "TopStatusBar should expose its rent button in the scene")
 	assert_true(menu_scene.contains("TaskButton"), "FloatingMenu should expose task button in the scene")
-	assert_true(menu_scene.contains("ZoomInButton"), "FloatingMenu should expose zoom-in button in the scene")
+	assert_false(menu_scene.contains("ZoomInButton"), "FloatingMenu should remove manual zoom-in button")
+	assert_false(menu_scene.contains("ZoomOutButton"), "FloatingMenu should remove manual zoom-out button")
+	assert_false(menu_scene.contains("icons/Plus.png"), "FloatingMenu should not keep zoom-in icon resources")
+	assert_false(menu_scene.contains("icons/Minus.png"), "FloatingMenu should not keep zoom-out icon resources")
 	assert_true(menu_scene.contains("custom_minimum_size = Vector2(46, 0)"), "FloatingMenu should be sized for a 360px viewport")
-	assert_true(menu_scene.contains("[node name=\"ZoomTooltipTemplate\" type=\"Label\""), "FloatingMenu should keep zoom tooltip templates as scene labels")
-	assert_false(menu_source.contains("@export"), "FloatingMenu should not require script exports for editor-authored tooltip templates")
-	assert_false(menu_source.contains("Zoom %.0f"), "FloatingMenu should not keep zoom tooltip templates in script fallbacks")
-	assert_true(placement_scene.contains("PlacementControls"), "Placement overlay should expose its bottom controls in the scene")
-	assert_true(placement_scene.contains("ConfirmButton"), "Placement overlay should expose confirm button in the scene")
-	assert_true(placement_source.contains("get_node_or_null(\"PlacementControls\")"), "Placement overlay should bind editor-authored controls first")
+	assert_false(menu_scene.contains("[node name=\"ZoomTooltipTemplate\" type=\"Label\""), "FloatingMenu should not keep zoom tooltip templates after removing zoom buttons")
+	assert_false(menu_source.contains("zoom_in_requested"), "FloatingMenu should not expose removed zoom-in signal")
+	assert_false(menu_source.contains("set_zoom_state"), "FloatingMenu should not keep removed zoom button state helpers")
+	assert_false(placement_scene.contains("PlacementControls"), "Placement overlay should not keep the old bottom-sheet controls")
+	assert_true(placement_scene.contains("HintStrip"), "Placement overlay should expose its lightweight hint strip in the scene")
+	assert_true(placement_scene.contains("FloatingControls"), "Placement overlay should expose floating controls in the scene")
+	assert_true(placement_scene.contains("res://scenes/furniture/FurnitureFloatingControls.tscn"), "Placement overlay should reuse the furniture floating controls scene")
+	assert_true(placement_scene.contains("mouse_filter = 0"), "Placement overlay should capture drag input while placement is active")
+	assert_true(placement_source.contains("get_node_or_null(\"HintStrip\")"), "Placement overlay should bind editor-authored hint strip first")
+	assert_true(placement_source.contains("get_node_or_null(\"FloatingControls\")"), "Placement overlay should bind editor-authored floating controls first")
+	assert_true(placement_source.contains("func _gui_input"), "Placement overlay should receive direct GUI drag events")
 	assert_true(placement_scene.contains("[node name=\"TemplateText\" type=\"Control\""), "Placement overlay should keep dynamic text templates as scene nodes")
 	assert_true(placement_scene.contains("[node name=\"PlaceConfirmText\" type=\"Label\""), "Placement overlay should keep confirm text as a scene label")
+	assert_true(placement_scene.contains("[node name=\"PlaceHintTemplate\" type=\"Label\""), "Placement overlay should keep placement hint copy as a scene label")
+	assert_true(placement_scene.contains("[node name=\"MoveHintTemplate\" type=\"Label\""), "Placement overlay should keep move hint copy as a scene label")
 	assert_false(placement_source.contains("@export"), "Placement overlay should not require script exports for editor-authored text templates")
 	assert_false(placement_source.contains("确认摆放并扣金币"), "Placement overlay should not hard-code confirm copy in script")
 	assert_true(furniture_controls_scene.contains("ConfirmButton"), "Furniture floating controls should expose confirm button in the scene")
 	assert_true(furniture_controls_scene.contains("CancelButton"), "Furniture floating controls should expose cancel button in the scene")
+	assert_true(furniture_controls_scene.contains("RecycleButton"), "Furniture floating controls should expose recycle button in the scene")
+	assert_true(furniture_controls_scene.contains("custom_minimum_size = Vector2(40, 38)"), "Furniture floating controls should use compact icon buttons")
+	assert_true(furniture_controls_scene.contains("icons/Check.png"), "Furniture floating controls should configure confirm icon in the scene")
+	assert_true(furniture_controls_scene.contains("icons/Close.png"), "Furniture floating controls should configure cancel icon in the scene")
+	assert_false(furniture_controls_scene.contains("\ntext = \"确认\""), "Furniture floating controls should not use wide text buttons")
 	assert_true(icon_row_scene.contains("TitleLabel"), "Repeated icon-info rows should live in a reusable scene")
 	assert_true(icon_row_scene.contains("DetailLabel"), "IconInfoRow should expose detail text in the scene")
 	assert_true(stat_card_scene.contains("ValueLabel"), "StatCard should expose value text in a reusable scene")
@@ -420,10 +551,13 @@ func test_ui_scripts_do_not_hide_fixed_layout_or_style() -> void:
 			assert_false(source.contains(token), "%s should keep fixed UI layout/style in .tscn, not script token %s" % [path, token])
 
 func test_project_rules_require_editor_authored_ui() -> void:
+	var agents := FileAccess.get_file_as_string("res://AGENTS.md")
 	var technical_rules := FileAccess.get_file_as_string("res://.agents/rules/technical.md")
 	var trd := FileAccess.get_file_as_string("res://docs/TRD.md")
 	var data_rules := FileAccess.get_file_as_string("res://.agents/rules/data-config.md")
 	var tilemap_plan := FileAccess.get_file_as_string("res://docs/APARTMENT_TILEMAP_MIGRATION.md")
+	assert_true(agents.contains("项目当前处于开发阶段"), "AGENTS should mark this project as development-stage")
+	assert_true(agents.contains("不需要兼容旧配置或旧存档"), "AGENTS should direct agents not to preserve old config/save compatibility by default")
 	assert_true(technical_rules.contains("UI 层必须在 `.tscn` 中搭建"), "technical rules should require editor-authored UI")
 	assert_true(technical_rules.contains("禁止在 UI 脚本中用 `Button.new()`"), "technical rules should forbid scripted UI skeletons")
 	assert_true(technical_rules.contains("固定 `StyleBox`"), "technical rules should forbid fixed UI skins in scripts")
@@ -532,7 +666,7 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 			assert_eq(int(frame_tiles[0]), 8, "%s should start as an 8-tile-wide room frame" % room_data.get("id", ""))
 			assert_eq(int(frame_tiles[1]), 4, "%s room frame height should stay fixed at 4 tiles" % room_data.get("id", ""))
 			assert_eq(int(grid_size[0]), int(frame_tiles[0]) - 2, "%s placement grid width should match inner room tiles" % room_data.get("id", ""))
-			assert_eq(int(grid_size[1]), int(frame_tiles[1]) - 1, "%s placement grid height should stay on the 16px tile grid" % room_data.get("id", ""))
+			assert_eq(int(grid_size[1]), int(frame_tiles[1]), "%s floor placement grid height should match the 4-tile room height" % room_data.get("id", ""))
 		for item in room_data.get("layout_upgrades", []):
 			var upgrade: Dictionary = item
 			var upgraded_frame_tiles: Array = upgrade.get("frame_tiles", [])
@@ -543,7 +677,7 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 				assert_gt(int(upgraded_frame_tiles[0]), int(frame_tiles[0]), "%s layout upgrades should add width tiles" % room_data.get("id", ""))
 				assert_eq(int(upgraded_frame_tiles[1]), int(frame_tiles[1]), "%s layout upgrades should not change room height" % room_data.get("id", ""))
 				assert_gt(int(upgraded_grid_size[0]), int(grid_size[0]), "%s layout upgrades should add placement columns" % room_data.get("id", ""))
-				assert_eq(int(upgraded_grid_size[1]), int(grid_size[1]), "%s layout upgrades should not change placement rows" % room_data.get("id", ""))
+				assert_eq(int(upgraded_grid_size[1]), int(grid_size[1]), "%s layout upgrades should not change floor placement rows" % room_data.get("id", ""))
 	for floor_index in floor_counts.keys():
 		assert_eq(int(floor_counts[floor_index]), 1, "%dF should have one MVP room" % int(floor_index))
 	assert_true(floor_scene.contains("FloorServiceCore.tscn"), "Each floor should expose a left-side door/elevator service core scene")
@@ -642,7 +776,10 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_false(floor_service_scene.contains("ServiceShade"), "Service core should not keep old ColorRect shade fallback")
 	assert_true(room_source.contains("frame_tiles"), "Room rendering should read frame_tiles for grid-sized room upgrades")
 	assert_true(room_source.contains("ApartmentTileMap.TILE_SIZE"), "Room pixel size should be derived from 16px TileMap cells")
-	assert_true(room_source.contains("frame_tiles.y - 1"), "Room placement grid should remain aligned to 16px vertical tiles")
+	assert_true(room_source.contains("frame_tiles.y) * ApartmentTileMap.TILE_SIZE"), "Floor placement grid should use the full 4-tile room height")
+	assert_true(room_source.contains("_wall_grid_rect"), "Room should expose a separate wall placement layer")
+	assert_true(room_source.contains("world_position_to_placement_grid"), "Room should translate scene taps through furniture-aware placement layers")
+	assert_true(room_source.contains("floor_grid_y_for"), "Floor furniture should map pointer input to the bottom floor line")
 	assert_true(room_shell_source.contains("render_room_skeleton"), "RoomShell should delegate room-frame drawing to ApartmentTileMap")
 	assert_true(room_source.contains("tenant_view.setup(tenant_id, room_id)"), "Room should bind tenant scene instances to their room")
 	assert_true(room_source.contains("_furniture_position"), "Furniture should be positioned inside the room instead of listed as thumbnails")
@@ -716,33 +853,16 @@ func test_saved_room_layouts_are_normalized_to_current_config() -> void:
 	assert_true(state_source.contains("_fixed_height_frame_tiles"), "Room frame tile height should be fixed by GameState")
 	assert_true(state_source.contains("_fixed_height_grid_size"), "Placement grid height should be fixed by GameState")
 	assert_true(state_source.contains("SAVE_SCHEMA_VERSION"), "GameState should version saves before trusting persisted room layout levels")
-	assert_true(state_source.contains("save_needs_writeback"), "Legacy room-layout migration should request a save writeback")
-	assert_true(save_source.contains("GameState.save_needs_writeback = false"), "SaveManager should clear migration writeback state after saving")
+	assert_true(state_source.contains("save_needs_writeback = false"), "Development-stage saves should not request legacy migration writeback by default")
+	assert_true(save_source.contains("GameState.save_needs_writeback = false"), "SaveManager should clear writeback state after saving")
 	assert_true(state_source.contains("\"frame_tiles\""), "Room saves should use frame_tiles instead of pixel dimensions")
 	assert_true(state_source.contains("\"grid_size\""), "Room saves should use grid_size instead of pixel rectangles")
 	assert_false(state_source.contains("\"room_size\""), "GameState should not preserve legacy pixel room_size fields")
 	assert_false(state_source.contains("\"grid_rect\""), "GameState should not preserve legacy pixel grid_rect fields")
 	assert_false(state_source.contains("[448, 176]"), "Old 720px-era room-size fallback should not survive in GameState")
-	var original_state := GameState.to_save_data().duplicate(true)
-	var legacy_save := original_state.duplicate(true)
-	legacy_save.erase("save_schema_version")
-	legacy_save["highest_built_floor"] = 2
-	legacy_save["rooms"]["room_101"]["level"] = 2
-	legacy_save["rooms"]["room_201"]["level"] = 1
-	GameState.from_save_data(legacy_save)
-	assert_eq(int(GameState.rooms["room_101"].get("level", 0)), 1, "Legacy saves should reset old per-room layout levels")
-	assert_eq(GameState.rooms["room_101"].get("frame_tiles", []), [8, 4], "Legacy room_101 should return to the configured 8x4 starter frame")
-	assert_true(GameState.save_needs_writeback, "Legacy layout migration should be written back after load")
-	var versioned_save := original_state.duplicate(true)
-	versioned_save["save_schema_version"] = GameState.SAVE_SCHEMA_VERSION
-	versioned_save["highest_built_floor"] = 2
-	versioned_save["rooms"]["room_101"]["level"] = 2
-	versioned_save["rooms"]["room_201"]["level"] = 1
-	GameState.from_save_data(versioned_save)
-	assert_eq(int(GameState.rooms["room_101"].get("level", 0)), 2, "Current-version saves should keep intentional room layout upgrades")
-	assert_eq(GameState.rooms["room_101"].get("frame_tiles", []), [10, 4], "Current-version room upgrades should still add width tiles")
-	assert_false(GameState.save_needs_writeback, "Current-version saves should not request migration writeback")
-	GameState.from_save_data(original_state)
+	assert_false(state_source.contains("save_needs_writeback = saved_schema_version < SAVE_SCHEMA_VERSION"), "Development-stage saves should not branch into legacy layout migrations")
+	assert_false(state_source.contains("if saved_schema_version < SAVE_SCHEMA_VERSION:"), "GameState should not keep old-save layout migration branches")
+	assert_true(state_source.contains("configured_layout := _configured_room_layout_for_level"), "Current-version saves should rebuild frame/grid from config and room level")
 
 func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	var building_source := FileAccess.get_file_as_string("res://scripts/building/ApartmentBuilding.gd")
@@ -812,17 +932,24 @@ func test_placement_overlay_is_scene_based_not_grid_panel() -> void:
 	var room_source := FileAccess.get_file_as_string("res://scripts/building/Room.gd")
 	var popup_source := FileAccess.get_file_as_string("res://scripts/ui/PopupLayer.gd")
 	var main_source := FileAccess.get_file_as_string("res://scenes/main/Main.gd")
-	assert_true(overlay_scene.contains("[node name=\"PlacementOverlay\" type=\"Control\"]"), "placement overlay should be transparent Control, not a blocking panel root")
+	assert_true(overlay_scene.contains("[node name=\"PlacementOverlay\" type=\"Control\"]"), "placement overlay should be a scene-authored Control, not a full AppPanel")
 	assert_true(overlay_scene.contains("[node name=\"PlaceTitlePrefix\" type=\"Label\""), "placement overlay state text should be authored in the scene")
 	assert_true(overlay_scene.contains("[node name=\"MoveConfirmText\" type=\"Label\""), "placement move confirm text should be authored in the scene")
-	assert_true(overlay_scene.contains("点房间内的格子调整位置"), "placement hint copy should be previewable in the scene")
+	assert_true(overlay_scene.contains("拖动 %s 到合适位置"), "placement hint copy should be previewable in the scene")
+	assert_true(overlay_scene.contains("mouse_filter = 0"), "placement overlay should capture direct drag input over room buttons")
 	assert_false(overlay_source.contains("extends \"res://scripts/ui/AppPanel.gd\""), "placement should not open as a full blocking AppPanel")
 	assert_false(overlay_source.contains("GridContainer.new()"), "placement should not use a separate grid-selection panel")
 	assert_false(overlay_source.contains("set_anchors_preset"), "placement overlay should keep its full-rect layout in the scene")
 	assert_false(overlay_source.contains("_fill_parent"), "placement overlay should not repair fixed layout at runtime")
-	assert_false(overlay_source.contains("点房间内的格子调整位置"), "placement hint copy should not be hidden in script")
-	assert_true(overlay_source.contains("show_placement_grid"), "placement should drive the target room grid overlay")
-	assert_true(room_source.contains("global_position_to_grid"), "Room should translate scene taps into placement grid cells")
+	assert_false(overlay_source.contains("拖动 %s 到合适位置"), "placement hint copy should not be hidden in script")
+	assert_true(overlay_source.contains("func _gui_input"), "placement should handle drag input before room buttons consume it")
+	assert_true(overlay_source.contains("_position_preview_under_pointer"), "placement preview should follow the active pointer during drag")
+	assert_true(overlay_source.contains("floating_controls.visible = false"), "placement should hide floating controls while dragging")
+	assert_true(overlay_source.contains("floating_controls.visible = true"), "placement should restore floating controls after drag release")
+	assert_true(overlay_source.contains("show_placement_grid"), "placement should still update hidden target-room placement state")
+	assert_true(room_source.contains("placement_grid_layer.visible = false"), "Room should keep the placement grid hidden")
+	assert_false(room_source.contains("draw_rect(cell_rect"), "Room should not draw every placement grid cell")
+	assert_true(room_source.contains("world_position_to_placement_grid"), "Room should translate scene taps into furniture-aware placement grid cells")
 	assert_true(room_source.contains("get_preview_position"), "Room should provide scene preview positions")
 	assert_true(room_source.contains("UIManager.current_state != UIManager.UIState.NORMAL"), "Room clicks should not steal placement-state input")
 	assert_true(popup_source.contains("open_overlay"), "PopupLayer should support transparent placement overlays")
@@ -872,47 +999,77 @@ func test_furniture_in_room_supports_scene_long_press_move() -> void:
 	assert_false(furniture_source.contains("stretch_mode ="), "Furniture stretch mode should stay in Furniture.tscn")
 	assert_false(furniture_source.contains("pivot_offset ="), "Furniture pivot should stay in Furniture.tscn")
 	assert_false(furniture_source.contains("\"家具\""), "Furniture fallback tooltip copy should not be hard-coded in script")
+	assert_true(preview_source.contains("VALID_OUTLINE_COLOR"), "FurniturePreview should expose valid placement with its own outline")
+	assert_true(preview_source.contains("INVALID_OUTLINE_COLOR"), "FurniturePreview should expose invalid placement with its own outline")
+	assert_true(preview_source.contains("draw_rect"), "FurniturePreview should draw placement validity feedback on the preview itself")
 	assert_true(room_source.contains("view_data[\"room_id\"] = room_id"), "Room should bind furniture visuals back to their room")
 	assert_true(room_source.contains("_asset_region_size"), "Furniture visuals should preserve atlas-region proportions")
 
-func test_tenant_uses_need_bubble_scene_and_animation_placeholder() -> void:
+func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	var tenant_scene := FileAccess.get_file_as_string("res://scenes/tenant/Tenant.tscn")
 	var tenant_source := FileAccess.get_file_as_string("res://scripts/tenant/Tenant.gd")
 	var room_source := FileAccess.get_file_as_string("res://scripts/building/Room.gd")
+	var main_source := FileAccess.get_file_as_string("res://scenes/main/Main.gd")
+	var locator_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantRoomLocator.gd")
+	var ai_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantAI.gd")
 	var need_bubble_scene := FileAccess.get_file_as_string("res://scenes/tenant/NeedBubble.tscn")
 	var need_bubble_source := FileAccess.get_file_as_string("res://scripts/tenant/NeedBubble.gd")
 	var emote_scene := FileAccess.get_file_as_string("res://scenes/tenant/TenantEmote.tscn")
 	var emote_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantEmote.gd")
+	assert_true(tenant_scene.contains("[node name=\"Tenant\" type=\"CharacterBody2D\""), "Tenant should be a map CharacterBody2D scene")
 	assert_true(tenant_scene.contains("AnimatedSprite2D"), "Tenant should reserve AnimatedSprite2D for future spritesheets")
 	assert_true(tenant_scene.contains("NeedBubble.tscn"), "Tenant should instance the reusable NeedBubble scene")
-	assert_true(tenant_scene.contains("custom_minimum_size = Vector2(64, 92)"), "Tenant preview size should be authored in Tenant.tscn")
-	assert_true(tenant_scene.contains("mouse_filter = 0"), "Tenant click priority should be authored in Tenant.tscn")
-	assert_true(tenant_scene.contains("focus_mode = 2"), "Tenant focus behavior should be authored in Tenant.tscn")
-	assert_true(tenant_scene.contains("position = Vector2(20, 76)"), "Tenant avatar position should be authored in Tenant.tscn")
-	assert_true(tenant_scene.contains("scale = Vector2(1.5, 1.5)"), "Tenant avatar scale should be authored in Tenant.tscn")
-	assert_true(tenant_scene.contains("custom_minimum_size = Vector2(36, 48)"), "Tenant fallback visual size should be authored in Tenant.tscn")
+	assert_true(tenant_scene.contains("TenantAI.gd"), "Tenant should own a per-instance AI state machine")
+	assert_true(tenant_scene.contains("[node name=\"TenantAI\" type=\"Node\""), "TenantAI should be a scene child, not a global Main loop")
+	assert_true(tenant_scene.contains("[node name=\"ClickArea\" type=\"Area2D\""), "Tenant clicks should be routed through a scene-authored ClickArea")
+	assert_true(tenant_scene.contains("[node name=\"ClickShape\" type=\"CollisionShape2D\""), "Tenant ClickArea should expose its hit shape in the scene")
+	assert_true(tenant_scene.contains("position = Vector2(28, 56)"), "Tenant standalone preview should place the character inside the viewport")
+	assert_true(tenant_scene.contains("position = Vector2(0, -7)"), "Tenant avatar should compensate for transparent padding in the unscaled 32x32 NPC frame")
+	assert_true(tenant_scene.contains("region = Rect2(0, 32, 32, 32)"), "Tenant atlas frames should match the configured 32x32 Pixel Spaces NPC grid")
+	assert_false(tenant_scene.contains("region = Rect2(0, 32, 16, 32)"), "Tenant atlas frames should not override the configured 32x32 NPC grid")
+	assert_false(tenant_scene.contains("scale = Vector2(1.5, 1.5)"), "Tenant should render the configured 32x32 NPC frames at scene scale")
 	assert_true(tenant_scene.contains("sprite_frames = SubResource"), "Tenant avatar frames should be prebuilt on AvatarSprite in Tenant.tscn")
 	assert_true(tenant_scene.contains("\"name\": &\"walk\""), "Tenant.tscn should prebuild a walk animation on AvatarSprite")
 	assert_true(tenant_scene.contains("BehaviorAnimationMap"), "Tenant behavior-to-animation bindings should be authored in Tenant.tscn")
 	assert_true(tenant_scene.contains("metadata/default_avatar_animation = \"idle\""), "Tenant default avatar animation should be scene metadata")
 	assert_true(tenant_scene.contains("metadata/avatar_animation = \"walk\""), "Tenant walk animation binding should be scene metadata")
-	assert_true(tenant_scene.contains("metadata/moves = true"), "Tenant wander movement should be scene-authored behavior metadata")
-	assert_true(need_bubble_scene.contains("[node name=\"NeedBubble\" type=\"Control\"]"), "NeedBubble should be a previewable Control scene")
+	assert_false(tenant_scene.contains("metadata/moves = true"), "Tenant movement should live in TenantAI, not animation metadata")
+	assert_false(tenant_scene.contains("metadata/behavior_keys = \"wander,recruited,entertainment,eat,clean,study,relax\""), "Only common visible actions should bind to avatar animations")
+	assert_true(need_bubble_scene.contains("[node name=\"NeedBubble\" type=\"Control\""), "NeedBubble should be a previewable Control scene")
 	assert_true(need_bubble_scene.contains("BubbleAnimation\" type=\"AnimatedSprite2D\""), "NeedBubble should reserve an AnimatedSprite2D bubble node")
 	assert_true(need_bubble_scene.contains("IconRoot"), "NeedBubble should expose an icon root in the scene")
 	assert_true(need_bubble_scene.contains("SleepIcon"), "NeedBubble should expose behavior icon nodes in the scene")
 	assert_true(need_bubble_scene.contains("metadata/behavior_key = \"sleep\""), "NeedBubble behavior icons should be bound through scene metadata")
 	assert_true(need_bubble_scene.contains("metadata/behavior_keys = \"relax,happy\""), "NeedBubble shared icons should be bound through scene metadata")
+	assert_true(need_bubble_scene.contains("\"loop\": false"), "NeedBubble animation should be non-looping so icons can appear after it finishes")
 	assert_true(emote_scene.contains("[node name=\"TenantEmote\" type=\"Control\"]"), "TenantEmote should be a previewable Control scene")
 	assert_true(emote_scene.contains("EmoteAnimation\" type=\"AnimatedSprite2D\""), "TenantEmote should reserve an AnimatedSprite2D emote node")
 	assert_true(emote_scene.contains("IconRoot"), "TenantEmote should expose an icon root in the scene")
 	assert_true(emote_scene.contains("HappyIcon"), "TenantEmote should expose emote icon nodes in the scene")
 	assert_true(emote_scene.contains("metadata/emote_key = \"happy\""), "TenantEmote icons should be bound through scene metadata")
+	assert_true(emote_scene.contains("\"loop\": false"), "TenantEmote animation should be non-looping so icons can appear after it finishes")
 	assert_true(tenant_source.contains("need_bubble.show_behavior"), "Tenant behavior bubble should be delegated to NeedBubble")
 	assert_true(tenant_source.contains("UIManager.open_tenant_panel"), "Clicking an in-room tenant should open tenant context")
 	assert_true(tenant_source.contains("_play_avatar_animation"), "Tenant should actively play the behavior animation")
-	assert_true(tenant_source.contains("GameEvents.tenant_behavior_observed.connect"), "Tenant animation should refresh when behavior changes")
+	assert_true(tenant_source.contains("GameEvents.tenant_behavior_changed.connect"), "Tenant animation should refresh on ordinary AI behavior changes")
+	assert_true(tenant_source.contains("TenantAI"), "Tenant should bind its scene-authored AI node")
+	assert_true(tenant_source.contains("ClickArea"), "Tenant should bind the scene-authored click area")
+	assert_true(tenant_source.contains("push_error(\"Tenant AvatarSprite is missing animation"), "Missing tenant animations should be explicit errors")
+	assert_true(ai_source.contains("enum AIState"), "TenantAI should use an explicit state machine")
+	assert_true(ai_source.contains("AIState.IDLE"), "TenantAI should support idle")
+	assert_true(ai_source.contains("AIState.WALK"), "TenantAI should support walking")
+	assert_true(ai_source.contains("AIState.JUMP"), "TenantAI should support jumping")
+	assert_true(ai_source.contains("AIState.BUBBLE_ACTION"), "TenantAI should support bubble-only actions")
+	assert_true(ai_source.contains("_sync_from_current_behavior"), "TenantAI setup should restore current state without overwriting observed behavior")
+	assert_true(ai_source.contains("TenantRoomLocator.spawn_position"), "TenantAI should spawn from the room floor grid")
+	assert_true(ai_source.contains("TenantRoomLocator.walk_positions"), "TenantAI should patrol using room floor grid positions")
+	assert_true(ai_source.contains("TenantRoomLocator.interaction_position"), "TenantAI should use grid-based furniture interaction points")
+	assert_true(locator_source.contains("class_name TenantRoomLocator"), "Tenant room positions should live in a dedicated grid locator")
+	assert_true(locator_source.contains("FurniturePlacementRules.door_cells_for_layer"), "Tenant grid positions should avoid floor door cells")
+	assert_true(need_bubble_source.contains("await bubble_animation.animation_finished"), "NeedBubble should reveal icons only after the bubble animation finishes")
+	assert_true(emote_source.contains("await emote_animation.animation_finished"), "TenantEmote should reveal icons only after the emote animation finishes")
 	assert_false(tenant_scene.contains("behavior_animation_map = {"), "Tenant.tscn should not keep script-exported behavior animation config")
+	assert_false(tenant_scene.contains("ColorFallback"), "Tenant should not keep a color fallback visual")
 	assert_false(tenant_source.contains("BEHAVIOR_ANIMATION"), "Tenant behavior animation bindings should stay in Tenant.tscn metadata")
 	assert_false(tenant_source.contains("@export"), "Tenant should not expose avatar frame or animation config in script")
 	assert_false(tenant_source.contains("AssetResolver"), "Tenant should not rebuild AvatarSprite frames from data at runtime")
@@ -924,11 +1081,19 @@ func test_tenant_uses_need_bubble_scene_and_animation_placeholder() -> void:
 	assert_false(tenant_source.contains("mouse_filter ="), "Tenant mouse filtering should stay in Tenant.tscn")
 	assert_false(tenant_source.contains("focus_mode ="), "Tenant focus mode should stay in Tenant.tscn")
 	assert_false(tenant_source.contains("need_bubble.position"), "NeedBubble placement should stay in NeedBubble.tscn")
+	assert_false(tenant_source.contains("fallback_animation"), "Tenant should not fall back to another avatar animation")
+	assert_false(tenant_source.contains("color_fallback"), "Tenant should not toggle fallback visuals")
+	assert_false(tenant_source.contains("accept_event()"), "Tenant should not use Control GUI event handling")
+	assert_false(tenant_source.contains("Rect2(Vector2.ZERO, size)"), "Tenant click checks should not depend on Control size")
+	assert_false(tenant_source.contains("func _gui_input"), "Tenant root should not use Control _gui_input")
+	assert_false(tenant_source.contains("position = base_position"), "Tenant should not snap back to its spawn point every frame")
+	assert_false(tenant_source.contains("current_behavior_moves"), "Tenant should not own behavior movement state")
 	assert_false(tenant_source.contains("睡觉"), "Tenant behavior labels should not be hard-coded in script")
 	assert_false(need_bubble_scene.contains("bubble_text_by_behavior = {"), "NeedBubble should use scene-authored icon nodes instead of exported text dictionaries")
 	assert_false(need_bubble_source.contains("@export"), "NeedBubble should not require script-level exported bubble text configuration")
 	assert_false(need_bubble_source.contains("BEHAVIOR_ICON_NODE"), "NeedBubble behavior icon bindings should stay in scene metadata")
 	assert_false(need_bubble_source.contains("BUBBLE_ANIMATION"), "NeedBubble animation selection should stay on the AnimatedSprite2D node")
+	assert_false(need_bubble_source.contains("get_animation_names"), "NeedBubble should not choose a fallback animation")
 	assert_false(need_bubble_source.contains("睡觉"), "NeedBubble should not keep display behavior names in script")
 	assert_false(need_bubble_source.contains("学习/工作"), "NeedBubble display text should stay in NeedBubble.tscn")
 	assert_false(emote_scene.contains("[node name=\"TenantEmote\" type=\"Label\"]"), "TenantEmote should not be a text-only label scene")
@@ -936,9 +1101,56 @@ func test_tenant_uses_need_bubble_scene_and_animation_placeholder() -> void:
 	assert_false(emote_source.contains("@export"), "TenantEmote should not require script-level exported visual configuration")
 	assert_false(emote_source.contains("EMOTE_ICON_NODE"), "TenantEmote icon bindings should stay in scene metadata")
 	assert_false(emote_source.contains("EMOTE_ANIMATION"), "TenantEmote animation selection should stay on the AnimatedSprite2D node")
+	assert_false(emote_source.contains("get_animation_names"), "TenantEmote should not choose a fallback animation")
 	assert_false(room_source.contains("set_avatar_scale"), "Room should only position tenant scenes, not rewrite their internal visual layout")
+	assert_false(room_source.contains("tenant_offset"), "Room should not keep naked tenant spawn coordinates")
+	assert_false(room_source.contains("Marker2D"), "Room should not use scene anchors for tenant AI positions")
+	assert_false(room_source.contains("tenant_view.position ="), "Room should not own tenant positioning beyond instantiation")
+	assert_false(room_source.contains("func _tenant_position"), "Room should not own tenant positioning beyond instantiation")
+	assert_false(room_source.contains("clampf(tenant_offset"), "Room should not clamp tenant movement against room bounds")
+	assert_false(room_source.contains("room_pixel_size.y - 48.0"), "Room should not clamp CharacterBody2D tenants as if they were top-left Control previews")
+	assert_false(room_source.contains("room_pixel_size.y - 4.0"), "Room should not leave CharacterBody2D tenants hovering above the floor")
+	assert_false(main_source.contains("tenant_ai_timer"), "Main should not run global tenant AI ticks")
+	assert_false(main_source.contains("_tick_tenant_ai"), "Main should not own tenant AI behavior selection")
+	assert_false(main_source.contains("_on_rent_changed(_value: float) -> void:\n\t_refresh_top_bar()\n\t_refresh_building()"), "Rent changes should not rebuild rooms and reset TenantAI state")
 	assert_false(need_bubble_source.contains("mouse_filter ="), "NeedBubble fixed interaction settings should stay in NeedBubble.tscn")
 	assert_false(emote_source.contains("mouse_filter ="), "TenantEmote fixed interaction settings should stay in TenantEmote.tscn")
+
+func test_tenant_room_locator_uses_floor_grid_positions() -> void:
+	var locator_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantRoomLocator.gd")
+	var room := {
+		"id": "__tenant_locator_test",
+		"frame_tiles": [8, 4],
+		"grid_size": [6, 4],
+		"furniture_instances": []
+	}
+	assert_true(locator_source.contains("static func floor_grid_y"), "TenantRoomLocator should expose floor row calculation")
+	assert_true(locator_source.contains("static func spawn_position"), "TenantRoomLocator should expose spawn position generation")
+	assert_true(locator_source.contains("static func walk_positions"), "TenantRoomLocator should expose patrol position generation")
+	assert_true(locator_source.contains("static func interaction_position"), "TenantRoomLocator should expose furniture interaction position generation")
+	var floor_row := FurniturePlacementRules.floor_grid_y_for(room["grid_size"], [1, 1])
+	var door_cells := FurniturePlacementRules.door_cells_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
+	var standing_grids := []
+	for x in range(int(room["grid_size"][0])):
+		var cell := [x, floor_row]
+		if not door_cells.has(cell):
+			standing_grids.append(cell)
+	var tile_size := FurniturePlacementRules.TILE_SIZE
+	var floor_origin := Vector2(float(tile_size), 0.0)
+	assert_eq(floor_row, 3, "Tenant floor row should be the bottom floor grid row")
+	assert_eq(standing_grids, [[1, 3], [2, 3], [3, 3], [4, 3], [5, 3]], "Tenant standing grids should avoid the floor door cell")
+	assert_eq(standing_grids[3], [4, 3], "Tenant spawn should default to a middle-right floor cell")
+	assert_eq(floor_origin + Vector2(4.5 * tile_size, 4.0 * tile_size), Vector2(88.0, 64.0), "Tenant spawn foot point should sit on the room floor")
+	assert_eq([standing_grids.front(), standing_grids.back()], [[1, 3], [5, 3]], "Tenant walk range should avoid the floor door cell")
+
+	room["furniture_instances"] = [
+		{"instance_id": "bed_a", "furniture_id": "bed_basic", "grid_pos": [1, 2]}
+	]
+	var bed_data := _furniture_data("bed_basic")
+	var bed_size: Array = bed_data.get("size", [])
+	var interaction_grid := [int(room["furniture_instances"][0]["grid_pos"][0]) + int(bed_size[0]), floor_row]
+	assert_eq(interaction_grid, [3, 3], "Tenant interaction point should stand beside floor furniture")
+	assert_eq(floor_origin + Vector2(3.5 * tile_size, 4.0 * tile_size), Vector2(72.0, 64.0), "Tenant interaction foot point should remain on the floor")
 
 func test_tenant_behavior_state_uses_keys_with_alias_config() -> void:
 	var game_state_source := FileAccess.get_file_as_string("res://scripts/autoload/GameState.gd")
@@ -949,7 +1161,9 @@ func test_tenant_behavior_state_uses_keys_with_alias_config() -> void:
 	assert_true(alias_config.contains("\"睡觉\": \"sleep\""), "Behavior aliases should migrate old display labels to behavior keys")
 	assert_true(game_state_source.contains("DEFAULT_TENANT_BEHAVIOR := \"wander\""), "GameState should store behavior keys, not display labels")
 	assert_true(game_state_source.contains("_need_to_behavior_key"), "Need updates should resolve to behavior keys")
-	assert_true(main_source.contains("GameState.IDLE_TENANT_BEHAVIOR"), "Main AI fallback should set a behavior key")
+	assert_true(game_state_source.contains("func set_tenant_behavior"), "GameState should expose ordinary tenant behavior syncing for TenantAI")
+	assert_true(game_state_source.contains("tenant_behavior_changed.emit"), "Ordinary behavior changes should emit a visual refresh signal")
+	assert_false(main_source.contains("GameState.IDLE_TENANT_BEHAVIOR"), "Main should not choose tenant behavior keys after TenantAI owns behavior selection")
 	assert_false(game_state_source.contains("\"闲逛\""), "GameState should not hard-code display behavior labels")
 	assert_false(game_state_source.contains("\"入住\""), "GameState should not hard-code recruited display labels")
 	assert_false(main_source.contains("\"发呆\""), "Main should not write display behavior labels into state")
@@ -990,10 +1204,16 @@ func test_building_view_zoom_uses_map_root() -> void:
 	assert_true(script_text.contains("APARTMENT_WORLD_SCALE: float = 1.0"), "Apartment art should share the same design-canvas coordinate system as the background")
 	assert_false(script_text.contains("_sync_viewport_size"), "BuildingView should not resize the SubViewport at runtime")
 	assert_false(script_text.contains("world_viewport.size ="), "BuildingView should keep SubViewport coverage authored in the scene")
-	assert_false(script_text.contains("_calculate_world_base_size"), "BuildingView should not dynamically expand map coverage to fit content")
-	assert_true(script_text.contains("world_base_size = DEFAULT_MAP_SIZE"), "BuildingView camera bounds should use the fixed project-sized map coverage")
+	assert_true(script_text.contains("camera_bounds"), "BuildingView should clamp camera movement against explicit world bounds")
+	assert_true(script_text.contains("effective_min_zoom"), "BuildingView should derive a dynamic minimum zoom from viewport and bounds")
+	assert_true(script_text.contains("_world_size_for_content"), "BuildingView should size camera bounds from viewport and apartment content")
+	assert_true(script_text.contains("calculate_min_zoom_for_bounds"), "BuildingView should expose minimum-zoom calculation for tests and UI state")
+	assert_true(script_text.contains("PLACEMENT_FOCUS_ZOOM"), "BuildingView should use a stable placement focus zoom")
+	assert_false(script_text.contains("focus_extra_bottom_space"), "Room focus should not move the apartment by adding temporary map height")
+	assert_false(script_text.contains("FOCUS_EXTRA_BOTTOM_SPACE"), "Room focus should not use extra bottom-space layout hacks")
 	assert_true(script_text.contains("_pan_camera"), "BuildingView should pan through the camera")
 	assert_true(script_text.contains("screen_to_world_position"), "Placement should convert overlay screen taps through the camera")
+	assert_true(script_text.contains("world_to_screen_position"), "Placement floating controls should map room preview positions back to the overlay")
 
 func test_pixel_space_assets_are_configured_for_mvp_surfaces() -> void:
 	var project_settings := FileAccess.get_file_as_string("res://project.godot")
@@ -1020,6 +1240,10 @@ func test_pixel_space_assets_are_configured_for_mvp_surfaces() -> void:
 		var asset: Dictionary = tenant_data.get("asset", {})
 		assert_eq(str(asset.get("type", "")), "spritesheet_animation", "%s should use sprite animations" % tenant_data.get("id", ""))
 		assert_true(_asset_texture_exists(asset), "%s tenant spritesheet should exist" % tenant_data.get("id", ""))
+		var frame_size: Array = asset.get("frame_size", [])
+		assert_true(frame_size.size() >= 2, "%s tenant spritesheet should declare frame_size" % tenant_data.get("id", ""))
+		if frame_size.size() >= 2:
+			assert_eq(Vector2i(int(frame_size[0]), int(frame_size[1])), Vector2i(32, 32), "%s tenant spritesheet frames should use the configured 32x32 grid" % tenant_data.get("id", ""))
 		assert_true(asset.get("animations", {}).has("move"), "%s should expose move animation" % tenant_data.get("id", ""))
 		assert_true(asset.get("animations", {}).has("idle"), "%s should expose idle animation" % tenant_data.get("id", ""))
 		assert_true(asset.get("animations", {}).has("jump"), "%s should expose jump animation" % tenant_data.get("id", ""))
@@ -1152,6 +1376,13 @@ func _tenant_data(tenant_id: String) -> Dictionary:
 		var tenant_data: Dictionary = tenant
 		if str(tenant_data.get("id", "")) == tenant_id:
 			return tenant_data
+	return {}
+
+func _furniture_data(furniture_id: String) -> Dictionary:
+	for item in furniture:
+		var furniture_data: Dictionary = item
+		if str(furniture_data.get("id", "")) == furniture_id:
+			return furniture_data
 	return {}
 
 func _unlocked_region_ids(apartment_level: int) -> Array:

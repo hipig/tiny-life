@@ -12,6 +12,14 @@ var _layout_ready := false
 func _ready() -> void:
 	_ensure_layout()
 
+func _gui_input(event: InputEvent) -> void:
+	if _is_world_camera_event(event):
+		accept_event()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and _is_world_camera_event(event):
+		get_viewport().set_input_as_handled()
+
 func setup_panel(title := "", clear_existing := false) -> void:
 	_ensure_layout()
 	if not title.is_empty():
@@ -43,3 +51,17 @@ func _bind_scene_layout() -> void:
 
 func _on_close_pressed() -> void:
 	close_requested.emit()
+
+func _is_world_camera_event(event: InputEvent) -> bool:
+	if event is InputEventMagnifyGesture or event is InputEventPanGesture:
+		return true
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		return true
+	if event is InputEventMouseMotion:
+		return true
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		return mouse_event.button_index == MOUSE_BUTTON_LEFT \
+			or mouse_event.button_index == MOUSE_BUTTON_WHEEL_UP \
+			or mouse_event.button_index == MOUSE_BUTTON_WHEEL_DOWN
+	return false

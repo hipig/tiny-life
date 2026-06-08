@@ -20,24 +20,10 @@ const OFFLINE_REWARD_POPUP_SCENE := preload("res://scenes/ui/OfflineRewardPopup.
 @onready var popup_layer: PopupLayer = $PopupLayer
 
 var selected_room_id := ""
-var tenant_ai_timer := 0.0
 
 func _ready() -> void:
-	_connect_view_controls()
 	_connect_events()
 	_refresh_all()
-
-func _process(delta: float) -> void:
-	tenant_ai_timer += delta
-	if tenant_ai_timer >= 5.0:
-		tenant_ai_timer = 0.0
-		_tick_tenant_ai()
-
-func _connect_view_controls() -> void:
-	building_view.zoom_changed.connect(_on_building_zoom_changed)
-	floating_menu.zoom_in_requested.connect(_on_zoom_in_requested)
-	floating_menu.zoom_out_requested.connect(_on_zoom_out_requested)
-	_on_building_zoom_changed(building_view.get_zoom_scale())
 
 func _connect_events() -> void:
 	GameEvents.rent_changed.connect(_on_rent_changed)
@@ -49,6 +35,7 @@ func _connect_events() -> void:
 	GameEvents.furniture_moved.connect(func(_room_id, _furniture_id): _refresh_building())
 	GameEvents.furniture_recycled.connect(func(_room_id, _furniture_id): _refresh_building())
 	GameEvents.tenant_recruited.connect(func(_tenant_id, _room_id): _refresh_building())
+	GameEvents.tenant_behavior_changed.connect(func(_tenant_id, _behavior): _refresh_room_panel_if_open())
 	GameEvents.task_updated.connect(func(_task_id): pass)
 	GameEvents.task_completed.connect(func(task_id): _toast("toast_task_completed", [_task_title(task_id)]))
 	GameEvents.toast_requested.connect(_show_toast)
@@ -69,7 +56,7 @@ func _refresh_all() -> void:
 
 func _on_rent_changed(_value: float) -> void:
 	_refresh_top_bar()
-	_refresh_building()
+	_refresh_room_panel_if_open()
 
 func _on_apartment_level_changed(_level: int) -> void:
 	_refresh_top_bar()
@@ -85,16 +72,6 @@ func _on_ui_state_changed(state: int) -> void:
 		floating_menu.visible = not placement_active
 	if not placement_active and building_view != null and building_view.has_method("clear_focus"):
 		building_view.clear_focus()
-
-func _on_building_zoom_changed(zoom_value: float) -> void:
-	if floating_menu != null:
-		floating_menu.set_zoom_state(zoom_value, BuildingView.MIN_ZOOM, BuildingView.MAX_ZOOM)
-
-func _on_zoom_in_requested() -> void:
-	building_view.zoom_by(0.1)
-
-func _on_zoom_out_requested() -> void:
-	building_view.zoom_by(-0.1)
 
 func _refresh_top_bar() -> void:
 	if top_status_bar != null and top_status_bar.has_method("refresh_from_state"):
@@ -129,6 +106,7 @@ func _show_new_placement(furniture_id: String, room_id: String) -> void:
 	var overlay := popup_layer.open_overlay(PLACEMENT_OVERLAY_SCENE) as PlacementOverlay
 	overlay.new_placement_confirmed.connect(_confirm_new_placement)
 	overlay.move_confirmed.connect(_confirm_move)
+	overlay.recycle_requested.connect(_on_placement_recycle_requested)
 	overlay.cancelled.connect(UIManager.open_room_panel)
 	overlay.open_new(room_id, furniture_id)
 
@@ -141,6 +119,7 @@ func _show_move_existing(room_id: String, instance_id: String) -> void:
 	var overlay := popup_layer.open_overlay(PLACEMENT_OVERLAY_SCENE) as PlacementOverlay
 	overlay.new_placement_confirmed.connect(_confirm_new_placement)
 	overlay.move_confirmed.connect(_confirm_move)
+	overlay.recycle_requested.connect(_on_placement_recycle_requested)
 	overlay.cancelled.connect(UIManager.open_room_panel)
 	overlay.open_move(room_id, instance_id)
 
@@ -160,6 +139,11 @@ func _on_move_furniture_pressed(instance_id: String) -> void:
 
 func _on_recycle_furniture_pressed(instance_id: String) -> void:
 	_confirm_recycle(selected_room_id, instance_id)
+
+func _on_placement_recycle_requested(room_id: String, instance_id: String) -> void:
+	selected_room_id = room_id
+	UIManager.set_state(UIManager.UIState.POPUP)
+	_confirm_recycle(room_id, instance_id)
 
 func _on_shop_place_pressed(furniture_id: String, room_id: String) -> void:
 	UIManager.start_new_furniture_placement(furniture_id, room_id)
@@ -273,6 +257,7 @@ func _on_reset_pressed() -> void:
 	_toast("toast_reset_done")
 
 func _show_offline_reward(amount: int, seconds: int) -> void:
+	UIManager.set_state(UIManager.UIState.POPUP)
 	var panel := _open_panel(OFFLINE_REWARD_POPUP_SCENE) as OfflineRewardPopup
 	panel.claim_requested.connect(_on_offline_reward_claim_requested)
 	panel.open(amount, seconds)
@@ -284,33 +269,13 @@ func _on_offline_reward_claim_requested(double: bool) -> void:
 				var got: int = EconomyManager.claim_offline_income(true)
 				_toast("toast_offline_double_claim", [got])
 				_clear_panel_layer_panels()
+				UIManager.return_to_normal()
 		)
 		return
 	var got: int = EconomyManager.claim_offline_income(false)
 	_toast("toast_offline_claim", [got])
 	_clear_panel_layer_panels()
-
-func _tick_tenant_ai() -> void:
-	for tenant_id in GameState.tenants.keys():
-		var tenant: Dictionary = GameState.tenants[tenant_id]
-		var room_id := str(tenant.get("room_id", ""))
-		if room_id.is_empty():
-			continue
-		var room: Dictionary = GameState.rooms.get(room_id, {})
-		var needs: Array[String] = []
-		for instance in room.get("furniture_instances", []):
-			var instance_data: Dictionary = instance
-			var data: Dictionary = ConfigManager.get_furniture_data(str(instance_data.get("furniture_id", "")))
-			var interaction: Dictionary = data.get("interaction", {})
-			var need := str(interaction.get("need", ""))
-			if not need.is_empty():
-				needs.append(need)
-		if needs.is_empty():
-			tenant["current_behavior"] = GameState.IDLE_TENANT_BEHAVIOR
-			GameState.tenants[tenant_id] = tenant
-		else:
-			GameState.observe_tenant_behavior(str(tenant_id), needs.pick_random())
-	_refresh_building()
+	UIManager.return_to_normal()
 
 func _open_panel(scene: PackedScene) -> AppPanel:
 	return popup_layer.open_panel(scene, _on_panel_close_requested)

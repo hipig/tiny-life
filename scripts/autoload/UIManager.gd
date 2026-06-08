@@ -35,6 +35,18 @@ func set_state(state: UIState) -> void:
 func return_to_normal() -> void:
 	set_state(UIState.NORMAL)
 
+func allows_world_camera_input() -> bool:
+	return current_state == UIState.NORMAL \
+		or current_state == UIState.PLACING_NEW_FURNITURE \
+		or current_state == UIState.MOVING_EXISTING_FURNITURE
+
+func is_furniture_placement_state() -> bool:
+	return current_state == UIState.PLACING_NEW_FURNITURE \
+		or current_state == UIState.MOVING_EXISTING_FURNITURE
+
+func blocks_world_camera_input() -> bool:
+	return not allows_world_camera_input()
+
 func open_room_panel(room_id: String) -> void:
 	set_state(UIState.ROOM_PANEL)
 	room_panel_requested.emit(room_id)
@@ -89,4 +101,3 @@ func open_settings_panel() -> void:
 
 func show_toast(message: String) -> void:
 	GameEvents.toast_requested.emit(message)
-

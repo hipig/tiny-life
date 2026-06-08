@@ -7,14 +7,21 @@ const DEFAULT_MAP_SIZE: Vector2 = Vector2(360.0, 640.0)
 const RENDER_PIXEL_SCALE: float = 1.0
 const APARTMENT_WORLD_SCALE: float = 1.0
 const MIN_ZOOM: float = 0.7
-const MAX_ZOOM: float = 1.4
+const MAX_ZOOM: float = 2.0
 const ZOOM_STEP: float = 0.1
-const FOCUS_EXTRA_BOTTOM_SPACE: float = 108.0
+const PLACEMENT_FOCUS_ZOOM: float = 1.6
 const FOCUS_ATTEMPTS: int = 3
 const NORMAL_TOP_MIN: float = 44.0
 const DEFAULT_GROUND_BAND_HEIGHT: float = 48.0
 const BUILDING_GROUND_OVERLAP: float = 4.0
 const FOCUS_SCREEN_ANCHOR: Vector2 = Vector2(0.5, 0.58)
+const TOUCH_PINCH_MIN_DISTANCE: float = 8.0
+
+enum CameraInputMode {
+	BLOCKED,
+	NORMAL,
+	PLACEMENT
+}
 
 @onready var world_clip: SubViewportContainer = $WorldClip
 @onready var world_viewport: SubViewport = $WorldClip/WorldViewport
@@ -25,9 +32,13 @@ const FOCUS_SCREEN_ANCHOR: Vector2 = Vector2(0.5, 0.58)
 
 var zoom_scale: float = 1.0
 var world_base_size: Vector2 = DEFAULT_MAP_SIZE
-var focus_extra_bottom_space: float = 0.0
+var camera_bounds: Rect2 = Rect2(Vector2.ZERO, DEFAULT_MAP_SIZE)
+var effective_min_zoom: float = MIN_ZOOM
 var is_dragging_view: bool = false
 var _camera_initialized: bool = false
+var _active_touch_points: Dictionary = {}
+var _pinch_distance: float = 0.0
+var _pinch_center: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	if not resized.is_connected(_on_resized):
@@ -36,31 +47,27 @@ func _ready() -> void:
 	refresh()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _can_use_view_input():
-		is_dragging_view = false
-		return
+	if handle_camera_input(event):
+		get_viewport().set_input_as_handled()
+
+func handle_camera_input(event: InputEvent, screen_position_override: Vector2 = Vector2.INF) -> bool:
+	var input_mode := _camera_input_mode()
+	if input_mode == CameraInputMode.BLOCKED:
+		_clear_camera_gesture_state()
+		return false
+	if event is InputEventMouseButton:
+		return _handle_mouse_button(event as InputEventMouseButton, screen_position_override, input_mode)
+	if event is InputEventMouseMotion:
+		return _handle_mouse_motion(event as InputEventMouseMotion, screen_position_override, input_mode)
+	if event is InputEventScreenTouch:
+		return _handle_screen_touch(event as InputEventScreenTouch, screen_position_override, input_mode)
+	if event is InputEventScreenDrag:
+		return _handle_screen_drag(event as InputEventScreenDrag, screen_position_override, input_mode)
 	if event is InputEventMagnifyGesture:
-		var gesture: InputEventMagnifyGesture = event as InputEventMagnifyGesture
-		zoom_by((gesture.factor - 1.0) * 0.8, _viewport_center())
-	elif event is InputEventMouseButton:
-		var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-		if not _contains_screen_position(mouse_event.position):
-			return
-		if mouse_event.button_index == MOUSE_BUTTON_WHEEL_UP and mouse_event.pressed:
-			zoom_by(0.08, screen_to_world_viewport_position(mouse_event.position))
-		elif mouse_event.button_index == MOUSE_BUTTON_WHEEL_DOWN and mouse_event.pressed:
-			zoom_by(-0.08, screen_to_world_viewport_position(mouse_event.position))
-		elif mouse_event.button_index == MOUSE_BUTTON_LEFT:
-			is_dragging_view = mouse_event.pressed
-	elif event is InputEventMouseMotion and is_dragging_view:
-		var motion: InputEventMouseMotion = event as InputEventMouseMotion
-		_pan_camera(-motion.relative / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
-	elif event is InputEventScreenDrag:
-		var drag: InputEventScreenDrag = event as InputEventScreenDrag
-		_pan_camera(-drag.relative / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
-	elif event is InputEventPanGesture:
-		var pan: InputEventPanGesture = event as InputEventPanGesture
-		_pan_camera(pan.delta / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
+		return _handle_magnify_gesture(event as InputEventMagnifyGesture, screen_position_override)
+	if event is InputEventPanGesture:
+		return _handle_pan_gesture(event as InputEventPanGesture, screen_position_override, input_mode)
+	return false
 
 func refresh() -> void:
 	if building_root == null:
@@ -75,7 +82,7 @@ func zoom_by(delta: float, anchor_viewport_position: Vector2 = Vector2.INF) -> v
 func set_zoom(value: float, anchor_viewport_position: Vector2 = Vector2.INF) -> void:
 	if world_camera == null:
 		return
-	var next_zoom: float = clampf(value, MIN_ZOOM, MAX_ZOOM)
+	var next_zoom: float = clampf(value, get_min_zoom_scale(), MAX_ZOOM)
 	var anchor: Vector2 = anchor_viewport_position
 	if not is_finite(anchor.x) or not is_finite(anchor.y):
 		anchor = _viewport_center()
@@ -90,17 +97,31 @@ func set_zoom(value: float, anchor_viewport_position: Vector2 = Vector2.INF) -> 
 func get_zoom_scale() -> float:
 	return zoom_scale
 
+func get_min_zoom_scale() -> float:
+	return effective_min_zoom
+
+func get_camera_bounds() -> Rect2:
+	return camera_bounds
+
+func get_visible_world_size() -> Vector2:
+	return _visible_world_size()
+
+static func calculate_min_zoom_for_bounds(viewport_size: Vector2, bounds_size: Vector2) -> float:
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0 or bounds_size.x <= 0.0 or bounds_size.y <= 0.0:
+		return 1.0
+	return maxf(viewport_size.x / bounds_size.x, viewport_size.y / bounds_size.y)
+
 func focus_room(room_id: String) -> void:
-	focus_extra_bottom_space = FOCUS_EXTRA_BOTTOM_SPACE
-	_layout_world(false)
+	if zoom_scale < PLACEMENT_FOCUS_ZOOM:
+		set_zoom(PLACEMENT_FOCUS_ZOOM, _viewport_center())
 	call_deferred("_apply_room_focus", room_id, 0)
 
 func clear_focus() -> void:
-	if focus_extra_bottom_space <= 0.0:
-		return
-	focus_extra_bottom_space = 0.0
 	_layout_world(false)
 	_clamp_camera()
+
+func clear_camera_gesture_state() -> void:
+	_clear_camera_gesture_state()
 
 func find_room_node(room_id: String) -> Control:
 	if building_root == null:
@@ -115,6 +136,11 @@ func screen_to_world_viewport_position(screen_position: Vector2) -> Vector2:
 func screen_to_world_position(screen_position: Vector2) -> Vector2:
 	return _screen_to_world(screen_to_world_viewport_position(screen_position))
 
+func world_to_screen_position(world_position: Vector2) -> Vector2:
+	if world_clip == null:
+		return world_position
+	return world_clip.get_global_rect().position + _world_to_viewport(world_position) * RENDER_PIXEL_SCALE
+
 func _on_resized() -> void:
 	_layout_world()
 	zoom_changed.emit(zoom_scale)
@@ -124,7 +150,10 @@ func _layout_world(clamp_camera: bool = true) -> void:
 		return
 	var building_size: Vector2 = building_root.get_building_size()
 	var building_world_size: Vector2 = building_size * APARTMENT_WORLD_SCALE
-	world_base_size = DEFAULT_MAP_SIZE
+	world_base_size = _world_size_for_content(building_world_size)
+	camera_bounds = Rect2(Vector2.ZERO, world_base_size)
+	effective_min_zoom = clampf(calculate_min_zoom_for_bounds(_viewport_size(), camera_bounds.size), MIN_ZOOM, MAX_ZOOM)
+	zoom_scale = clampf(zoom_scale, effective_min_zoom, MAX_ZOOM)
 	building_root.custom_minimum_size = building_size
 	building_root.size = building_size
 	building_root.scale = Vector2.ONE * APARTMENT_WORLD_SCALE
@@ -141,7 +170,7 @@ func _layout_world(clamp_camera: bool = true) -> void:
 
 func _building_position_in_world(building_size: Vector2, current_world_size: Vector2) -> Vector2:
 	var ground_band: float = _ground_band_height()
-	var y: float = current_world_size.y - focus_extra_bottom_space - ground_band - building_size.y + BUILDING_GROUND_OVERLAP
+	var y: float = current_world_size.y - ground_band - building_size.y + BUILDING_GROUND_OVERLAP
 	return Vector2(
 		maxf(24.0, (current_world_size.x - building_size.x) * 0.5),
 		maxf(NORMAL_TOP_MIN, y)
@@ -164,34 +193,194 @@ func _pan_camera(delta_world: Vector2) -> void:
 	world_camera.position += delta_world
 	_clamp_camera()
 
+func _handle_mouse_button(event: InputEventMouseButton, screen_position_override: Vector2, input_mode: int) -> bool:
+	var screen_position := _event_screen_position(event, screen_position_override)
+	if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		if not event.pressed or _screen_position_blocks_camera(screen_position):
+			return false
+		zoom_by(0.08 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -0.08, screen_to_world_viewport_position(screen_position))
+		return true
+	if event.button_index != MOUSE_BUTTON_LEFT:
+		return false
+	if input_mode != CameraInputMode.NORMAL:
+		is_dragging_view = false
+		return false
+	if event.pressed:
+		if _screen_position_blocks_camera(screen_position):
+			return false
+		is_dragging_view = true
+		return true
+	is_dragging_view = false
+	return true
+
+func _handle_mouse_motion(event: InputEventMouseMotion, screen_position_override: Vector2, input_mode: int) -> bool:
+	if input_mode != CameraInputMode.NORMAL or not is_dragging_view:
+		return false
+	var screen_position := _event_screen_position(event, screen_position_override)
+	if _screen_position_blocks_camera(screen_position):
+		is_dragging_view = false
+		return false
+	_pan_camera(-event.relative / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
+	return true
+
+func _handle_screen_touch(event: InputEventScreenTouch, screen_position_override: Vector2, input_mode: int) -> bool:
+	var screen_position := _event_screen_position(event, screen_position_override)
+	if event.pressed:
+		if _screen_position_blocks_camera(screen_position):
+			return false
+		_active_touch_points[event.index] = screen_position
+		_refresh_pinch_reference()
+		return input_mode == CameraInputMode.NORMAL or _active_touch_points.size() >= 2
+	var had_touch := _active_touch_points.has(event.index)
+	_active_touch_points.erase(event.index)
+	_refresh_pinch_reference()
+	return had_touch
+
+func _handle_screen_drag(event: InputEventScreenDrag, screen_position_override: Vector2, input_mode: int) -> bool:
+	var screen_position := _event_screen_position(event, screen_position_override)
+	if not _active_touch_points.has(event.index):
+		if input_mode == CameraInputMode.NORMAL and not _screen_position_blocks_camera(screen_position):
+			_pan_camera(-event.relative / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
+			return true
+		return false
+	_active_touch_points[event.index] = screen_position
+	if _active_touch_points.size() >= 2:
+		_apply_touch_pinch()
+		return true
+	if input_mode == CameraInputMode.NORMAL:
+		_pan_camera(-event.relative / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
+		return true
+	return false
+
+func _handle_magnify_gesture(event: InputEventMagnifyGesture, screen_position_override: Vector2) -> bool:
+	var screen_position := _event_screen_position(event, screen_position_override)
+	if _screen_position_blocks_camera(screen_position):
+		return false
+	zoom_by((event.factor - 1.0) * 0.8, screen_to_world_viewport_position(screen_position))
+	return true
+
+func _handle_pan_gesture(event: InputEventPanGesture, screen_position_override: Vector2, input_mode: int) -> bool:
+	if input_mode == CameraInputMode.BLOCKED:
+		return false
+	if _screen_position_blocks_camera(_event_screen_position(event, screen_position_override)):
+		return false
+	_pan_camera(event.delta / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
+	return true
+
+func _apply_touch_pinch() -> void:
+	var metrics := _current_touch_metrics()
+	var next_distance: float = metrics.get("distance", 0.0)
+	var next_center: Vector2 = metrics.get("center", _pinch_center)
+	if _pinch_distance >= TOUCH_PINCH_MIN_DISTANCE and next_distance >= TOUCH_PINCH_MIN_DISTANCE:
+		var previous_center := _pinch_center
+		var zoom_ratio := next_distance / maxf(_pinch_distance, 0.001)
+		set_zoom(zoom_scale * zoom_ratio, screen_to_world_viewport_position(next_center))
+		var center_delta := next_center - previous_center
+		_pan_camera(-center_delta / maxf(zoom_scale * RENDER_PIXEL_SCALE, 0.001))
+	_pinch_distance = next_distance
+	_pinch_center = next_center
+
+func _refresh_pinch_reference() -> void:
+	if _active_touch_points.size() < 2:
+		_pinch_distance = 0.0
+		_pinch_center = Vector2.ZERO
+		return
+	var metrics := _current_touch_metrics()
+	_pinch_distance = metrics.get("distance", 0.0)
+	_pinch_center = metrics.get("center", Vector2.ZERO)
+
+func _current_touch_metrics() -> Dictionary:
+	var keys := _active_touch_points.keys()
+	if keys.size() < 2:
+		return {"center": Vector2.ZERO, "distance": 0.0}
+	var first: Vector2 = _active_touch_points[keys[0]]
+	var second: Vector2 = _active_touch_points[keys[1]]
+	return {
+		"center": (first + second) * 0.5,
+		"distance": first.distance_to(second)
+	}
+
+func _event_screen_position(event: InputEvent, screen_position_override: Vector2) -> Vector2:
+	if is_finite(screen_position_override.x) and is_finite(screen_position_override.y):
+		return screen_position_override
+	if event is InputEventMouseButton:
+		return (event as InputEventMouseButton).position
+	if event is InputEventMouseMotion:
+		return (event as InputEventMouseMotion).position
+	if event is InputEventScreenTouch:
+		return (event as InputEventScreenTouch).position
+	if event is InputEventScreenDrag:
+		return (event as InputEventScreenDrag).position
+	if event is InputEventGesture:
+		return (event as InputEventGesture).position
+	return _world_clip_screen_center()
+
+func _screen_position_blocks_camera(screen_position: Vector2) -> bool:
+	return not _contains_screen_position(screen_position) or _screen_position_over_hud(screen_position)
+
+func _screen_position_over_hud(screen_position: Vector2) -> bool:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var ui_layer := tree.current_scene.get_node_or_null("CanvasLayer_UI")
+	if ui_layer == null:
+		return false
+	for child in ui_layer.get_children():
+		if child is Control:
+			var control := child as Control
+			if control.visible and control.get_global_rect().has_point(screen_position):
+				return true
+	return false
+
+func _camera_input_mode() -> int:
+	if UIManager.blocks_world_camera_input() or _has_blocking_panel():
+		return CameraInputMode.BLOCKED
+	return CameraInputMode.PLACEMENT if UIManager.is_furniture_placement_state() else CameraInputMode.NORMAL
+
+func _has_blocking_panel() -> bool:
+	var tree := get_tree()
+	if tree == null or tree.current_scene == null:
+		return false
+	var popup_layer := tree.current_scene.find_child("PopupLayer", true, false)
+	return popup_layer != null and popup_layer.has_method("has_blocking_panel") and bool(popup_layer.call("has_blocking_panel"))
+
+func _clear_camera_gesture_state() -> void:
+	is_dragging_view = false
+	_active_touch_points.clear()
+	_pinch_distance = 0.0
+	_pinch_center = Vector2.ZERO
+
 func _camera_position_for_anchor(world_position: Vector2, viewport_position: Vector2) -> Vector2:
 	return world_position - (viewport_position - _viewport_center()) / maxf(zoom_scale, 0.001)
 
 func _screen_to_world(viewport_position: Vector2) -> Vector2:
 	return world_camera.position + (viewport_position - _viewport_center()) / maxf(zoom_scale, 0.001)
 
+func _world_to_viewport(world_position: Vector2) -> Vector2:
+	return _viewport_center() + (world_position - world_camera.position) * maxf(zoom_scale, 0.001)
+
 func _default_camera_position() -> Vector2:
 	var visible_size: Vector2 = _visible_world_size()
 	return _clamped_camera_position(Vector2(world_base_size.x * 0.5, world_base_size.y - visible_size.y * 0.5))
 
 func _apply_camera_limits() -> void:
-	world_camera.limit_left = 0
-	world_camera.limit_top = 0
-	world_camera.limit_right = int(ceil(world_base_size.x))
-	world_camera.limit_bottom = int(ceil(world_base_size.y))
+	world_camera.limit_left = int(floor(camera_bounds.position.x))
+	world_camera.limit_top = int(floor(camera_bounds.position.y))
+	world_camera.limit_right = int(ceil(camera_bounds.end.x))
+	world_camera.limit_bottom = int(ceil(camera_bounds.end.y))
 
 func _clamp_camera() -> void:
 	world_camera.position = _clamped_camera_position(world_camera.position)
 
 func _clamped_camera_position(position: Vector2) -> Vector2:
 	var half_visible: Vector2 = _visible_world_size() * 0.5
-	var min_x: float = half_visible.x
-	var max_x: float = world_base_size.x - half_visible.x
-	var min_y: float = half_visible.y
-	var max_y: float = world_base_size.y - half_visible.y
+	var min_x: float = camera_bounds.position.x + half_visible.x
+	var max_x: float = camera_bounds.end.x - half_visible.x
+	var min_y: float = camera_bounds.position.y + half_visible.y
+	var max_y: float = camera_bounds.end.y - half_visible.y
 	var result: Vector2 = position
-	result.x = world_base_size.x * 0.5 if min_x > max_x else clampf(result.x, min_x, max_x)
-	result.y = world_base_size.y * 0.5 if min_y > max_y else clampf(result.y, min_y, max_y)
+	result.x = camera_bounds.get_center().x if min_x > max_x else clampf(result.x, min_x, max_x)
+	result.y = camera_bounds.get_center().y if min_y > max_y else clampf(result.y, min_y, max_y)
 	return result
 
 func _visible_world_size() -> Vector2:
@@ -208,10 +397,23 @@ func _viewport_size() -> Vector2:
 func _viewport_center() -> Vector2:
 	return _viewport_size() * 0.5
 
+func _world_clip_screen_center() -> Vector2:
+	if world_clip == null:
+		return _viewport_center()
+	return world_clip.get_global_rect().get_center()
+
 func _ground_band_height() -> float:
 	if scene_backdrop == null:
 		return DEFAULT_GROUND_BAND_HEIGHT
 	return maxf(1.0, scene_backdrop.ground_band_height)
+
+func _world_size_for_content(building_world_size: Vector2) -> Vector2:
+	var viewport_size := _viewport_size()
+	var required_width := maxf(DEFAULT_MAP_SIZE.x, viewport_size.x)
+	var required_height := maxf(DEFAULT_MAP_SIZE.y, viewport_size.y)
+	required_width = maxf(required_width, building_world_size.x + 48.0)
+	required_height = maxf(required_height, building_world_size.y + _ground_band_height() + NORMAL_TOP_MIN)
+	return Vector2(required_width, required_height)
 
 func _contains_screen_position(screen_position: Vector2) -> bool:
 	if world_clip == null:
@@ -219,4 +421,4 @@ func _contains_screen_position(screen_position: Vector2) -> bool:
 	return world_clip.get_global_rect().has_point(screen_position)
 
 func _can_use_view_input() -> bool:
-	return UIManager.current_state == UIManager.UIState.NORMAL
+	return _camera_input_mode() != CameraInputMode.BLOCKED

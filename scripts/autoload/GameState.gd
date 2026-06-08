@@ -1,7 +1,7 @@
 extends Node
 
 const DEFAULT_FRAME_TILES := [8, 4]
-const DEFAULT_GRID_SIZE := [6, 3]
+const DEFAULT_GRID_SIZE := [6, 4]
 const SAVE_SCHEMA_VERSION := 2
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
@@ -286,6 +286,18 @@ func recruit_tenant(room_id: String, tenant_id: String) -> bool:
 	add_apartment_exp(20)
 	return true
 
+func set_tenant_behavior(tenant_id: String, behavior_key: String) -> void:
+	var tenant: Dictionary = tenants.get(tenant_id, {})
+	if tenant.is_empty():
+		return
+	var behavior := _normalize_tenant_behavior(behavior_key)
+	if str(tenant.get("current_behavior", "")) == behavior and str(tenant.get("current_need", "")).is_empty():
+		return
+	tenant["current_need"] = ""
+	tenant["current_behavior"] = behavior
+	tenants[tenant_id] = tenant
+	GameEvents.tenant_behavior_changed.emit(tenant_id, behavior)
+
 func build_floor(floor_index: int) -> bool:
 	var floor: Dictionary = ConfigManager.get_floor_data(floor_index)
 	if floor.is_empty():
@@ -314,10 +326,12 @@ func observe_tenant_behavior(tenant_id: String, need: String) -> void:
 	var tenant: Dictionary = tenants.get(tenant_id, {})
 	if tenant.is_empty():
 		return
+	var behavior := _need_to_behavior_key(need)
 	tenant["current_need"] = need
-	tenant["current_behavior"] = _need_to_behavior_key(need)
+	tenant["current_behavior"] = behavior
 	tenant["satisfaction"] = clampi(int(tenant.get("satisfaction", 60)) + 1, 0, 100)
 	tenants[tenant_id] = tenant
+	GameEvents.tenant_behavior_changed.emit(tenant_id, behavior)
 	GameEvents.tenant_behavior_observed.emit(tenant_id, need)
 	GameEvents.tenant_satisfaction_changed.emit(tenant_id, int(tenant["satisfaction"]))
 	TaskManager.notify_event("tenant_behavior_observed", {"tenant_id": tenant_id, "behavior": need})
@@ -358,8 +372,7 @@ func to_save_data() -> Dictionary:
 func from_save_data(data: Dictionary) -> void:
 	if data.is_empty():
 		return
-	var saved_schema_version := int(data.get("save_schema_version", 0))
-	save_needs_writeback = saved_schema_version < SAVE_SCHEMA_VERSION
+	save_needs_writeback = false
 	coins = int(data.get("coins", coins))
 	total_rent_per_minute = float(data.get("total_rent_per_minute", total_rent_per_minute))
 	apartment_level = int(data.get("apartment_level", apartment_level))
@@ -378,7 +391,7 @@ func from_save_data(data: Dictionary) -> void:
 		tasks = saved_tasks
 	if saved_stats is Dictionary:
 		stats = saved_stats
-	_ensure_runtime_defaults(saved_schema_version)
+	_ensure_runtime_defaults()
 	for room_id in rooms.keys():
 		recalculate_room_stats(str(room_id))
 	EconomyManager.recalculate_total_rent()
@@ -386,7 +399,7 @@ func from_save_data(data: Dictionary) -> void:
 	GameEvents.apartment_level_changed.emit(apartment_level)
 	GameEvents.state_loaded.emit()
 
-func _ensure_runtime_defaults(saved_schema_version := SAVE_SCHEMA_VERSION) -> void:
+func _ensure_runtime_defaults() -> void:
 	if last_save_timestamp <= 0:
 		last_save_timestamp = TimeManager.now_unix()
 	_ensure_stats_defaults()
@@ -401,8 +414,6 @@ func _ensure_runtime_defaults(saved_schema_version := SAVE_SCHEMA_VERSION) -> vo
 		var floor_index := int(room_data.get("floor_index", room.get("floor_index", 1)))
 		var initially_unlocked := bool(room_data.get("initial_unlocked", true))
 		var room_level := int(room.get("level", 1))
-		if saved_schema_version < SAVE_SCHEMA_VERSION:
-			room_level = 1
 		var configured_layout := _configured_room_layout_for_level(room_data, room_level)
 		normalized_rooms[room_id] = {
 			"id": room_id,

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://b2fca46mdm5c" path="res://assets/pixel_spaces/npc/Pre-made NPCs/Male/NPC 1.png" id="2_ki6lv"]
 [ext_resource type="PackedScene" uid="uid://bc62iumnan5yo" path="res://scenes/tenant/NeedBubble.tscn" id="2_need_bubble"]
 [ext_resource type="PackedScene" path="res://scenes/tenant/TenantEmote.tscn" id="3_tenant_emote"]
+[ext_resource type="Script" path="res://scripts/tenant/TenantAI.gd" id="4_tenant_ai"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ox65g"]
 atlas = ExtResource("2_ki6lv")
@@ -86,56 +87,61 @@ animations = [{
 "speed": 4.0
 }]
 
-[node name="Tenant" type="Control" unique_id=1195394466]
-custom_minimum_size = Vector2(64, 92)
-layout_mode = 3
-anchors_preset = 0
-focus_mode = 2
-mouse_filter = 0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ki6lv"]
+radius = 4.0
+height = 14.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_click"]
+size = Vector2(28, 40)
+
+[node name="Tenant" type="CharacterBody2D" unique_id=385276132]
+z_index = 1
+position = Vector2(28, 56)
+motion_mode = 1
 script = ExtResource("1_tenant")
 
-[node name="ColorFallback" type="ColorRect" parent="." unique_id=1965088416]
-visible = false
-custom_minimum_size = Vector2(36, 48)
-layout_mode = 0
-offset_left = 2.0
-offset_top = 52.0
-offset_right = 38.0
-offset_bottom = 100.0
-mouse_filter = 2
-color = Color(0.361, 0.651, 1, 1)
-
 [node name="AvatarSprite" type="AnimatedSprite2D" parent="." unique_id=755068810]
-position = Vector2(20, 76)
-scale = Vector2(1.5, 1.5)
+position = Vector2(0, -7)
 sprite_frames = SubResource("SpriteFrames_dqi23")
 animation = &"idle"
 autoplay = "idle"
 frame_progress = 0.25714666
 
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1077295502]
+position = Vector2(0, -7)
+shape = SubResource("CapsuleShape2D_ki6lv")
+
+[node name="ClickArea" type="Area2D" parent="." unique_id=1476930362]
+
+[node name="ClickShape" type="CollisionShape2D" parent="ClickArea" unique_id=1482714742]
+position = Vector2(0, -7)
+shape = SubResource("RectangleShape2D_click")
+
 [node name="NeedBubble" parent="." unique_id=1790016221 instance=ExtResource("2_need_bubble")]
-layout_mode = 1
-offset_left = 14.0
-offset_top = -15.0
-offset_right = 14.0
-offset_bottom = -15.0
+offset_left = 22.0
+offset_top = -31.0
+offset_right = 22.0
+offset_bottom = -31.0
 
 [node name="TenantEmote" parent="." unique_id=598181074 instance=ExtResource("3_tenant_emote")]
+layout_mode = 3
 
-[node name="BehaviorAnimationMap" type="Node" parent="."]
+[node name="TenantAI" type="Node" parent="." unique_id=2017583373]
+script = ExtResource("4_tenant_ai")
+
+[node name="BehaviorAnimationMap" type="Node" parent="." unique_id=1657259067]
 metadata/default_avatar_animation = "idle"
 
-[node name="Idle" type="Node" parent="BehaviorAnimationMap"]
-metadata/behavior_keys = "idle,sleep"
+[node name="Idle" type="Node" parent="BehaviorAnimationMap" unique_id=698479167]
+metadata/behavior_keys = "idle,recruited"
 metadata/avatar_animation = "idle"
 
-[node name="Walk" type="Node" parent="BehaviorAnimationMap"]
-metadata/behavior_keys = "wander,recruited,entertainment,eat,clean,study,relax"
+[node name="Walk" type="Node" parent="BehaviorAnimationMap" unique_id=296676773]
+metadata/behavior_keys = "wander,walk"
 metadata/avatar_animation = "walk"
-metadata/moves = true
 
-[node name="Happy" type="Node" parent="BehaviorAnimationMap"]
-metadata/behavior_key = "happy"
+[node name="Happy" type="Node" parent="BehaviorAnimationMap" unique_id=1437926919]
+metadata/behavior_keys = "happy,jump"
 metadata/avatar_animation = "jump"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=249509520]

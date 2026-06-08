@@ -55,12 +55,12 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_fmh5o")
 }],
-"loop": true,
+"loop": false,
 "name": &"default",
 "speed": 4.0
 }]
 
-[node name="NeedBubble" type="Control"]
+[node name="NeedBubble" type="Control" unique_id=951550520]
 layout_mode = 3
 anchors_preset = 5
 anchor_left = 0.5
@@ -72,9 +72,10 @@ mouse_filter = 2
 script = ExtResource("1_need_bubble")
 
 [node name="BubbleAnimation" type="AnimatedSprite2D" parent="." unique_id=1809037741]
+scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_bubble")
 autoplay = "default"
-frame_progress = 0.41533643
+frame_progress = 0.20185049
 
 [node name="IconRoot" type="Control" parent="." unique_id=906555994]
 layout_mode = 1
@@ -92,15 +93,21 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="SleepIcon" type="TextureRect" parent="IconRoot" unique_id=422410091]
+visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -4.0
+offset_top = -4.5
+offset_right = 4.0
+offset_bottom = 4.5
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("3_icon_sleep")
-stretch_mode = 5
 metadata/behavior_key = "sleep"
 
 [node name="StudyIcon" type="TextureRect" parent="IconRoot" unique_id=887588969]
