@@ -8,7 +8,6 @@
     "initial_built": true,
     "required_apartment_level": 1,
     "build_cost": 0,
-    "room_size": [224, 88],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -48,7 +47,6 @@
     "initial_built": false,
     "required_apartment_level": 1,
     "build_cost": 500,
-    "room_size": [224, 88],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -88,7 +86,6 @@
     "initial_built": false,
     "required_apartment_level": 2,
     "build_cost": 900,
-    "room_size": [224, 88],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -128,7 +125,6 @@
     "initial_built": false,
     "required_apartment_level": 3,
     "build_cost": 1600,
-    "room_size": [224, 88],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -168,7 +164,6 @@
     "initial_built": false,
     "required_apartment_level": 4,
     "build_cost": 2800,
-    "room_size": [224, 88],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -208,7 +203,6 @@
     "initial_built": false,
     "required_apartment_level": 5,
     "build_cost": 4600,
-    "room_size": [224, 88],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",

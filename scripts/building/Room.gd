@@ -1,12 +1,10 @@
 extends Button
 
-const DEFAULT_ROOM_WIDTH := 224.0
-const DEFAULT_ROOM_HEIGHT := 88.0
+const DEFAULT_FRAME_TILES := Vector2i(8, 4)
 
 const META_TENANT_SCENE_PATH := &"tenant_scene_path"
 const META_FURNITURE_SCENE_PATH := &"furniture_scene_path"
-const META_DEFAULT_ROOM_SIZE := &"default_room_size"
-const META_DEFAULT_GRID_RECT := &"default_grid_rect"
+const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 const META_WALL_INSET := &"wall_inset"
 const META_FLOOR_HEIGHT := &"floor_height"
 const META_TENANT_OFFSET := &"tenant_offset"
@@ -14,11 +12,10 @@ const META_ROOF_HEIGHT := &"roof_height"
 
 var tenant_scene: PackedScene
 var furniture_scene: PackedScene
-var default_room_size := Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT)
-var default_grid_rect := Rect2(21.0, 24.0, 187.0, 40.0)
+var default_frame_tiles := DEFAULT_FRAME_TILES
 var wall_inset := 9.0
 var floor_height := 22.0
-var tenant_offset := Vector2(166.0, 37.0)
+var tenant_offset := Vector2(86.0, 28.0)
 var roof_height := 13.0
 var fallback_room_name := ""
 var rent_badge_template := ""
@@ -35,7 +32,7 @@ var placement_ignored_instance_id := ""
 
 func _ready() -> void:
 	_bind_scene_config()
-	custom_minimum_size = _room_size()
+	custom_minimum_size = _room_pixel_size()
 	clip_contents = true
 	clip_text = true
 	text = ""
@@ -57,10 +54,10 @@ func _rebuild() -> void:
 	if room_shell == null:
 		return
 	text = ""
-	custom_minimum_size = _room_size()
+	custom_minimum_size = _room_pixel_size()
 	size = custom_minimum_size
 	var room: Dictionary = GameState.rooms.get(room_id, {})
-	room_shell.apply_layout(size, wall_inset, floor_height, roof_height)
+	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), {})
 	room_shell.clear_dynamic_views()
 	room_shell.set_roof_visible(show_roof_eaves)
 	_apply_room_badges(room)
@@ -119,7 +116,7 @@ func global_position_to_grid(viewport_position: Vector2) -> Array:
 	if not rect.has_point(local):
 		return []
 	var room: Dictionary = GameState.rooms.get(room_id, {})
-	var room_grid: Array = room.get("grid_size", [8, 5])
+	var room_grid := _room_grid_size(room)
 	var columns := maxi(1, int(room_grid[0]))
 	var rows := maxi(1, int(room_grid[1]))
 	var gx := clampi(int(floor((local.x - rect.position.x) / (rect.size.x / float(columns)))), 0, columns - 1)
@@ -161,7 +158,7 @@ func _furniture_visual_size(furniture_data: Dictionary) -> Vector2:
 	var asset_size := _asset_region_size(furniture_data.get("asset", {}))
 	var grid_size: Array = furniture_data.get("size", [1, 1])
 	var room: Dictionary = GameState.rooms.get(room_id, {})
-	var room_grid: Array = room.get("grid_size", [8, 5])
+	var room_grid := _room_grid_size(room)
 	var rect := _grid_rect()
 	var cell_x := rect.size.x / maxf(1.0, float(room_grid[0]))
 	var cell_y := rect.size.y / maxf(1.0, float(room_grid[1]))
@@ -182,8 +179,9 @@ func _furniture_visual_size(furniture_data: Dictionary) -> Vector2:
 func _furniture_position(instance_data: Dictionary, furniture_data: Dictionary, room: Dictionary, visual_size: Vector2) -> Vector2:
 	var grid_pos: Array = instance_data.get("grid_pos", [0, 0])
 	var rect := _grid_rect()
-	var columns := maxf(1.0, float(room.get("grid_size", [8, 5])[0]))
-	var rows := maxf(1.0, float(room.get("grid_size", [8, 5])[1]))
+	var room_grid := _room_grid_size(room)
+	var columns := maxf(1.0, float(room_grid[0]))
+	var rows := maxf(1.0, float(room_grid[1]))
 	var gx := clampf(float(grid_pos[0]), 0.0, columns - 1.0)
 	var gy := clampf(float(grid_pos[1]), 0.0, rows - 1.0)
 	var cell_x := rect.size.x / columns
@@ -196,25 +194,19 @@ func _furniture_position(instance_data: Dictionary, furniture_data: Dictionary, 
 	return Vector2(x, floor_y)
 
 func _grid_rect() -> Rect2:
-	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
-	var runtime_rect: Variant = runtime_room.get("grid_rect", [])
-	if runtime_rect is Array and runtime_rect.size() >= 4:
-		return Rect2(float(runtime_rect[0]), float(runtime_rect[1]), float(runtime_rect[2]), float(runtime_rect[3]))
-	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
-	var configured_rect: Variant = room_config.get("grid_rect", [])
-	if configured_rect is Array and configured_rect.size() >= 4:
-		return Rect2(float(configured_rect[0]), float(configured_rect[1]), float(configured_rect[2]), float(configured_rect[3]))
-	var room_size := _room_size()
-	var base := Rect2(wall_inset + 12.0, 24.0, room_size.x - wall_inset * 3.0 - 12.0, room_size.y - floor_height - 26.0)
-	if room_config.is_empty():
-		return default_grid_rect
-	return base
+	var frame_tiles := _frame_tiles()
+	return Rect2(
+		ApartmentTileMap.TILE_SIZE,
+		ApartmentTileMap.TILE_SIZE,
+		float(maxi(1, frame_tiles.x - 2) * ApartmentTileMap.TILE_SIZE),
+		float(maxi(1, frame_tiles.y - 1) * ApartmentTileMap.TILE_SIZE)
+	)
 
 func _draw_placement_grid() -> void:
 	if not placement_active or placement_grid_layer == null:
 		return
 	var room: Dictionary = GameState.rooms.get(room_id, {})
-	var grid_size: Array = room.get("grid_size", [8, 5])
+	var grid_size := _room_grid_size(room)
 	var columns := maxi(1, int(grid_size[0]))
 	var rows := maxi(1, int(grid_size[1]))
 	var rect := _grid_rect()
@@ -235,25 +227,42 @@ func _draw_placement_grid() -> void:
 		)
 		placement_grid_layer.draw_rect(selected_rect, Color("#fff4dc"), false, 3.0)
 
-func _room_size() -> Vector2:
+func _room_pixel_size() -> Vector2:
+	var frame_tiles := _frame_tiles()
+	return Vector2(frame_tiles.x * ApartmentTileMap.TILE_SIZE, frame_tiles.y * ApartmentTileMap.TILE_SIZE)
+
+func _frame_tiles() -> Vector2i:
 	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
-	var runtime_size: Variant = runtime_room.get("room_size", [])
-	if runtime_size is Array and runtime_size.size() >= 2:
-		return _vector2_from_array(runtime_size, default_room_size)
+	var runtime_tiles: Variant = runtime_room.get("frame_tiles", [])
+	if runtime_tiles is Array and runtime_tiles.size() >= 2:
+		return _fixed_height_frame_tiles(_vector2i_from_array(runtime_tiles, default_frame_tiles))
 	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
-	return _vector2_from_array(room_config.get("room_size", [default_room_size.x, default_room_size.y]), default_room_size)
+	var configured_tiles: Variant = room_config.get("frame_tiles", [])
+	if configured_tiles is Array and configured_tiles.size() >= 2:
+		return _fixed_height_frame_tiles(_vector2i_from_array(configured_tiles, default_frame_tiles))
+	return default_frame_tiles
+
+func _room_grid_size(room: Dictionary) -> Array:
+	var configured: Variant = room.get("grid_size", [])
+	if configured is Array and configured.size() >= 2:
+		return [int(configured[0]), int(configured[1])]
+	var frame_tiles := _frame_tiles()
+	return [maxi(1, frame_tiles.x - 2), maxi(1, frame_tiles.y - 1)]
 
 func _tenant_position() -> Vector2:
-	var room_size := _room_size()
+	var room_pixel_size := _room_pixel_size()
 	return Vector2(
-		minf(tenant_offset.x, room_size.x - 42.0),
-		minf(tenant_offset.y, room_size.y - 48.0)
+		minf(tenant_offset.x, room_pixel_size.x - 42.0),
+		minf(tenant_offset.y, room_pixel_size.y - 48.0)
 	)
 
-func _vector2_from_array(value: Variant, fallback: Vector2) -> Vector2:
+func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
 	if value is Array and value.size() >= 2:
-		return Vector2(float(value[0]), float(value[1]))
+		return Vector2i(int(value[0]), int(value[1]))
 	return fallback
+
+func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
+	return Vector2i(maxi(4, value.x), default_frame_tiles.y)
 
 func _asset_region_size(asset: Dictionary) -> Vector2:
 	var asset_type := str(asset.get("type", ""))
@@ -274,11 +283,10 @@ func _bind_scene_config() -> void:
 		return
 	tenant_scene = _scene_from_path(_scene_meta_text(config, META_TENANT_SCENE_PATH), tenant_scene)
 	furniture_scene = _scene_from_path(_scene_meta_text(config, META_FURNITURE_SCENE_PATH), furniture_scene)
-	default_room_size = _scene_meta_vector2(config, META_DEFAULT_ROOM_SIZE, Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_ROOM_HEIGHT))
-	default_grid_rect = _scene_meta_rect2(config, META_DEFAULT_GRID_RECT, Rect2(21.0, 24.0, 187.0, 40.0))
+	default_frame_tiles = _scene_meta_vector2i(config, META_DEFAULT_FRAME_TILES, DEFAULT_FRAME_TILES)
 	wall_inset = _scene_meta_float(config, META_WALL_INSET, 9.0)
 	floor_height = _scene_meta_float(config, META_FLOOR_HEIGHT, 22.0)
-	tenant_offset = _scene_meta_vector2(config, META_TENANT_OFFSET, Vector2(166.0, 37.0))
+	tenant_offset = _scene_meta_vector2(config, META_TENANT_OFFSET, Vector2(86.0, 28.0))
 	roof_height = _scene_meta_float(config, META_ROOF_HEIGHT, 13.0)
 	fallback_room_name = _template_text("FallbackRoomName")
 	rent_badge_template = _template_text("RentBadgeTemplate")
@@ -309,6 +317,18 @@ func _scene_meta_float(node: Node, meta_key: StringName, fallback: float) -> flo
 		return fallback
 	return float(node.get_meta(meta_key))
 
+func _scene_meta_vector2i(node: Node, meta_key: StringName, fallback: Vector2i) -> Vector2i:
+	if node == null or not node.has_meta(meta_key):
+		return fallback
+	var value: Variant = node.get_meta(meta_key)
+	if value is Vector2i:
+		return value
+	if value is Vector2:
+		return Vector2i(int(value.x), int(value.y))
+	if value is Array and value.size() >= 2:
+		return Vector2i(int(value[0]), int(value[1]))
+	return fallback
+
 func _scene_meta_vector2(node: Node, meta_key: StringName, fallback: Vector2) -> Vector2:
 	if node == null or not node.has_meta(meta_key):
 		return fallback
@@ -317,16 +337,6 @@ func _scene_meta_vector2(node: Node, meta_key: StringName, fallback: Vector2) ->
 		return value
 	if value is Array and value.size() >= 2:
 		return Vector2(float(value[0]), float(value[1]))
-	return fallback
-
-func _scene_meta_rect2(node: Node, meta_key: StringName, fallback: Rect2) -> Rect2:
-	if node == null or not node.has_meta(meta_key):
-		return fallback
-	var value: Variant = node.get_meta(meta_key)
-	if value is Rect2:
-		return value
-	if value is Array and value.size() >= 4:
-		return Rect2(float(value[0]), float(value[1]), float(value[2]), float(value[3]))
 	return fallback
 
 func _on_pressed() -> void:

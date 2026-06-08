@@ -408,7 +408,7 @@ BuildingView
 
 ```text
 1. 新增 res://tilesets/apartment_tileset.tres，统一引用公寓墙体、地板、屋檐、施工层、门梯等 16x16 素材。
-2. 新建 ApartmentTileMap.tscn，至少包含 WallTileMap、FloorTileMap、InfrastructureTileMap、RoofTileMap、ConstructionTileMap。
+2. 新建 ApartmentTileMap.tscn，至少包含 WallpaperTileMap、WallTileMap、InfrastructureTileMap、RoofTileMap、ConstructionTileMap。
 3. Room.tscn / Floor.tscn 保留交互按钮和租客/家具挂点，但房间墙体、地板、骨架、屋檐改由 TileMapLayer 编辑器手动铺设。
 4. 建造槽状态通过切换已铺好的 TileMapLayer/子场景可见性表达，不在脚本中生成色块、框线或施工素材。
 5. 房间大小、格子大小、房间数量扩展继续来自 rooms.json / floors.json；脚本只把配置绑定到交互区域、家具网格和租客挂点。

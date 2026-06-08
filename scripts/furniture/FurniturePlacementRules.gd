@@ -4,7 +4,7 @@ extends RefCounted
 static func can_place_furniture(room_id: String, furniture_id: String, grid_pos: Array, ignored_instance_id := "") -> bool:
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
-	var grid_size: Array = room.get("grid_size", [8, 5])
+	var grid_size: Array = room.get("grid_size", [6, 3])
 	var size: Array = data.get("size", [1, 1])
 	if grid_pos.size() < 2 or grid_size.size() < 2 or size.size() < 2:
 		return false
@@ -37,7 +37,7 @@ static func can_place_furniture(room_id: String, furniture_id: String, grid_pos:
 static func find_first_valid_grid(room_id: String, furniture_id: String, ignored_instance_id := "") -> Array:
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
-	var grid_size: Array = room.get("grid_size", [8, 5])
+	var grid_size: Array = room.get("grid_size", [6, 3])
 	if grid_size.size() < 2:
 		return [0, 0]
 	if bool(data.get("requires_wall", false)):

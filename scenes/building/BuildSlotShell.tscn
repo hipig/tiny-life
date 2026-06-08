@@ -1,9 +1,14 @@
-[gd_scene load_steps=6 format=3 uid="uid://build_slot_shell"]
+[gd_scene load_steps=8 format=3 uid="uid://build_slot_shell"]
 
 [ext_resource type="Script" path="res://scripts/building/BuildSlotShell.gd" id="1_slot_shell"]
 [ext_resource type="PackedScene" path="res://scenes/building/ApartmentTileMap.tscn" id="2_apartment_tilemap"]
 [ext_resource type="PackedScene" path="res://scenes/building/ServiceCoreTileMap.tscn" id="3_service_tilemap"]
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Hammer.png" id="4_hammer"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/building/Infrastructure.png" id="5_infrastructure"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_construction_cover"]
+atlas = ExtResource("5_infrastructure")
+region = Rect2(112, 304, 100, 52)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_status"]
 bg_color = Color(0.14, 0.08, 0.07, 0.44)
@@ -18,42 +23,50 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="BuildSlotShell" type="HBoxContainer"]
-custom_minimum_size = Vector2(272, 88)
+custom_minimum_size = Vector2(176, 64)
 layout_mode = 0
-offset_right = 272.0
-offset_bottom = 88.0
+offset_right = 176.0
+offset_bottom = 64.0
 mouse_filter = 2
 theme_override_constants/separation = 0
-clip_contents = true
 script = ExtResource("1_slot_shell")
 
 [node name="BuildServiceCore" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 88)
+custom_minimum_size = Vector2(48, 64)
 layout_mode = 2
 offset_right = 48.0
-offset_bottom = 88.0
+offset_bottom = 64.0
 mouse_filter = 2
-clip_contents = true
 
 [node name="ServiceCoreTileMap" parent="BuildServiceCore" instance=ExtResource("3_service_tilemap")]
 
 [node name="BuildRoomShell" type="Control" parent="."]
-custom_minimum_size = Vector2(224, 88)
+custom_minimum_size = Vector2(128, 64)
 layout_mode = 2
-offset_right = 272.0
-offset_bottom = 88.0
+offset_right = 128.0
+offset_bottom = 64.0
 mouse_filter = 2
-clip_contents = true
 
 [node name="ApartmentTileMap" parent="BuildRoomShell" instance=ExtResource("2_apartment_tilemap")]
 
-[node name="BuildSlotStatusPanel" type="PanelContainer" parent="BuildRoomShell"]
-custom_minimum_size = Vector2(181, 35)
+[node name="ConstructionCover" type="TextureRect" parent="BuildRoomShell"]
+custom_minimum_size = Vector2(88, 40)
 layout_mode = 0
-offset_left = 18.0
-offset_top = 24.0
-offset_right = 199.0
-offset_bottom = 59.0
+offset_left = 20.0
+offset_top = 22.0
+offset_right = 108.0
+offset_bottom = 62.0
+mouse_filter = 2
+texture = SubResource("AtlasTexture_construction_cover")
+stretch_mode = 5
+
+[node name="BuildSlotStatusPanel" type="PanelContainer" parent="BuildRoomShell"]
+custom_minimum_size = Vector2(112, 32)
+layout_mode = 0
+offset_left = 8.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 52.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_status")
 
@@ -78,7 +91,7 @@ texture = ExtResource("4_hammer")
 stretch_mode = 5
 
 [node name="BuildSlotLabel" type="Label" parent="BuildRoomShell/BuildSlotStatusPanel/MarginContainer/StatusRow"]
-custom_minimum_size = Vector2(126, 24)
+custom_minimum_size = Vector2(62, 24)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2

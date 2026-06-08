@@ -1,16 +1,15 @@
 extends HBoxContainer
 
-const DEFAULT_FLOOR_HEIGHT := 88.0
 const DEFAULT_SERVICE_WIDTH := 48.0
-const DEFAULT_ROOM_WIDTH := 224.0
+const DEFAULT_FRAME_TILES := Vector2i(8, 4)
 
 const META_ROOM_SCENE_PATH := &"room_scene_path"
 const META_SERVICE_WIDTH := &"service_width"
-const META_DEFAULT_ROOM_SIZE := &"default_room_size"
+const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 
 var room_scene: PackedScene
 var service_width := DEFAULT_SERVICE_WIDTH
-var default_room_size := Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_FLOOR_HEIGHT)
+var default_frame_tiles := DEFAULT_FRAME_TILES
 
 var floor_index := 0
 var show_roof_on_top_room := true
@@ -46,7 +45,7 @@ func setup(index: int, show_roof := true) -> void:
 			return
 		var room_view := target_room_scene.instantiate()
 		room_view.name = "Room_%s" % str(room_data.get("id", ""))
-		room_view.custom_minimum_size = _room_size(room_data)
+		room_view.custom_minimum_size = _room_pixel_size(room_data)
 		add_child(room_view)
 		room_view.setup(str(room_data.get("id", "")), show_roof_on_top_room)
 
@@ -59,7 +58,7 @@ func _ensure_service_core() -> void:
 
 func _clear_runtime_rooms() -> void:
 	for child in get_children():
-		if child == service_core:
+		if child == service_core or child.name == "SceneConfig":
 			continue
 		remove_child(child)
 		child.queue_free()
@@ -79,32 +78,43 @@ func _floor_size() -> Vector2:
 			continue
 		if not _room_is_visible(room_data):
 			continue
-		var room_size := _room_size(room_data)
-		width += room_size.x
-		height = maxf(height, room_size.y)
+		var room_pixel_size := _room_pixel_size(room_data)
+		width += room_pixel_size.x
+		height = maxf(height, room_pixel_size.y)
 		room_count += 1
 	if room_count == 0:
-		width += default_room_size.x
+		width += _room_pixel_size_from_frame_tiles(default_frame_tiles).x
 	return Vector2(width, height)
 
 func _floor_height() -> float:
-	var height := default_room_size.y
+	var height := _room_pixel_size_from_frame_tiles(default_frame_tiles).y
 	for room in ConfigManager.rooms:
 		var room_data: Dictionary = room
 		if int(room_data.get("floor_index", 0)) == floor_index and _room_is_visible(room_data):
-			height = maxf(height, _room_size(room_data).y)
+			height = maxf(height, _room_pixel_size(room_data).y)
 	return height
 
-func _room_size(room_data: Dictionary) -> Vector2:
+func _room_pixel_size(room_data: Dictionary) -> Vector2:
 	var room_id := str(room_data.get("id", ""))
 	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
-	var runtime_value: Variant = runtime_room.get("room_size", [])
-	if runtime_value is Array and runtime_value.size() >= 2:
-		return Vector2(float(runtime_value[0]), float(runtime_value[1]))
-	var value: Variant = room_data.get("room_size", [default_room_size.x, default_room_size.y])
+	var runtime_tiles: Variant = runtime_room.get("frame_tiles", [])
+	if runtime_tiles is Array and runtime_tiles.size() >= 2:
+		return _room_pixel_size_from_frame_tiles(_fixed_height_frame_tiles(_vector2i_from_array(runtime_tiles, default_frame_tiles)))
+	var frame_tiles: Variant = room_data.get("frame_tiles", [])
+	if frame_tiles is Array and frame_tiles.size() >= 2:
+		return _room_pixel_size_from_frame_tiles(_fixed_height_frame_tiles(_vector2i_from_array(frame_tiles, default_frame_tiles)))
+	return _room_pixel_size_from_frame_tiles(default_frame_tiles)
+
+func _room_pixel_size_from_frame_tiles(value: Vector2i) -> Vector2:
+	return Vector2(value.x * ApartmentTileMap.TILE_SIZE, value.y * ApartmentTileMap.TILE_SIZE)
+
+func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
 	if value is Array and value.size() >= 2:
-		return Vector2(float(value[0]), float(value[1]))
-	return default_room_size
+		return Vector2i(int(value[0]), int(value[1]))
+	return fallback
+
+func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
+	return Vector2i(maxi(4, value.x), default_frame_tiles.y)
 
 func _room_is_visible(room_data: Dictionary) -> bool:
 	var room_id := str(room_data.get("id", ""))
@@ -131,7 +141,7 @@ func _bind_scene_config() -> void:
 		return
 	room_scene = _scene_from_path(_scene_meta_text(config, META_ROOM_SCENE_PATH), room_scene)
 	service_width = _scene_meta_float(config, META_SERVICE_WIDTH, DEFAULT_SERVICE_WIDTH)
-	default_room_size = _scene_meta_vector2(config, META_DEFAULT_ROOM_SIZE, Vector2(DEFAULT_ROOM_WIDTH, DEFAULT_FLOOR_HEIGHT))
+	default_frame_tiles = _scene_meta_vector2i(config, META_DEFAULT_FRAME_TILES, DEFAULT_FRAME_TILES)
 
 func _scene_meta_text(node: Node, meta_key: StringName) -> String:
 	if node == null or not node.has_meta(meta_key):
@@ -143,12 +153,14 @@ func _scene_meta_float(node: Node, meta_key: StringName, fallback: float) -> flo
 		return fallback
 	return float(node.get_meta(meta_key))
 
-func _scene_meta_vector2(node: Node, meta_key: StringName, fallback: Vector2) -> Vector2:
+func _scene_meta_vector2i(node: Node, meta_key: StringName, fallback: Vector2i) -> Vector2i:
 	if node == null or not node.has_meta(meta_key):
 		return fallback
 	var value: Variant = node.get_meta(meta_key)
-	if value is Vector2:
+	if value is Vector2i:
 		return value
+	if value is Vector2:
+		return Vector2i(int(value.x), int(value.y))
 	if value is Array and value.size() >= 2:
-		return Vector2(float(value[0]), float(value[1]))
+		return Vector2i(int(value[0]), int(value[1]))
 	return fallback

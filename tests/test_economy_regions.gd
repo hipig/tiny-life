@@ -476,6 +476,7 @@ func test_building_view_uses_backgrounds_atlas_for_scene_backdrop() -> void:
 	assert_false(backdrop_scene.contains("scroll_offset"), "SceneBackdrop should not persist runtime cloud drift")
 	assert_false(backdrop_scene.contains("GrassDetailTileMap"), "Ground should stay to the single bottom TileMapLayer")
 	assert_false(backdrop_source.contains("@tool"), "Backdrop should not run editor-time generation over manual TileMap edits")
+	assert_false(backdrop_source.contains("@export"), "Backdrop should read scene-authored config instead of script exports")
 	assert_false(backdrop_source.contains("TileSet.new"), "Backdrop should not create TileSets at runtime")
 	assert_false(backdrop_source.contains("TileSetAtlasSource.new"), "Backdrop should not slice atlas sources at runtime")
 	assert_false(backdrop_source.contains("set_cell"), "Backdrop should not paint TileMap cells at runtime")
@@ -509,17 +510,40 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	var room_shell_scene := FileAccess.get_file_as_string("res://scenes/building/RoomShell.tscn")
 	var room_shell_source := FileAccess.get_file_as_string("res://scripts/building/RoomShell.gd")
 	var apartment_tilemap_scene := FileAccess.get_file_as_string("res://scenes/building/ApartmentTileMap.tscn")
+	var apartment_tilemap_source := FileAccess.get_file_as_string("res://scripts/building/ApartmentTileMap.gd")
 	var apartment_tileset_source := FileAccess.get_file_as_string("res://tilesets/apartment_tileset.tres")
-	var apartment_tileset := ResourceLoader.load("res://tilesets/apartment_tileset.tres") as TileSet
+	var apartment_tileset := ResourceLoader.load("res://tilesets/apartment_tileset.tres", "", ResourceLoader.CACHE_MODE_REPLACE) as TileSet
 	var floor_counts := {}
 	for room in rooms:
 		var room_data: Dictionary = room
 		var floor_index := int(room_data.get("floor_index", 0))
+		var frame_tiles: Array = room_data.get("frame_tiles", [])
+		var grid_size: Array = room_data.get("grid_size", [])
 		floor_counts[floor_index] = int(floor_counts.get(floor_index, 0)) + 1
 		assert_true(ResourceLoader.exists(str(room_data.get("room_scene_path", ""))), "%s should configure a loadable room scene template" % room_data.get("id", ""))
 		assert_true(_asset_texture_exists(room_data.get("infrastructure_asset", {})), "%s should use Infrastructure.png for its room frame" % room_data.get("id", ""))
-		assert_true(room_data.has("room_size"), "%s should expose room_size for future expansion" % room_data.get("id", ""))
-		assert_true(room_data.has("grid_rect"), "%s should expose grid_rect for future placement upgrades" % room_data.get("id", ""))
+		assert_true(_asset_texture_exists(room_data.get("wall_asset", {})), "%s wallpaper asset should exist" % room_data.get("id", ""))
+		assert_false(room_data.has("floor_asset"), "%s should not keep a separate floor layer asset for room skeletons" % room_data.get("id", ""))
+		assert_false(room_data.has("room_size"), "%s should not keep legacy pixel room_size config" % room_data.get("id", ""))
+		assert_false(room_data.has("grid_rect"), "%s should not keep legacy pixel grid_rect config" % room_data.get("id", ""))
+		assert_eq(frame_tiles.size(), 2, "%s should configure frame_tiles as [width, height]" % room_data.get("id", ""))
+		assert_eq(grid_size.size(), 2, "%s should configure grid_size as [width, height]" % room_data.get("id", ""))
+		if frame_tiles.size() >= 2 and grid_size.size() >= 2:
+			assert_eq(int(frame_tiles[0]), 8, "%s should start as an 8-tile-wide room frame" % room_data.get("id", ""))
+			assert_eq(int(frame_tiles[1]), 4, "%s room frame height should stay fixed at 4 tiles" % room_data.get("id", ""))
+			assert_eq(int(grid_size[0]), int(frame_tiles[0]) - 2, "%s placement grid width should match inner room tiles" % room_data.get("id", ""))
+			assert_eq(int(grid_size[1]), int(frame_tiles[1]) - 1, "%s placement grid height should stay on the 16px tile grid" % room_data.get("id", ""))
+		for item in room_data.get("layout_upgrades", []):
+			var upgrade: Dictionary = item
+			var upgraded_frame_tiles: Array = upgrade.get("frame_tiles", [])
+			var upgraded_grid_size: Array = upgrade.get("grid_size", [])
+			assert_eq(upgraded_frame_tiles.size(), 2, "%s layout upgrade should configure frame_tiles" % room_data.get("id", ""))
+			assert_eq(upgraded_grid_size.size(), 2, "%s layout upgrade should configure grid_size" % room_data.get("id", ""))
+			if upgraded_frame_tiles.size() >= 2 and upgraded_grid_size.size() >= 2 and frame_tiles.size() >= 2 and grid_size.size() >= 2:
+				assert_gt(int(upgraded_frame_tiles[0]), int(frame_tiles[0]), "%s layout upgrades should add width tiles" % room_data.get("id", ""))
+				assert_eq(int(upgraded_frame_tiles[1]), int(frame_tiles[1]), "%s layout upgrades should not change room height" % room_data.get("id", ""))
+				assert_gt(int(upgraded_grid_size[0]), int(grid_size[0]), "%s layout upgrades should add placement columns" % room_data.get("id", ""))
+				assert_eq(int(upgraded_grid_size[1]), int(grid_size[1]), "%s layout upgrades should not change placement rows" % room_data.get("id", ""))
 	for floor_index in floor_counts.keys():
 		assert_eq(int(floor_counts[floor_index]), 1, "%dF should have one MVP room" % int(floor_index))
 	assert_true(floor_scene.contains("FloorServiceCore.tscn"), "Each floor should expose a left-side door/elevator service core scene")
@@ -527,8 +551,9 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(floor_scene.contains("metadata/room_scene_path = \"res://scenes/building/Room.tscn\""), "Floor should assign the editable Room template in scene metadata")
 	assert_true(floor_service_scene.contains("ServiceCoreTileMap.tscn"), "FloorServiceCore should compose an editable TileMap template")
 	assert_true(service_tilemap_scene.contains("res://tilesets/apartment_tileset.tres"), "ServiceCoreTileMap should share the internal apartment TileSet")
-	for layer_name in ["WallTileMap", "FloorTileMap", "InfrastructureTileMap", "RoofTileMap", "ConstructionTileMap"]:
+	for layer_name in ["WallpaperTileMap", "WallTileMap", "InfrastructureTileMap", "RoofTileMap", "ConstructionTileMap"]:
 		assert_true(service_tilemap_scene.contains("name=\"%s\" type=\"TileMapLayer\"" % layer_name), "ServiceCoreTileMap should expose %s for editor painting" % layer_name)
+	assert_false(service_tilemap_scene.contains("name=\"FloorTileMap\""), "ServiceCoreTileMap should not keep a separate floor layer")
 	assert_true(floor_service_scene.contains("FloorLabel"), "FloorServiceCore should expose its floor label in the scene")
 	assert_true(floor_service_scene.contains("theme_override_font_sizes/font_size = 9"), "Floor label style should be editor-authored")
 	assert_true(floor_source.contains("get_node_or_null(\"FloorServiceCore\")"), "Floor should bind the scene-authored service core node")
@@ -557,15 +582,47 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(room_shell_scene.contains("theme_override_font_sizes/font_size = 9"), "Room name badge style should be editor-authored")
 	assert_true(room_shell_scene.contains("theme_override_font_sizes/font_size = 8"), "Room rent badge style should be editor-authored")
 	assert_true(apartment_tilemap_scene.contains("res://tilesets/apartment_tileset.tres"), "ApartmentTileMap should share the internal apartment TileSet")
-	for layer_name in ["WallTileMap", "FloorTileMap", "InfrastructureTileMap", "RoofTileMap", "ConstructionTileMap"]:
+	for layer_name in ["WallpaperTileMap", "WallTileMap", "InfrastructureTileMap", "RoofTileMap", "ConstructionTileMap"]:
 		assert_true(apartment_tilemap_scene.contains("name=\"%s\" type=\"TileMapLayer\"" % layer_name), "ApartmentTileMap should expose %s for editor painting" % layer_name)
+	assert_false(apartment_tilemap_scene.contains("name=\"FloorTileMap\""), "ApartmentTileMap should not keep a separate floor layer")
 	assert_true(apartment_tileset != null, "Apartment TileSet should load")
 	if apartment_tileset != null:
 		assert_eq(apartment_tileset.tile_size, Vector2i(16, 16), "Apartment TileSet should use 16x16 tile cells")
+		assert_eq(apartment_tileset.get_terrain_sets_count(), 2, "Apartment TileSet should expose two editor-visible terrain sets")
+		assert_eq(apartment_tileset.get_terrain_name(0, 0), "RoomFrame", "Terrain set 0 should expose RoomFrame")
+		assert_eq(apartment_tileset.get_terrain_name(1, 0), "WallpaperFill", "Terrain set 1 should expose WallpaperFill")
 		assert_eq((apartment_tileset.get_source(0) as TileSetAtlasSource).texture_region_size, Vector2i(16, 16), "Infrastructure atlas source should use 16x16 atlas cells")
-		assert_eq((apartment_tileset.get_source(1) as TileSetAtlasSource).texture_region_size, Vector2i(16, 16), "Wallpaper atlas source should use 16x16 atlas cells")
+		var wallpaper_source := _tileset_source_with_texture(apartment_tileset, "Wallpaper Tilesets.png")
+		assert_true(wallpaper_source != null, "Wallpaper atlas source should be discoverable by texture path")
+		if wallpaper_source != null:
+			assert_eq(wallpaper_source.texture_region_size, Vector2i(16, 16), "Wallpaper atlas source should use 16x16 atlas cells")
 	assert_true(apartment_tileset_source.contains("Infrastructure.png"), "Apartment TileSet should reference the infrastructure atlas")
 	assert_true(apartment_tileset_source.contains("Wallpaper Tilesets.png"), "Apartment TileSet should reference the wallpaper atlas")
+	assert_true(apartment_tileset_source.contains("RoomFrame"), "Apartment TileSet should save room-frame terrain rules")
+	assert_true(apartment_tileset_source.contains("WallpaperFill"), "Apartment TileSet should save wallpaper-fill terrain rules")
+	assert_true(apartment_tilemap_source.contains("render_room_skeleton"), "ApartmentTileMap should be the dedicated grid renderer for room frames")
+	assert_true(apartment_tilemap_source.contains("set_cell"), "ApartmentTileMap may paint generated room skeleton cells")
+	assert_true(apartment_tilemap_source.contains("@export var body_top_left_corner_tile"), "ApartmentTileMap should export themed wall-body corner coordinates for editor filling")
+	assert_true(apartment_tilemap_source.contains("@export var edge_top_left_corner_tile"), "ApartmentTileMap should export fixed wall-edge corner coordinates for editor filling")
+	assert_true(apartment_tilemap_source.contains("@export var wallpaper_tile"), "ApartmentTileMap should export the default wallpaper tile coordinate")
+	assert_true(apartment_tilemap_source.contains("@export var body_door_short_wall_cells"), "ApartmentTileMap should export body short-wall cells around doors")
+	assert_true(apartment_tilemap_source.contains("@export var edge_door_short_wall_cells"), "ApartmentTileMap should export edge short-wall cells around doors")
+	assert_false(apartment_tilemap_source.contains("@export var floor_tiles"), "ApartmentTileMap should not expose a separate floor layer for room skeletons")
+	assert_false(apartment_tilemap_source.contains("func _paint_floor"), "ApartmentTileMap should not paint FloorTileMap for room skeletons")
+	assert_true(apartment_tilemap_source.contains("@export var door_tile"), "ApartmentTileMap should export the door tile coordinate")
+	assert_true(apartment_tilemap_source.contains("@export var window_tile"), "ApartmentTileMap should export the window tile coordinate")
+	assert_true(apartment_tilemap_source.contains("@export var construction_marker_tile"), "ApartmentTileMap should export construction marker tile coordinates")
+	assert_false(room_source.contains("_asset_tile_origin"), "Room should not infer TileSet atlas coordinates from asset regions")
+	assert_false(room_source.contains("wallpaper_origin"), "Room should not pass guessed wallpaper atlas origins")
+	assert_false(room_source.contains("frame_origin"), "Room should not pass guessed frame atlas origins")
+	for path in [
+		"res://scripts/building/Room.gd",
+		"res://scripts/building/Floor.gd",
+		"res://scripts/building/BuildSlot.gd",
+		"res://scripts/building/ApartmentBuilding.gd"
+	]:
+		var building_source := FileAccess.get_file_as_string(path)
+		assert_false(building_source.contains("set_cell"), "%s should pass frame_tiles to ApartmentTileMap instead of painting cells" % path)
 	assert_false(room_source.contains("StyleBoxFlat.new"), "Room should not create fixed button skins in script")
 	assert_false(room_source.contains("add_theme_"), "Room should not hide fixed badge styling in script")
 	assert_false(room_source.contains("@export"), "Room should read scene-authored config instead of script exports")
@@ -583,9 +640,54 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_false(floor_service_scene.contains("ServiceInfrastructure"), "Service core should not keep old TextureRect infrastructure body")
 	assert_false(floor_service_scene.contains("DoorOrElevator"), "Service core should not keep old TextureRect door/elevator body")
 	assert_false(floor_service_scene.contains("ServiceShade"), "Service core should not keep old ColorRect shade fallback")
-	assert_true(room_source.contains("room.get(\"room_size\""), "Room rendering should support runtime room-size upgrades")
+	assert_true(room_source.contains("frame_tiles"), "Room rendering should read frame_tiles for grid-sized room upgrades")
+	assert_true(room_source.contains("ApartmentTileMap.TILE_SIZE"), "Room pixel size should be derived from 16px TileMap cells")
+	assert_true(room_source.contains("frame_tiles.y - 1"), "Room placement grid should remain aligned to 16px vertical tiles")
+	assert_true(room_shell_source.contains("render_room_skeleton"), "RoomShell should delegate room-frame drawing to ApartmentTileMap")
 	assert_true(room_source.contains("tenant_view.setup(tenant_id, room_id)"), "Room should bind tenant scene instances to their room")
 	assert_true(room_source.contains("_furniture_position"), "Furniture should be positioned inside the room instead of listed as thumbnails")
+
+func test_apartment_tilemap_renders_room_frame_tiles_on_16px_grid() -> void:
+	var scene := ResourceLoader.load("res://scenes/building/ApartmentTileMap.tscn") as PackedScene
+	assert_true(scene != null, "ApartmentTileMap scene should load for direct preview")
+	if scene == null:
+		return
+	var tilemap := scene.instantiate() as ApartmentTileMap
+	assert_true(tilemap != null, "ApartmentTileMap scene should instantiate with its script")
+	if tilemap == null:
+		return
+	_bind_apartment_tilemap_layers(tilemap)
+	var wallpaper_layer := tilemap.get_node("WallpaperTileMap") as TileMapLayer
+	var wall_layer := tilemap.get_node("WallTileMap") as TileMapLayer
+	var infrastructure_layer := tilemap.get_node("InfrastructureTileMap") as TileMapLayer
+	tilemap.door_tile = Vector2i(0, 0)
+	tilemap.window_tile = Vector2i(0, 0)
+
+	tilemap.render_room_skeleton(Vector2i(8, 4), {}, false, false)
+	assert_eq(tilemap.current_frame_tiles, Vector2i(8, 4), "Initial room frame should be 8x4 tiles")
+	assert_eq(tilemap.room_pixel_size(), Vector2(128, 64), "8x4 frame tiles should render as 128x64 pixels")
+	assert_eq(wallpaper_layer.get_used_rect().position, Vector2i.ZERO, "Wallpaper should start at tile origin")
+	assert_eq(wallpaper_layer.get_used_rect().size, Vector2i(8, 4), "Wallpaper layer should cover every room tile")
+	assert_eq(wall_layer.get_used_rect().position, Vector2i.ZERO, "Room frame should start at tile origin")
+	assert_eq(wall_layer.get_used_rect().size, Vector2i(8, 4), "Wall layer should occupy an 8x4 tile frame")
+	assert_eq(infrastructure_layer.get_used_rect().position, Vector2i(-1, -1), "Infrastructure black wall edge should wrap one tile around the room frame")
+	assert_eq(infrastructure_layer.get_used_rect().size, Vector2i(10, 6), "Infrastructure layer should include the outer black wall edge")
+	assert_eq(infrastructure_layer.get_cell_atlas_coords(Vector2i(0, 3)), Vector2i(7, 14), "Room door should use the editor-painted door tile near the left wall")
+	assert_eq(infrastructure_layer.get_cell_atlas_coords(Vector2i(7, 1)), Vector2i(5, 2), "Room window should use the editor-painted right-wall tile")
+
+	tilemap.render_room_skeleton(Vector2i(10, 4), {}, false, false)
+	assert_eq(tilemap.current_frame_tiles, Vector2i(10, 4), "Room expansion should only add width tiles")
+	assert_eq(tilemap.room_pixel_size(), Vector2(160, 64), "10x4 frame tiles should render as 160x64 pixels")
+	assert_eq(wallpaper_layer.get_used_rect().size, Vector2i(10, 4), "Expanded wallpaper layer should cover every room tile")
+	assert_eq(wall_layer.get_used_rect().size, Vector2i(10, 4), "Expanded wall layer should keep fixed height")
+	assert_eq(infrastructure_layer.get_used_rect().size, Vector2i(12, 6), "Expanded infrastructure layer should keep the one-tile outer wall edge")
+	assert_eq(infrastructure_layer.get_cell_atlas_coords(Vector2i(9, 1)), Vector2i(5, 2), "Expanded room window should move with the right wall")
+
+	tilemap.render_room_skeleton(Vector2i(3, 4), {}, false, false)
+	assert_eq(tilemap.current_frame_tiles, Vector2i(3, 4), "Service-core TileMaps should support 3-tile width")
+	assert_eq(tilemap.room_pixel_size(), Vector2(48, 64), "3x4 service core should render as 48x64 pixels")
+	assert_eq(wall_layer.get_used_rect().size, Vector2i(3, 4), "Service-core frame should not overpaint into the room")
+	tilemap.free()
 
 func test_room_layout_upgrades_are_config_driven_and_future_rooms_can_stay_hidden() -> void:
 	var config_source := FileAccess.get_file_as_string("res://scripts/autoload/ConfigManager.gd")
@@ -609,10 +711,38 @@ func test_room_layout_upgrades_are_config_driven_and_future_rooms_can_stay_hidde
 
 func test_saved_room_layouts_are_normalized_to_current_config() -> void:
 	var state_source := FileAccess.get_file_as_string("res://scripts/autoload/GameState.gd")
-	assert_true(state_source.contains("_configured_room_layout_for_level"), "Save compatibility should derive room layout from current config and room level")
-	assert_true(state_source.contains("room[\"room_size\"] = configured_layout.get"), "Saved room_size should be normalized instead of blindly trusting legacy saves")
-	assert_true(state_source.contains("room[\"grid_rect\"] = configured_layout.get"), "Saved grid_rect should be normalized to the current viewport layout")
+	var save_source := FileAccess.get_file_as_string("res://scripts/autoload/SaveManager.gd")
+	assert_true(state_source.contains("_configured_room_layout_for_level"), "Saved room layout should be rebuilt from current config and room level")
+	assert_true(state_source.contains("_fixed_height_frame_tiles"), "Room frame tile height should be fixed by GameState")
+	assert_true(state_source.contains("_fixed_height_grid_size"), "Placement grid height should be fixed by GameState")
+	assert_true(state_source.contains("SAVE_SCHEMA_VERSION"), "GameState should version saves before trusting persisted room layout levels")
+	assert_true(state_source.contains("save_needs_writeback"), "Legacy room-layout migration should request a save writeback")
+	assert_true(save_source.contains("GameState.save_needs_writeback = false"), "SaveManager should clear migration writeback state after saving")
+	assert_true(state_source.contains("\"frame_tiles\""), "Room saves should use frame_tiles instead of pixel dimensions")
+	assert_true(state_source.contains("\"grid_size\""), "Room saves should use grid_size instead of pixel rectangles")
+	assert_false(state_source.contains("\"room_size\""), "GameState should not preserve legacy pixel room_size fields")
+	assert_false(state_source.contains("\"grid_rect\""), "GameState should not preserve legacy pixel grid_rect fields")
 	assert_false(state_source.contains("[448, 176]"), "Old 720px-era room-size fallback should not survive in GameState")
+	var original_state := GameState.to_save_data().duplicate(true)
+	var legacy_save := original_state.duplicate(true)
+	legacy_save.erase("save_schema_version")
+	legacy_save["highest_built_floor"] = 2
+	legacy_save["rooms"]["room_101"]["level"] = 2
+	legacy_save["rooms"]["room_201"]["level"] = 1
+	GameState.from_save_data(legacy_save)
+	assert_eq(int(GameState.rooms["room_101"].get("level", 0)), 1, "Legacy saves should reset old per-room layout levels")
+	assert_eq(GameState.rooms["room_101"].get("frame_tiles", []), [8, 4], "Legacy room_101 should return to the configured 8x4 starter frame")
+	assert_true(GameState.save_needs_writeback, "Legacy layout migration should be written back after load")
+	var versioned_save := original_state.duplicate(true)
+	versioned_save["save_schema_version"] = GameState.SAVE_SCHEMA_VERSION
+	versioned_save["highest_built_floor"] = 2
+	versioned_save["rooms"]["room_101"]["level"] = 2
+	versioned_save["rooms"]["room_201"]["level"] = 1
+	GameState.from_save_data(versioned_save)
+	assert_eq(int(GameState.rooms["room_101"].get("level", 0)), 2, "Current-version saves should keep intentional room layout upgrades")
+	assert_eq(GameState.rooms["room_101"].get("frame_tiles", []), [10, 4], "Current-version room upgrades should still add width tiles")
+	assert_false(GameState.save_needs_writeback, "Current-version saves should not request migration writeback")
+	GameState.from_save_data(original_state)
 
 func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	var building_source := FileAccess.get_file_as_string("res://scripts/building/ApartmentBuilding.gd")
@@ -643,6 +773,8 @@ func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	assert_true(slot_shell_scene.contains("name=\"BuildSlotShell\" type=\"HBoxContainer\""), "Build slot shell should lay out service and room areas in the editable scene")
 	assert_true(slot_shell_scene.contains("ApartmentTileMap.tscn"), "Build slots should reuse the editable apartment TileMap template")
 	assert_true(slot_shell_scene.contains("ServiceCoreTileMap.tscn"), "Build slots should reuse the editable service-core TileMap template")
+	assert_true(slot_shell_scene.contains("ConstructionCover"), "Build slots should keep the construction cloth as a scene-authored texture overlay")
+	assert_true(slot_shell_scene.contains("AtlasTexture_construction_cover"), "Build slot construction cover should use a scene-authored AtlasTexture")
 	assert_true(slot_shell_scene.contains("theme_override_font_sizes/font_size = 10"), "Build slot label style should be editor-authored")
 	assert_true(slot_shell_scene.contains("text = \"待修建\""), "Build slot label should be previewable in BuildSlotShell.tscn")
 	assert_false(slot_shell_scene.contains("BuildRoomInfrastructure"), "Build slots should not keep old TextureRect infrastructure body")
@@ -652,7 +784,7 @@ func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	assert_false(slot_shell_scene.contains("TrafficCone"), "Build slots should not keep old TextureRect traffic cones")
 	assert_false(slot_shell_scene.contains("BuildRoofEaves"), "Build slots should not keep old TextureRect roof")
 	assert_false(slot_shell_scene.contains("BuildSlotScrim"), "Build slots should not keep old ColorRect construction fallback")
-	assert_false(slot_source.contains("@export var construction_cloth_texture"), "Construction cloth should move to the editor-painted TileMap")
+	assert_false(slot_source.contains("@export var construction_cloth_texture"), "Construction cover should stay scene-authored instead of exported from script")
 	assert_false(slot_source.contains("@export var roof_texture"), "Build-slot roof should move to the editor-painted TileMap")
 	assert_false(slot_source.contains("apply_asset_to_texture_rect"), "BuildSlot should not patch building visuals from scripts")
 	assert_false(slot_source.contains("AtlasTexture.new"), "BuildSlot should not create atlas slices for building visuals")
@@ -661,6 +793,9 @@ func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	assert_false(slot_source.contains("StyleBoxFlat.new"), "BuildSlot should not create fixed button skins in script")
 	assert_false(slot_source.contains("add_theme_"), "BuildSlot should not hide fixed label styling in script")
 	assert_false(slot_source.contains("@export"), "BuildSlot should read scene-authored config instead of script exports")
+	assert_false(slot_source.contains("_asset_tile_origin"), "BuildSlot should not infer TileSet atlas coordinates from room asset regions")
+	assert_false(slot_source.contains("wallpaper_origin"), "BuildSlot should not pass guessed wallpaper atlas origins")
+	assert_false(slot_source.contains("frame_origin"), "BuildSlot should not pass guessed frame atlas origins")
 	assert_false(slot_source.contains("待修建"), "BuildSlot should not hard-code build-state copy in script")
 	assert_false(slot_source.contains("金币"), "BuildSlot should not hard-code build-cost copy in script")
 	assert_false(slot_source.contains("解锁"), "BuildSlot should not hard-code locked-state copy in script")
@@ -869,6 +1004,13 @@ func test_pixel_space_assets_are_configured_for_mvp_surfaces() -> void:
 	assert_true(project_settings.contains("window/size/window_height_override=1280"), "Desktop preview should open at 2x portrait height")
 	assert_true(project_settings.contains("window/stretch/mode=\"viewport\""), "Pixel art should be upscaled from the logical viewport instead of resizing nodes")
 	assert_true(project_settings.contains("window/stretch/aspect=\"keep_width\""), "Mobile portrait scaling should keep the design width so world art does not shrink on tall screens")
+	assert_eq(str(ProjectSettings.get_setting("display/window/stretch/scale_mode")), "integer", "Pixel art should use integer stretch scaling to avoid blurry pixels")
+	assert_true(bool(ProjectSettings.get_setting("gui/common/snap_controls_to_pixels")), "Controls should snap to pixels for crisp UI text")
+	assert_eq(int(ProjectSettings.get_setting("gui/theme/default_font_antialiasing")), 0, "Default UI font antialiasing should be disabled for pixel-crisp labels")
+	assert_eq(int(ProjectSettings.get_setting("gui/theme/default_font_subpixel_positioning")), 0, "Default UI font subpixel positioning should be disabled")
+	assert_eq(int(ProjectSettings.get_setting("gui/theme/lcd_subpixel_layout")), 0, "LCD subpixel layout should be disabled for pixel-art text")
+	assert_true(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel")), "Node2D transforms should snap to pixels")
+	assert_true(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_vertices_to_pixel")), "2D vertices should snap to pixels")
 	for item in furniture:
 		var furniture_data: Dictionary = item
 		assert_false(str(furniture_data.get("asset", {}).get("type", "placeholder")) == "placeholder", "%s should use a Pixel Spaces visual asset" % furniture_data.get("id", ""))
@@ -884,7 +1026,7 @@ func test_pixel_space_assets_are_configured_for_mvp_surfaces() -> void:
 	for room in rooms:
 		var room_data: Dictionary = room
 		assert_true(_asset_texture_exists(room_data.get("wall_asset", {})), "%s wall asset should exist" % room_data.get("id", ""))
-		assert_true(_asset_texture_exists(room_data.get("floor_asset", {})), "%s floor asset should exist" % room_data.get("id", ""))
+		assert_false(room_data.has("floor_asset"), "%s should not configure a separate floor asset" % room_data.get("id", ""))
 	for floor in floors:
 		var floor_data: Dictionary = floor
 		assert_true(_asset_texture_exists(floor_data.get("floor_icon_asset", {})), "%dF icon asset should exist" % int(floor_data.get("floor_index", 0)))
@@ -1049,9 +1191,24 @@ func _room_ids_on_floor(floor_index: int) -> Array:
 			ids.append(str(room_data.get("id", "")))
 	return ids
 
+func _bind_apartment_tilemap_layers(tilemap: ApartmentTileMap) -> void:
+	tilemap.wallpaper_layer = tilemap.get_node_or_null("WallpaperTileMap") as TileMapLayer
+	tilemap.wall_layer = tilemap.get_node_or_null("WallTileMap") as TileMapLayer
+	tilemap.infrastructure_layer = tilemap.get_node_or_null("InfrastructureTileMap") as TileMapLayer
+	tilemap.roof_layer = tilemap.get_node_or_null("RoofTileMap") as TileMapLayer
+	tilemap.construction_layer = tilemap.get_node_or_null("ConstructionTileMap") as TileMapLayer
+
 func _asset_texture_exists(asset: Dictionary) -> bool:
 	var path := str(asset.get("texture", ""))
 	return not path.is_empty() and FileAccess.file_exists(path)
+
+func _tileset_source_with_texture(tileset: TileSet, texture_name: String) -> TileSetAtlasSource:
+	for index in range(tileset.get_source_count()):
+		var source_id := tileset.get_source_id(index)
+		var atlas_source := tileset.get_source(source_id) as TileSetAtlasSource
+		if atlas_source != null and atlas_source.texture != null and atlas_source.texture.resource_path.ends_with(texture_name):
+			return atlas_source
+	return null
 
 func _load_json_array(path: String) -> Array:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))

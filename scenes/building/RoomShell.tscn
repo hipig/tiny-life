@@ -4,12 +4,11 @@
 [ext_resource type="PackedScene" path="res://scenes/building/ApartmentTileMap.tscn" id="2_apartment_tilemap"]
 
 [node name="RoomShell" type="Control"]
-custom_minimum_size = Vector2(224, 88)
+custom_minimum_size = Vector2(128, 64)
 layout_mode = 0
-offset_right = 224.0
-offset_bottom = 88.0
+offset_right = 128.0
+offset_bottom = 64.0
 mouse_filter = 2
-clip_contents = true
 script = ExtResource("1_room_shell")
 
 [node name="ApartmentTileMap" parent="." instance=ExtResource("2_apartment_tilemap")]

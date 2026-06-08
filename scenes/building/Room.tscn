@@ -28,7 +28,7 @@ border_width_right = 2
 border_width_bottom = 2
 
 [node name="Room" type="Button"]
-custom_minimum_size = Vector2(224, 88)
+custom_minimum_size = Vector2(128, 64)
 focus_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
@@ -43,11 +43,10 @@ script = ExtResource("1_room")
 [node name="SceneConfig" type="Node" parent="."]
 metadata/tenant_scene_path = "res://scenes/tenant/Tenant.tscn"
 metadata/furniture_scene_path = "res://scenes/furniture/Furniture.tscn"
-metadata/default_room_size = Vector2(224, 88)
-metadata/default_grid_rect = Rect2(21, 24, 187, 40)
+metadata/default_frame_tiles = Vector2i(8, 4)
 metadata/wall_inset = 9.0
 metadata/floor_height = 22.0
-metadata/tenant_offset = Vector2(166, 37)
+metadata/tenant_offset = Vector2(86, 28)
 metadata/roof_height = 13.0
 
 [node name="TemplateText" type="Control" parent="."]

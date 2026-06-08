@@ -90,24 +90,26 @@ texture_margin_right = 6.0
 texture_margin_bottom = 6.0
 
 [node name="TopStatusBar" type="Control" unique_id=1887108067]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 3
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
+size_flags_vertical = 0
 script = ExtResource("1_status")
 
 [node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1891653790]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 12
 
 [node name="LevelButton" type="Button" parent="ButtonRow" unique_id=950086961]
-custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "公寓总览"
@@ -118,7 +120,6 @@ theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 
 theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
 theme_override_constants/outline_size = 2
 theme_override_constants/icon_max_width = 18
-theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxTexture_blue_normal")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_blue_pressed")
 theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
@@ -127,7 +128,6 @@ icon = ExtResource("9_icon_population")
 expand_icon = true
 
 [node name="CoinButton" type="Button" parent="ButtonRow" unique_id=730422338]
-custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "收益详情"
@@ -138,7 +138,6 @@ theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 
 theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
 theme_override_constants/outline_size = 2
 theme_override_constants/icon_max_width = 18
-theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxTexture_yellow_normal")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_yellow_pressed")
 theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")
@@ -147,7 +146,6 @@ icon = ExtResource("10_icon_currency")
 expand_icon = true
 
 [node name="RentButton" type="Button" parent="ButtonRow" unique_id=647454395]
-custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "租金构成"
@@ -158,7 +156,6 @@ theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 
 theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
 theme_override_constants/outline_size = 2
 theme_override_constants/icon_max_width = 18
-theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxTexture_green_normal")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_green_pressed")
 theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_normal")

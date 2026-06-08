@@ -7,6 +7,9 @@
 [node name="SceneBackdrop" type="Node2D" unique_id=389117932]
 script = ExtResource("1_backdrop")
 
+[node name="SceneConfig" type="Node" parent="."]
+metadata/ground_rows = 3
+
 [node name="SkySprite" type="Sprite2D" parent="." unique_id=1070850058]
 z_index = -70
 scale = Vector2(22.5, 5.71429)

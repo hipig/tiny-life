@@ -1,8 +1,8 @@
 extends Node
 
-const DEFAULT_ROOM_SIZE := [224, 88]
-const DEFAULT_GRID_SIZE := [8, 5]
-const DEFAULT_GRID_RECT := [21, 24, 187, 40]
+const DEFAULT_FRAME_TILES := [8, 4]
+const DEFAULT_GRID_SIZE := [6, 3]
+const SAVE_SCHEMA_VERSION := 2
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
 const IDLE_TENANT_BEHAVIOR := "idle"
@@ -30,6 +30,7 @@ var rooms: Dictionary = {}
 var tenants: Dictionary = {}
 var tasks: Dictionary = {}
 var stats: Dictionary = {}
+var save_needs_writeback := false
 
 func _ready() -> void:
 	reset_new_game()
@@ -44,6 +45,7 @@ func reset_new_game() -> void:
 	rooms = {}
 	tenants = {}
 	tasks = {}
+	save_needs_writeback = false
 	stats = {
 		"furniture_placed_count": 0,
 		"tenant_recruited_count": 0,
@@ -61,9 +63,8 @@ func reset_new_game() -> void:
 			"id": room_data.get("id", ""),
 			"floor_index": floor_index,
 			"room_name": room_data.get("room_name", ""),
-			"room_size": _number_pair(room_data.get("room_size", DEFAULT_ROOM_SIZE), DEFAULT_ROOM_SIZE),
-			"grid_size": _int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE),
-			"grid_rect": _number_rect(room_data.get("grid_rect", DEFAULT_GRID_RECT), DEFAULT_GRID_RECT),
+			"frame_tiles": _fixed_height_frame_tiles(_int_pair(room_data.get("frame_tiles", DEFAULT_FRAME_TILES), DEFAULT_FRAME_TILES)),
+			"grid_size": _fixed_height_grid_size(_int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE)),
 			"unlocked": initially_unlocked and floor_index <= highest_built_floor,
 			"level": 1,
 			"tenant_id": "",
@@ -157,16 +158,14 @@ func unlock_room(room_id: String) -> bool:
 	GameEvents.room_updated.emit(room_id)
 	return true
 
-func upgrade_room_layout(room_id: String, room_size: Array = [], grid_size: Array = [], grid_rect: Array = []) -> bool:
+func upgrade_room_layout(room_id: String, frame_tiles: Array = [], grid_size: Array = []) -> bool:
 	var room: Dictionary = rooms.get(room_id, {})
 	if room.is_empty():
 		return false
-	if room_size.size() >= 2:
-		room["room_size"] = [float(room_size[0]), float(room_size[1])]
+	if frame_tiles.size() >= 2:
+		room["frame_tiles"] = _fixed_height_frame_tiles([int(frame_tiles[0]), int(frame_tiles[1])])
 	if grid_size.size() >= 2:
-		room["grid_size"] = [int(grid_size[0]), int(grid_size[1])]
-	if grid_rect.size() >= 4:
-		room["grid_rect"] = [float(grid_rect[0]), float(grid_rect[1]), float(grid_rect[2]), float(grid_rect[3])]
+		room["grid_size"] = _fixed_height_grid_size([int(grid_size[0]), int(grid_size[1])])
 	rooms[room_id] = room
 	GameEvents.room_layout_changed.emit(room_id)
 	GameEvents.room_updated.emit(room_id)
@@ -186,9 +185,8 @@ func apply_room_layout_upgrade(room_id: String, target_level := 0) -> bool:
 	rooms[room_id] = room
 	return upgrade_room_layout(
 		room_id,
-		upgrade.get("room_size", []),
-		upgrade.get("grid_size", []),
-		upgrade.get("grid_rect", [])
+		upgrade.get("frame_tiles", []),
+		upgrade.get("grid_size", [])
 	)
 
 func recalculate_room_stats(room_id: String) -> void:
@@ -344,6 +342,7 @@ func _need_to_behavior_key(need: String) -> String:
 
 func to_save_data() -> Dictionary:
 	return {
+		"save_schema_version": SAVE_SCHEMA_VERSION,
 		"coins": coins,
 		"total_rent_per_minute": total_rent_per_minute,
 		"apartment_level": apartment_level,
@@ -359,6 +358,8 @@ func to_save_data() -> Dictionary:
 func from_save_data(data: Dictionary) -> void:
 	if data.is_empty():
 		return
+	var saved_schema_version := int(data.get("save_schema_version", 0))
+	save_needs_writeback = saved_schema_version < SAVE_SCHEMA_VERSION
 	coins = int(data.get("coins", coins))
 	total_rent_per_minute = float(data.get("total_rent_per_minute", total_rent_per_minute))
 	apartment_level = int(data.get("apartment_level", apartment_level))
@@ -377,7 +378,7 @@ func from_save_data(data: Dictionary) -> void:
 		tasks = saved_tasks
 	if saved_stats is Dictionary:
 		stats = saved_stats
-	_ensure_runtime_defaults()
+	_ensure_runtime_defaults(saved_schema_version)
 	for room_id in rooms.keys():
 		recalculate_room_stats(str(room_id))
 	EconomyManager.recalculate_total_rent()
@@ -385,43 +386,42 @@ func from_save_data(data: Dictionary) -> void:
 	GameEvents.apartment_level_changed.emit(apartment_level)
 	GameEvents.state_loaded.emit()
 
-func _ensure_runtime_defaults() -> void:
+func _ensure_runtime_defaults(saved_schema_version := SAVE_SCHEMA_VERSION) -> void:
 	if last_save_timestamp <= 0:
 		last_save_timestamp = TimeManager.now_unix()
 	_ensure_stats_defaults()
-	var valid_room_ids := {}
+	var source_rooms := rooms
+	var normalized_rooms := {}
 	for room_config in ConfigManager.rooms:
 		var room_data: Dictionary = room_config
 		var room_id := str(room_data.get("id", ""))
 		if room_id.is_empty():
 			continue
-		valid_room_ids[room_id] = true
-		var room: Dictionary = rooms.get(room_id, {})
+		var room: Dictionary = source_rooms.get(room_id, {})
 		var floor_index := int(room_data.get("floor_index", room.get("floor_index", 1)))
 		var initially_unlocked := bool(room_data.get("initial_unlocked", true))
 		var room_level := int(room.get("level", 1))
+		if saved_schema_version < SAVE_SCHEMA_VERSION:
+			room_level = 1
 		var configured_layout := _configured_room_layout_for_level(room_data, room_level)
-		room["id"] = room_id
-		room["floor_index"] = floor_index
-		room["room_name"] = str(room.get("room_name", room_data.get("room_name", "")))
-		room["level"] = room_level
-		room["room_size"] = configured_layout.get("room_size", DEFAULT_ROOM_SIZE).duplicate()
-		room["grid_size"] = configured_layout.get("grid_size", DEFAULT_GRID_SIZE).duplicate()
-		room["grid_rect"] = configured_layout.get("grid_rect", DEFAULT_GRID_RECT).duplicate()
-		room["unlocked"] = bool(room.get("unlocked", initially_unlocked and floor_index <= highest_built_floor))
-		room["tenant_id"] = str(room.get("tenant_id", ""))
-		room["furniture_instances"] = room.get("furniture_instances", [])
-		room["score"] = int(room.get("score", 0))
-		room["comfort"] = int(room.get("comfort", 0))
-		room["entertainment"] = int(room.get("entertainment", 0))
-		room["hygiene"] = int(room.get("hygiene", 0))
-		room["food"] = int(room.get("food", 0))
-		room["rent_per_minute"] = float(room.get("rent_per_minute", 0.0))
-		rooms[room_id] = room
-	for saved_room_id in rooms.keys():
-		var room_id := str(saved_room_id)
-		if not valid_room_ids.has(room_id):
-			rooms.erase(room_id)
+		normalized_rooms[room_id] = {
+			"id": room_id,
+			"floor_index": floor_index,
+			"room_name": str(room_data.get("room_name", "")),
+			"level": room_level,
+			"frame_tiles": configured_layout.get("frame_tiles", DEFAULT_FRAME_TILES).duplicate(),
+			"grid_size": configured_layout.get("grid_size", DEFAULT_GRID_SIZE).duplicate(),
+			"unlocked": bool(room.get("unlocked", initially_unlocked and floor_index <= highest_built_floor)),
+			"tenant_id": str(room.get("tenant_id", "")),
+			"furniture_instances": room.get("furniture_instances", []),
+			"score": int(room.get("score", 0)),
+			"comfort": int(room.get("comfort", 0)),
+			"entertainment": int(room.get("entertainment", 0)),
+			"hygiene": int(room.get("hygiene", 0)),
+			"food": int(room.get("food", 0)),
+			"rent_per_minute": float(room.get("rent_per_minute", 0.0))
+		}
+	rooms = normalized_rooms
 	for tenant_config in ConfigManager.tenants:
 		var tenant_data: Dictionary = tenant_config
 		var tenant_id := str(tenant_data.get("id", ""))
@@ -460,31 +460,30 @@ func _normalize_tenant_behavior(value: String) -> String:
 	return DEFAULT_TENANT_BEHAVIOR
 
 func _configured_room_layout_for_level(room_data: Dictionary, room_level: int) -> Dictionary:
+	var frame_tiles := _fixed_height_frame_tiles(_int_pair(room_data.get("frame_tiles", DEFAULT_FRAME_TILES), DEFAULT_FRAME_TILES))
 	var layout := {
-		"room_size": _number_pair(room_data.get("room_size", DEFAULT_ROOM_SIZE), DEFAULT_ROOM_SIZE),
-		"grid_size": _int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE),
-		"grid_rect": _number_rect(room_data.get("grid_rect", DEFAULT_GRID_RECT), DEFAULT_GRID_RECT)
+		"frame_tiles": frame_tiles,
+		"grid_size": _fixed_height_grid_size(_int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE))
 	}
 	for item in room_data.get("layout_upgrades", []):
 		var upgrade: Dictionary = item
 		if int(upgrade.get("level", 0)) > room_level:
 			continue
-		layout["room_size"] = _number_pair(upgrade.get("room_size", layout["room_size"]), layout["room_size"])
-		layout["grid_size"] = _int_pair(upgrade.get("grid_size", layout["grid_size"]), layout["grid_size"])
-		layout["grid_rect"] = _number_rect(upgrade.get("grid_rect", layout["grid_rect"]), layout["grid_rect"])
+		layout["frame_tiles"] = _fixed_height_frame_tiles(_int_pair(upgrade.get("frame_tiles", layout["frame_tiles"]), layout["frame_tiles"]))
+		layout["grid_size"] = _fixed_height_grid_size(_int_pair(upgrade.get("grid_size", layout["grid_size"]), layout["grid_size"]))
 	return layout
 
-func _number_pair(value: Variant, fallback: Array) -> Array:
-	if value is Array and value.size() >= 2:
-		return [float(value[0]), float(value[1])]
-	return fallback.duplicate()
+func _fixed_height_frame_tiles(value: Array) -> Array:
+	if value.size() >= 2:
+		return [maxi(4, int(value[0])), int(DEFAULT_FRAME_TILES[1])]
+	return DEFAULT_FRAME_TILES.duplicate()
+
+func _fixed_height_grid_size(value: Array) -> Array:
+	if value.size() >= 2:
+		return [maxi(1, int(value[0])), int(DEFAULT_GRID_SIZE[1])]
+	return DEFAULT_GRID_SIZE.duplicate()
 
 func _int_pair(value: Variant, fallback: Array) -> Array:
 	if value is Array and value.size() >= 2:
 		return [int(value[0]), int(value[1])]
-	return fallback.duplicate()
-
-func _number_rect(value: Variant, fallback: Array) -> Array:
-	if value is Array and value.size() >= 4:
-		return [float(value[0]), float(value[1]), float(value[2]), float(value[3])]
 	return fallback.duplicate()
