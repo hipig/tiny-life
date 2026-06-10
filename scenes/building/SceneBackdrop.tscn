@@ -48,6 +48,8 @@ tile_set = ExtResource("3_background_tileset")
 z_index = -60
 scroll_scale = Vector2(0.18, 0)
 repeat_size = Vector2(360, 0)
+autoscroll = Vector2(-4, 0)
+repeat_times = 2
 
 [node name="Cloud_01" type="Sprite2D" parent="CloudParallax" unique_id=1685726540]
 position = Vector2(36, 44)

@@ -1,23 +1,23 @@
-[gd_scene load_steps=3 format=3 uid="uid://service_core_tilemap"]
+[gd_scene format=3 uid="uid://bvakg1tbhshb"]
 
 [ext_resource type="Script" uid="uid://bdhfohruunitl" path="res://scripts/building/ApartmentTileMap.gd" id="1_service_tilemap"]
-[ext_resource type="TileSet" path="res://tilesets/apartment_tileset.tres" id="2_apartment_tileset"]
+[ext_resource type="TileSet" uid="uid://da8f30h62l4qi" path="res://tilesets/apartment_tileset.tres" id="2_apartment_tileset"]
 
-[node name="ServiceCoreTileMap" type="Node2D"]
+[node name="ServiceCoreTileMap" type="Node2D" unique_id=2047636105]
 script = ExtResource("1_service_tilemap")
 
-[node name="WallpaperTileMap" type="TileMapLayer" parent="."]
+[node name="WallpaperTileMap" type="TileMapLayer" parent="." unique_id=501876997]
 tile_set = ExtResource("2_apartment_tileset")
 
-[node name="WallTileMap" type="TileMapLayer" parent="."]
+[node name="WallTileMap" type="TileMapLayer" parent="." unique_id=1807766278]
 tile_set = ExtResource("2_apartment_tileset")
 
-[node name="InfrastructureTileMap" type="TileMapLayer" parent="."]
+[node name="InfrastructureTileMap" type="TileMapLayer" parent="." unique_id=352229577]
 tile_set = ExtResource("2_apartment_tileset")
 
-[node name="RoofTileMap" type="TileMapLayer" parent="."]
+[node name="RoofTileMap" type="TileMapLayer" parent="." unique_id=371036063]
 tile_set = ExtResource("2_apartment_tileset")
 
-[node name="ConstructionTileMap" type="TileMapLayer" parent="."]
+[node name="ConstructionTileMap" type="TileMapLayer" parent="." unique_id=1603380710]
 visible = false
 tile_set = ExtResource("2_apartment_tileset")

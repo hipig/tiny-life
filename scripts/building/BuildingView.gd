@@ -17,6 +17,8 @@ const BUILDING_GROUND_OVERLAP: float = 4.0
 const FOCUS_SCREEN_ANCHOR: Vector2 = Vector2(0.5, 0.58)
 const TOUCH_PINCH_MIN_DISTANCE: float = 8.0
 
+const TENANT_SCENE := preload("res://scenes/tenant/Tenant.tscn")
+
 enum CameraInputMode {
 	BLOCKED,
 	NORMAL,
@@ -28,6 +30,8 @@ enum CameraInputMode {
 @onready var world_root: Node2D = $WorldClip/WorldViewport/WorldRoot
 @onready var scene_backdrop: SceneBackdrop = $WorldClip/WorldViewport/WorldRoot/SceneBackdrop
 @onready var building_root: ApartmentBuilding = $WorldClip/WorldViewport/WorldRoot/ApartmentBuilding
+@onready var tenant_world_layer: Node2D = $WorldClip/WorldViewport/WorldRoot/TenantWorldLayer
+@onready var left_offscreen_marker: Marker2D = $WorldClip/WorldViewport/WorldRoot/TenantRouteMarkers/LeftOffscreenMarker
 @onready var world_camera: Camera2D = $WorldClip/WorldViewport/WorldRoot/WorldCamera
 
 var zoom_scale: float = 1.0
@@ -43,8 +47,8 @@ var _pinch_center: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	if not resized.is_connected(_on_resized):
 		resized.connect(_on_resized)
+	TenantAI.reset_startup_entry_session()
 	world_camera.make_current()
-	refresh()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if handle_camera_input(event):
@@ -74,6 +78,7 @@ func refresh() -> void:
 		return
 	building_root.refresh()
 	_layout_world()
+	_ensure_world_tenants()
 	zoom_changed.emit(zoom_scale)
 
 func zoom_by(delta: float, anchor_viewport_position: Vector2 = Vector2.INF) -> void:
@@ -128,6 +133,68 @@ func find_room_node(room_id: String) -> Control:
 		return null
 	return building_root.find_room_node(room_id)
 
+func get_tenant_world_layer() -> Node2D:
+	return tenant_world_layer
+
+func get_room_visual_layer(room_id: String) -> Control:
+	var room_node := find_room_node(room_id)
+	if room_node != null and room_node.has_method("get_room_visual_layer"):
+		return room_node.call("get_room_visual_layer") as Control
+	return null
+
+func get_room_door(room_id: String) -> TrafficDoor:
+	var room_node := find_room_node(room_id)
+	if room_node != null and room_node.has_method("get_room_door"):
+		return room_node.call("get_room_door") as TrafficDoor
+	return null
+
+func get_room_door_world_position(room_id: String) -> Vector2:
+	var room_node := find_room_node(room_id)
+	if room_node != null and room_node.has_method("get_room_door_world_position"):
+		return room_node.call("get_room_door_world_position")
+	return Vector2.ZERO
+
+func get_room_spawn_local_position(room_id: String) -> Vector2:
+	var room_node := find_room_node(room_id)
+	if room_node != null and room_node.has_method("get_room_spawn_local_position"):
+		return room_node.call("get_room_spawn_local_position")
+	return Vector2.ZERO
+
+func get_floor_service_core(floor_index: int) -> FloorServiceCore:
+	if building_root == null:
+		return null
+	return building_root.find_floor_service_core(floor_index)
+
+func get_service_exit_door() -> TrafficDoor:
+	var service := get_floor_service_core(1)
+	return service.get_exit_door() if service != null else null
+
+func get_service_elevator_door(floor_index: int) -> TrafficDoor:
+	var service := get_floor_service_core(floor_index)
+	return service.get_elevator_door() if service != null else null
+
+func get_service_exit_world_position() -> Vector2:
+	var service := get_floor_service_core(1)
+	if service == null:
+		return Vector2.ZERO
+	return service.get_global_transform() * service.get_exit_anchor_local_position()
+
+func get_service_elevator_world_position(floor_index: int) -> Vector2:
+	var service := get_floor_service_core(floor_index)
+	if service == null:
+		return get_service_exit_world_position()
+	return service.get_global_transform() * service.get_elevator_anchor_local_position()
+
+func get_offscreen_left_world_position(y: float) -> Vector2:
+	return get_left_offscreen_route_mark_world_position(y)
+
+func get_left_offscreen_route_mark_world_position(y: float) -> Vector2:
+	var marker_position := Vector2(_visible_world_left() - _tenant_route_offscreen_margin(), y)
+	if left_offscreen_marker == null:
+		push_error("BuildingView.tscn must expose TenantRouteMarkers/LeftOffscreenMarker.")
+		return marker_position
+	return marker_position
+
 func screen_to_world_viewport_position(screen_position: Vector2) -> Vector2:
 	if world_clip == null:
 		return screen_position
@@ -167,6 +234,7 @@ func _layout_world(clamp_camera: bool = true) -> void:
 		_camera_initialized = true
 	elif clamp_camera:
 		_clamp_camera()
+	_ensure_world_tenants()
 
 func _building_position_in_world(building_size: Vector2, current_world_size: Vector2) -> Vector2:
 	var ground_band: float = _ground_band_height()
@@ -186,6 +254,34 @@ func _apply_room_focus(room_id: String, attempt: int = 0) -> void:
 	_clamp_camera()
 	if attempt < FOCUS_ATTEMPTS:
 		call_deferred("_apply_room_focus", room_id, attempt + 1)
+
+func _ensure_world_tenants() -> void:
+	if tenant_world_layer == null:
+		return
+	for tenant_id in GameState.tenants.keys():
+		var tenant_state: Dictionary = GameState.tenants[tenant_id]
+		var presence := str(tenant_state.get("presence_state", GameState.TENANT_PRESENCE_HOME))
+		var room_id := str(tenant_state.get("room_id", ""))
+		var node_name := "Tenant_%s" % str(tenant_id)
+		var existing := tenant_world_layer.get_node_or_null(node_name)
+		var startup_entry_active := TenantAI.is_startup_entry_active(str(tenant_id))
+		if presence == GameState.TENANT_PRESENCE_HOME or room_id.is_empty():
+			if existing != null and not startup_entry_active:
+				existing.queue_free()
+			continue
+		if existing != null:
+			continue
+		var tenant_view := TENANT_SCENE.instantiate() as Tenant
+		if tenant_view == null:
+			continue
+		tenant_view.name = node_name
+		tenant_world_layer.add_child(tenant_view)
+		var exit_position := get_service_exit_world_position()
+		if exit_position == Vector2.ZERO:
+			exit_position = get_room_door_world_position(room_id)
+		tenant_view.position = get_offscreen_left_world_position(exit_position.y)
+		tenant_view.visible = presence != GameState.TENANT_PRESENCE_AWAY
+		tenant_view.setup(str(tenant_id), room_id)
 
 func _pan_camera(delta_world: Vector2) -> void:
 	if world_camera == null:
@@ -385,6 +481,14 @@ func _clamped_camera_position(position: Vector2) -> Vector2:
 
 func _visible_world_size() -> Vector2:
 	return _viewport_size() / maxf(zoom_scale, 0.001)
+
+func _visible_world_left() -> float:
+	if world_camera == null:
+		return 0.0
+	return world_camera.position.x - _visible_world_size().x * 0.5
+
+func _tenant_route_offscreen_margin() -> float:
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("offscreen_margin", 64.0)))
 
 func _viewport_size() -> Vector2:
 	if world_viewport == null:

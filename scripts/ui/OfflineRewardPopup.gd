@@ -26,8 +26,8 @@ func _bind_scene_nodes() -> void:
 	list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/ListRoot") as VBoxContainer
 	offline_info_row = list_root.get_node_or_null("OfflineInfoRow") as IconInfoRow
 	amount_card = list_root.get_node_or_null("AmountCard") as StatCard
-	claim_button = list_root.get_node_or_null("ClaimButton") as PanelActionButton
-	double_claim_button = list_root.get_node_or_null("DoubleClaimButton") as PanelActionButton
+	claim_button = list_root.get_node_or_null("ButtonRow/ClaimButton") as PanelActionButton
+	double_claim_button = list_root.get_node_or_null("ButtonRow/DoubleClaimButton") as PanelActionButton
 
 func _bind_scene_text() -> void:
 	offline_duration_title_template = _template_text("OfflineDurationTitleTemplate")

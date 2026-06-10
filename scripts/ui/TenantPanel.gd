@@ -52,6 +52,16 @@ func open(target_room_id: String, panel_mode: String) -> void:
 	else:
 		_show_tenant_view()
 
+func refresh() -> void:
+	_bind_scene_text()
+	if mode == "recruit":
+		if selected_region_id.is_empty():
+			_show_regions()
+		else:
+			_show_candidates(selected_region_id)
+		return
+	_show_tenant_view()
+
 func _show_regions() -> void:
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	setup_panel(panel_title, false)

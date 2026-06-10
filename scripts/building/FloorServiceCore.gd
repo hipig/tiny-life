@@ -1,10 +1,16 @@
+@tool
 class_name FloorServiceCore
 extends Control
 
 @onready var service_tile_map: ApartmentTileMap = $ServiceCoreTileMap
+@onready var exit_door: TrafficDoor = $TrafficRoot/ExitDoor
+@onready var elevator_door: TrafficDoor = $TrafficRoot/ElevatorDoor
 @onready var floor_label: Label = $FloorLabel
 
-func apply_layout(service_width: float, floor_height: float) -> void:
+var floor_index := 1
+
+func apply_layout(service_width: float, floor_height: float, index := 1, edge_sides: Dictionary = {}, body_sides: Dictionary = {}) -> void:
+	floor_index = index
 	custom_minimum_size = Vector2(service_width, floor_height)
 	size = custom_minimum_size
 	if service_tile_map != null:
@@ -12,7 +18,28 @@ func apply_layout(service_width: float, floor_height: float) -> void:
 			maxi(3, int(round(service_width / ApartmentTileMap.TILE_SIZE))),
 			maxi(3, int(round(floor_height / ApartmentTileMap.TILE_SIZE)))
 		)
-		service_tile_map.render_room_skeleton(frame_tiles, {}, false, false)
+		service_tile_map.render_room_skeleton(frame_tiles, {}, false, false, edge_sides, body_sides, floor_index == 1)
+	_layout_traffic_nodes(service_width, floor_height)
 
 func set_floor_label(text: String) -> void:
 	floor_label.text = text
+
+func get_exit_door() -> TrafficDoor:
+	return exit_door
+
+func get_elevator_door() -> TrafficDoor:
+	return elevator_door
+
+func get_exit_anchor_local_position() -> Vector2:
+	return Vector2(ApartmentTileMap.TILE_SIZE * 0.5, maxf(ApartmentTileMap.TILE_SIZE, size.y))
+
+func get_elevator_anchor_local_position() -> Vector2:
+	return Vector2(size.x * 0.5, maxf(ApartmentTileMap.TILE_SIZE, size.y))
+
+func _layout_traffic_nodes(service_width: float, floor_height: float) -> void:
+	if exit_door != null:
+		exit_door.visible = floor_index == 1
+		exit_door.position = Vector2(ApartmentTileMap.TILE_SIZE * 0.5, maxf(ApartmentTileMap.TILE_SIZE, floor_height))
+	if elevator_door != null:
+		elevator_door.visible = true
+		elevator_door.position = Vector2(service_width * 0.5, maxf(ApartmentTileMap.TILE_SIZE, floor_height - ApartmentTileMap.TILE_SIZE))

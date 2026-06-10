@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://uhsw6hgy4tec"]
+
+[ext_resource type="Script" uid="uid://d162gh5bylts1" path="res://scripts/building/TrafficDoor.gd" id="1_traffic_door"]
+[ext_resource type="Texture2D" uid="uid://c1i8atqwpsyc" path="res://assets/pixel_spaces/building/Infrastructure.png" id="2_3xxam"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dopuh"]
+atlas = ExtResource("2_3xxam")
+region = Rect2(176, 224, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k5hq7"]
+atlas = ExtResource("2_3xxam")
+region = Rect2(192, 224, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_643dr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dopuh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k5hq7")
+}],
+"loop": false,
+"name": &"default",
+"speed": 8.0
+}]
+
+[node name="RoomDoor" type="Node2D" unique_id=355482709]
+z_index = 5
+script = ExtResource("1_traffic_door")
+
+[node name="DoorSprite" type="AnimatedSprite2D" parent="." unique_id=2118457031]
+position = Vector2(0, -16)
+sprite_frames = SubResource("SpriteFrames_643dr")

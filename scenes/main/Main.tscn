@@ -28,10 +28,11 @@ grow_vertical = 2
 [node name="TopStatusBar" parent="CanvasLayer_UI" instance=ExtResource("2_top")]
 layout_mode = 1
 anchors_preset = 10
-anchor_right = 1.0
-offset_left = 8.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
 offset_top = 8.0
-offset_right = -8.0
+offset_right = 120.0
 offset_bottom = 58.0
 grow_horizontal = 2
 

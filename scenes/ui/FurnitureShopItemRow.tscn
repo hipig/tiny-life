@@ -63,36 +63,43 @@ content_margin_right = 5.0
 content_margin_bottom = 5.0
 
 [node name="FurnitureShopItemRow" type="PanelContainer"]
-custom_minimum_size = Vector2(0, 66)
+custom_minimum_size = Vector2(130, 166)
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxTexture_panel_white")
 script = ExtResource("1_shop_row")
 
-[node name="Row" type="HBoxContainer" parent="."]
+[node name="Card" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 5
 
-[node name="Preview" type="TextureRect" parent="Row"]
-custom_minimum_size = Vector2(58, 58)
+[node name="ItemLabel" type="Label" parent="Card"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="PreviewFrame" type="PanelContainer" parent="Card"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxTexture_panel_white")
+
+[node name="Preview" type="TextureRect" parent="Card/PreviewFrame"]
+custom_minimum_size = Vector2(74, 60)
 layout_mode = 2
 mouse_filter = 2
 stretch_mode = 5
 
-[node name="ItemLabel" type="Label" parent="Row"]
+[node name="PlaceButton" type="Button" parent="Card"]
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="PlaceButton" type="Button" parent="Row"]
-custom_minimum_size = Vector2(86, 46)
-layout_mode = 2
-size_flags_horizontal = 8
-text = "摆放"
+text = "0"
 focus_mode = 2
 theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
 theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
@@ -100,7 +107,7 @@ theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
 theme_override_colors/font_disabled_color = Color(0.490196, 0.454902, 0.439216, 1)
 theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxTexture_green_normal")
 theme_override_styles/hover = SubResource("StyleBoxTexture_yellow_hover")
 theme_override_styles/pressed = SubResource("StyleBoxTexture_green_pressed")
@@ -110,9 +117,9 @@ theme_override_styles/disabled = SubResource("StyleBoxTexture_grey_disabled")
 visible = false
 layout_mode = 2
 
-[node name="ItemTextTemplate" type="Label" parent="TemplateText"]
+[node name="PriceButtonTemplate" type="Label" parent="TemplateText"]
 layout_mode = 1
-text = "%s  %d 金币  评分 +%d"
+text = "%d"
 
 [node name="PlaceInsufficientText" type="Label" parent="TemplateText"]
 layout_mode = 1

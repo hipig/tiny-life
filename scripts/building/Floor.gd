@@ -20,6 +20,7 @@ func _ready() -> void:
 
 func setup(index: int, show_roof := true) -> void:
 	floor_index = index
+	name = "Floor_%d" % floor_index
 	show_roof_on_top_room = show_roof
 	_bind_scene_config()
 	_ensure_service_core()
@@ -33,12 +34,9 @@ func setup(index: int, show_roof := true) -> void:
 	var floor_data: Dictionary = ConfigManager.get_floor_data(floor_index)
 	_apply_service_core(floor_data)
 
-	for room in ConfigManager.rooms:
-		var room_data: Dictionary = room
-		if int(room_data.get("floor_index", 0)) != floor_index:
-			continue
-		if not _room_is_visible(room_data):
-			continue
+	var visible_rooms := _visible_room_configs_for_floor()
+	for i in range(visible_rooms.size()):
+		var room_data: Dictionary = visible_rooms[i]
 		var target_room_scene := _scene_from_path(str(room_data.get("room_scene_path", "")), room_scene)
 		if target_room_scene == null:
 			push_error("Floor.tscn must assign a room_scene template.")
@@ -47,7 +45,7 @@ func setup(index: int, show_roof := true) -> void:
 		room_view.name = "Room_%s" % str(room_data.get("id", ""))
 		room_view.custom_minimum_size = _room_pixel_size(room_data)
 		add_child(room_view)
-		room_view.setup(str(room_data.get("id", "")), show_roof_on_top_room)
+		room_view.setup(str(room_data.get("id", "")), show_roof_on_top_room, _room_edge_sides(i == visible_rooms.size() - 1))
 
 func _ensure_service_core() -> void:
 	service_core = get_node_or_null("FloorServiceCore") as FloorServiceCore
@@ -65,8 +63,11 @@ func _clear_runtime_rooms() -> void:
 
 func _apply_service_core(floor_data: Dictionary) -> void:
 	var floor_height := _floor_height()
-	service_core.apply_layout(service_width, floor_height)
+	service_core.apply_layout(service_width, floor_height, floor_index, _service_edge_sides(), _service_body_sides())
 	service_core.set_floor_label(str(floor_data.get("display_name", "%dF" % floor_index)))
+
+func get_service_core() -> FloorServiceCore:
+	return service_core
 
 func _floor_size() -> Vector2:
 	var width := service_width
@@ -124,6 +125,40 @@ func _room_is_visible(room_data: Dictionary) -> bool:
 	if not runtime_room.is_empty():
 		return bool(runtime_room.get("unlocked", false))
 	return bool(room_data.get("initial_unlocked", true)) and int(room_data.get("floor_index", 0)) <= GameState.highest_built_floor
+
+func _visible_room_configs_for_floor() -> Array:
+	var result: Array = []
+	for room in ConfigManager.rooms:
+		var room_data: Dictionary = room
+		if int(room_data.get("floor_index", 0)) != floor_index:
+			continue
+		if _room_is_visible(room_data):
+			result.append(room_data)
+	return result
+
+func _service_edge_sides() -> Dictionary:
+	return {
+		"left": true,
+		"right": false,
+		"top": false,
+		"bottom": false
+	}
+
+func _service_body_sides() -> Dictionary:
+	return {
+		"left": true,
+		"right": false,
+		"top": true,
+		"bottom": true
+	}
+
+func _room_edge_sides(is_rightmost_room: bool) -> Dictionary:
+	return {
+		"left": false,
+		"right": is_rightmost_room,
+		"top": false,
+		"bottom": false
+	}
 
 func _scene_from_path(path: String, fallback: PackedScene) -> PackedScene:
 	if path.is_empty():

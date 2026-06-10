@@ -24,6 +24,15 @@ static func walk_positions(room: Dictionary) -> Array[Vector2]:
 	var grids := walk_grids(room)
 	return [grid_to_position(room, grids[0]), grid_to_position(room, grids[1])]
 
+static func room_door_inside_grid(room: Dictionary) -> Array:
+	var door_cells := FurniturePlacementRules.door_cells_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
+	if not door_cells.is_empty():
+		return door_cells.front()
+	return [0, floor_grid_y(room)]
+
+static func room_door_inside_position(room: Dictionary) -> Vector2:
+	return grid_to_position(room, room_door_inside_grid(room))
+
 static func interaction_grid(room: Dictionary, furniture_instance: Dictionary, furniture_data: Dictionary) -> Array:
 	var floor_row := floor_grid_y(room)
 	var grid_pos: Array = furniture_instance.get("grid_pos", [0, floor_row])

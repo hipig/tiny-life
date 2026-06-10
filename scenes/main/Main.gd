@@ -20,26 +20,27 @@ const OFFLINE_REWARD_POPUP_SCENE := preload("res://scenes/ui/OfflineRewardPopup.
 @onready var popup_layer: PopupLayer = $PopupLayer
 
 var selected_room_id := ""
+var state_loaded_once := false
 
 func _ready() -> void:
 	_connect_events()
-	_refresh_all()
 
 func _connect_events() -> void:
 	GameEvents.rent_changed.connect(_on_rent_changed)
 	GameEvents.apartment_level_changed.connect(_on_apartment_level_changed)
 	GameEvents.room_updated.connect(_on_room_updated)
-	GameEvents.room_layout_changed.connect(func(_room_id): _refresh_building())
-	GameEvents.room_unlocked.connect(func(_room_id): _refresh_building())
-	GameEvents.furniture_placed.connect(func(_room_id, _furniture_id): _refresh_building())
-	GameEvents.furniture_moved.connect(func(_room_id, _furniture_id): _refresh_building())
-	GameEvents.furniture_recycled.connect(func(_room_id, _furniture_id): _refresh_building())
-	GameEvents.tenant_recruited.connect(func(_tenant_id, _room_id): _refresh_building())
-	GameEvents.tenant_behavior_changed.connect(func(_tenant_id, _behavior): _refresh_room_panel_if_open())
+	GameEvents.room_layout_changed.connect(func(_room_id): _refresh_building_if_loaded())
+	GameEvents.room_unlocked.connect(func(_room_id): _refresh_building_if_loaded())
+	GameEvents.furniture_placed.connect(func(_room_id, _furniture_id): _refresh_building_if_loaded())
+	GameEvents.furniture_moved.connect(func(_room_id, _furniture_id): _refresh_building_if_loaded())
+	GameEvents.furniture_recycled.connect(func(_room_id, _furniture_id): _refresh_building_if_loaded())
+	GameEvents.tenant_recruited.connect(func(_tenant_id, _room_id): _refresh_building_if_loaded())
+	GameEvents.tenant_behavior_changed.connect(func(_tenant_id, _behavior): _refresh_tenant_panels_if_open())
+	GameEvents.tenant_presence_changed.connect(func(_tenant_id, _presence): _refresh_tenant_panels_if_open())
 	GameEvents.task_updated.connect(func(_task_id): pass)
 	GameEvents.task_completed.connect(func(task_id): _toast("toast_task_completed", [_task_title(task_id)]))
 	GameEvents.toast_requested.connect(_show_toast)
-	GameEvents.state_loaded.connect(_refresh_all)
+	GameEvents.state_loaded.connect(_on_state_loaded)
 	GameEvents.offline_income_ready.connect(_show_offline_reward)
 	UIManager.room_panel_requested.connect(_show_room_panel)
 	UIManager.furniture_shop_requested.connect(_show_furniture_shop)
@@ -54,16 +55,22 @@ func _refresh_all() -> void:
 	_refresh_top_bar()
 	_refresh_building()
 
+func _on_state_loaded() -> void:
+	TenantAI.begin_startup_entry_refresh()
+	state_loaded_once = true
+	_refresh_all()
+	TenantAI.end_startup_entry_refresh()
+
 func _on_rent_changed(_value: float) -> void:
 	_refresh_top_bar()
 	_refresh_room_panel_if_open()
 
 func _on_apartment_level_changed(_level: int) -> void:
 	_refresh_top_bar()
-	_refresh_building()
+	_refresh_building_if_loaded()
 
 func _on_room_updated(_room_id: String) -> void:
-	_refresh_building()
+	_refresh_building_if_loaded()
 	_refresh_room_panel_if_open()
 
 func _on_ui_state_changed(state: int) -> void:
@@ -80,6 +87,10 @@ func _refresh_top_bar() -> void:
 func _refresh_building() -> void:
 	if building_view != null and building_view.has_method("refresh"):
 		building_view.refresh()
+
+func _refresh_building_if_loaded() -> void:
+	if state_loaded_once:
+		_refresh_building()
 
 func _show_room_panel(room_id: String) -> void:
 	selected_room_id = room_id
@@ -253,7 +264,6 @@ func _on_save_pressed() -> void:
 func _on_reset_pressed() -> void:
 	SaveManager.delete_save_and_restart()
 	_clear_panel_layer_panels()
-	_refresh_all()
 	_toast("toast_reset_done")
 
 func _show_offline_reward(amount: int, seconds: int) -> void:
@@ -305,6 +315,16 @@ func _refresh_room_panel_if_open() -> void:
 		var panel := _active_panel() as RoomPanel
 		if panel != null:
 			panel.refresh()
+
+func _refresh_tenant_panel_if_open() -> void:
+	if UIManager.current_state == UIManager.UIState.TENANT_PANEL and not selected_room_id.is_empty():
+		var panel := _active_panel() as TenantPanel
+		if panel != null:
+			panel.refresh()
+
+func _refresh_tenant_panels_if_open() -> void:
+	_refresh_room_panel_if_open()
+	_refresh_tenant_panel_if_open()
 
 func _active_panel() -> AppPanel:
 	return popup_layer.active_panel()

@@ -6,7 +6,7 @@ const FURNITURE_SHOP_ITEM_ROW_SCENE := preload("res://scenes/ui/FurnitureShopIte
 signal place_requested(furniture_id: String, room_id: String)
 
 var room_id := ""
-var list_root: VBoxContainer
+var list_root: GridContainer
 
 var title_template := ""
 var fallback_room_name := ""
@@ -15,7 +15,7 @@ func open(target_room_id: String) -> void:
 	room_id = target_room_id
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	setup_panel("", false)
-	list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/ListRoot") as VBoxContainer
+	list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/ListRoot") as GridContainer
 	_bind_scene_text()
 	title_label.text = title_template % room.get("room_name", fallback_room_name)
 	_refresh_list()

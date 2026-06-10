@@ -237,6 +237,21 @@ layout_mode = 1
 text = "发呆"
 metadata/behavior_key = "idle"
 
+[node name="Leaving" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "离开中"
+metadata/behavior_key = "leaving"
+
+[node name="Away" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "外出"
+metadata/behavior_key = "away"
+
+[node name="Returning" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
+layout_mode = 1
+text = "回家中"
+metadata/behavior_key = "returning"
+
 [node name="Recruited" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels"]
 layout_mode = 1
 text = "入住"

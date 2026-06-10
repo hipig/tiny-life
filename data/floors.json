@@ -69,8 +69,8 @@
     },
     "floor_icon_asset": {
       "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
-      "region": [0, 0, 16, 32]
+      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+      "region": [0, 0, 32, 32]
     },
     "build_icon_asset": {
       "type": "single_sprite",
@@ -108,8 +108,8 @@
     },
     "floor_icon_asset": {
       "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
-      "region": [0, 0, 16, 32]
+      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+      "region": [32, 0, 32, 32]
     },
     "build_icon_asset": {
       "type": "single_sprite",
@@ -147,8 +147,8 @@
     },
     "floor_icon_asset": {
       "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_emergency.png",
-      "region": [0, 0, 16, 32]
+      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+      "region": [0, 0, 32, 32]
     },
     "build_icon_asset": {
       "type": "single_sprite",

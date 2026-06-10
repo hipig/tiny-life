@@ -66,6 +66,13 @@ func find_room_node(room_id: String) -> Control:
 		return found as Control
 	return null
 
+func find_floor_service_core(floor_index: int) -> FloorServiceCore:
+	var floor_node := find_child("Floor_%d" % floor_index, true, false)
+	if floor_node == null:
+		return null
+	var service := floor_node.get_node_or_null("FloorServiceCore")
+	return service as FloorServiceCore
+
 func _max_floor_index() -> int:
 	var max_floor: int = 1
 	for floor in ConfigManager.floors:

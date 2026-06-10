@@ -10,16 +10,16 @@
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Boost.png" id="8_icon_boost"]
 
 [node name="OfflineRewardPopup" instance=ExtResource("1_base")]
-custom_minimum_size = Vector2(320, 300)
+custom_minimum_size = Vector2(340, 280)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -160.0
-offset_top = -150.0
-offset_right = 160.0
-offset_bottom = 150.0
+offset_left = -170.0
+offset_top = -140.0
+offset_right = 170.0
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_offline")
@@ -55,16 +55,22 @@ text = "获得金币"
 [node name="ValueLabel" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/AmountCard/Row/Texts" index="1"]
 text = "0"
 
-[node name="ClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
-custom_minimum_size = Vector2(220, 52)
+[node name="ButtonRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot"]
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/ButtonRow" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
 text = "领取"
 icon = ExtResource("7_icon_currency")
 
-[node name="DoubleClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot" instance=ExtResource("3_action")]
-custom_minimum_size = Vector2(220, 52)
+[node name="DoubleClaimButton" parent="PanelBox/ScrollContainer/ContentRoot/ListRoot/ButtonRow" instance=ExtResource("3_action")]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "看广告双倍领取"
+size_flags_horizontal = 3
+text = "双倍领取"
 icon = ExtResource("8_icon_boost")
 
 [node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]

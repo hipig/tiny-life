@@ -133,11 +133,11 @@ script = ExtResource("4_tenant_ai")
 metadata/default_avatar_animation = "idle"
 
 [node name="Idle" type="Node" parent="BehaviorAnimationMap" unique_id=698479167]
-metadata/behavior_keys = "idle,recruited"
+metadata/behavior_keys = "idle,recruited,away"
 metadata/avatar_animation = "idle"
 
 [node name="Walk" type="Node" parent="BehaviorAnimationMap" unique_id=296676773]
-metadata/behavior_keys = "wander,walk"
+metadata/behavior_keys = "wander,walk,leaving,returning"
 metadata/avatar_animation = "walk"
 
 [node name="Happy" type="Node" parent="BehaviorAnimationMap" unique_id=1437926919]

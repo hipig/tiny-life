@@ -6,6 +6,13 @@ const SAVE_SCHEMA_VERSION := 2
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
 const IDLE_TENANT_BEHAVIOR := "idle"
+const LEAVING_TENANT_BEHAVIOR := "leaving"
+const AWAY_TENANT_BEHAVIOR := "away"
+const RETURNING_TENANT_BEHAVIOR := "returning"
+const TENANT_PRESENCE_HOME := "home"
+const TENANT_PRESENCE_LEAVING := "leaving"
+const TENANT_PRESENCE_AWAY := "away"
+const TENANT_PRESENCE_RETURNING := "returning"
 const VALID_TENANT_BEHAVIORS := {
 	"wander": true,
 	"recruited": true,
@@ -16,7 +23,16 @@ const VALID_TENANT_BEHAVIORS := {
 	"clean": true,
 	"study": true,
 	"relax": true,
-	"happy": true
+	"happy": true,
+	"leaving": true,
+	"away": true,
+	"returning": true
+}
+const VALID_TENANT_PRESENCE := {
+	"home": true,
+	"leaving": true,
+	"away": true,
+	"returning": true
 }
 
 var coins: int = 0
@@ -83,7 +99,10 @@ func reset_new_game() -> void:
 			"satisfaction": int(tenant_data.get("initial_satisfaction", 60)),
 			"current_need": "",
 			"current_behavior": DEFAULT_TENANT_BEHAVIOR,
-			"room_id": ""
+			"room_id": "",
+			"presence_state": TENANT_PRESENCE_HOME,
+			"away_until_timestamp": 0,
+			"presence_target_room_id": ""
 		}
 	for task_config in ConfigManager.tasks:
 		var task_data: Dictionary = task_config
@@ -298,6 +317,27 @@ func set_tenant_behavior(tenant_id: String, behavior_key: String) -> void:
 	tenants[tenant_id] = tenant
 	GameEvents.tenant_behavior_changed.emit(tenant_id, behavior)
 
+func set_tenant_presence(tenant_id: String, presence_state: String, away_until_timestamp := 0, target_room_id := "") -> void:
+	var tenant: Dictionary = tenants.get(tenant_id, {})
+	if tenant.is_empty():
+		return
+	var presence := _normalize_tenant_presence(presence_state)
+	var behavior := _behavior_for_presence(presence)
+	tenant["presence_state"] = presence
+	tenant["away_until_timestamp"] = maxi(0, away_until_timestamp)
+	tenant["presence_target_room_id"] = target_room_id
+	if not behavior.is_empty():
+		tenant["current_need"] = ""
+		tenant["current_behavior"] = behavior
+	if presence == TENANT_PRESENCE_HOME:
+		tenant["away_until_timestamp"] = 0
+		tenant["presence_target_room_id"] = ""
+	tenants[tenant_id] = tenant
+	save_needs_writeback = true
+	GameEvents.tenant_presence_changed.emit(tenant_id, presence)
+	if not behavior.is_empty():
+		GameEvents.tenant_behavior_changed.emit(tenant_id, behavior)
+
 func build_floor(floor_index: int) -> bool:
 	var floor: Dictionary = ConfigManager.get_floor_data(floor_index)
 	if floor.is_empty():
@@ -446,6 +486,21 @@ func _ensure_runtime_defaults() -> void:
 		tenant["room_id"] = str(tenant.get("room_id", ""))
 		if not tenant["room_id"].is_empty() and not rooms.has(tenant["room_id"]):
 			tenant["room_id"] = ""
+		tenant["presence_state"] = _normalize_tenant_presence(str(tenant.get("presence_state", TENANT_PRESENCE_HOME)))
+		tenant["away_until_timestamp"] = maxi(0, int(tenant.get("away_until_timestamp", 0)))
+		tenant["presence_target_room_id"] = str(tenant.get("presence_target_room_id", ""))
+		if tenant["room_id"].is_empty():
+			tenant["presence_state"] = TENANT_PRESENCE_HOME
+			tenant["away_until_timestamp"] = 0
+			tenant["presence_target_room_id"] = ""
+		elif tenant["presence_state"] == TENANT_PRESENCE_AWAY and int(tenant["away_until_timestamp"]) <= TimeManager.now_unix():
+			tenant["presence_state"] = TENANT_PRESENCE_RETURNING
+		elif tenant["presence_state"] == TENANT_PRESENCE_LEAVING:
+			tenant["presence_state"] = TENANT_PRESENCE_RETURNING
+		var presence_behavior := _behavior_for_presence(str(tenant["presence_state"]))
+		if not presence_behavior.is_empty():
+			tenant["current_need"] = ""
+			tenant["current_behavior"] = presence_behavior
 		tenants[tenant_id] = tenant
 	for task_config in ConfigManager.tasks:
 		var task_data: Dictionary = task_config
@@ -469,6 +524,23 @@ func _normalize_tenant_behavior(value: String) -> String:
 	if VALID_TENANT_BEHAVIORS.has(key):
 		return key
 	return DEFAULT_TENANT_BEHAVIOR
+
+func _normalize_tenant_presence(value: String) -> String:
+	var key := value.strip_edges()
+	if VALID_TENANT_PRESENCE.has(key):
+		return key
+	return TENANT_PRESENCE_HOME
+
+func _behavior_for_presence(presence_state: String) -> String:
+	match presence_state:
+		TENANT_PRESENCE_LEAVING:
+			return LEAVING_TENANT_BEHAVIOR
+		TENANT_PRESENCE_AWAY:
+			return AWAY_TENANT_BEHAVIOR
+		TENANT_PRESENCE_RETURNING:
+			return RETURNING_TENANT_BEHAVIOR
+		_:
+			return ""
 
 func _configured_room_layout_for_level(room_data: Dictionary, room_level: int) -> Dictionary:
 	var frame_tiles := _fixed_height_frame_tiles(_int_pair(room_data.get("frame_tiles", DEFAULT_FRAME_TILES), DEFAULT_FRAME_TILES))

@@ -20,6 +20,7 @@ var rent_badge_template := ""
 
 var room_id := ""
 var show_roof_eaves := false
+var room_edge_sides: Dictionary = {}
 var room_shell: RoomShell
 var visual_layer: Control
 var placement_grid_layer: Control
@@ -40,9 +41,10 @@ func _ready() -> void:
 	if not room_id.is_empty():
 		_rebuild()
 
-func setup(id: String, has_roof_eaves := false) -> void:
+func setup(id: String, has_roof_eaves := false, edge_sides: Dictionary = {}) -> void:
 	room_id = id
 	show_roof_eaves = has_roof_eaves
+	room_edge_sides = edge_sides.duplicate()
 	if is_inside_tree():
 		_rebuild()
 
@@ -55,7 +57,8 @@ func _rebuild() -> void:
 	custom_minimum_size = _room_pixel_size()
 	size = custom_minimum_size
 	var room: Dictionary = GameState.rooms.get(room_id, {})
-	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), {})
+	room_shell.roof_visible = show_roof_eaves
+	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), {}, room_edge_sides)
 	room_shell.clear_dynamic_views()
 	room_shell.set_roof_visible(show_roof_eaves)
 	_apply_room_badges(room)
@@ -84,11 +87,17 @@ func _bind_visual_layer(room: Dictionary) -> void:
 	var tenant_id := str(room.get("tenant_id", ""))
 	if tenant_id.is_empty():
 		return
+	var tenant_state: Dictionary = GameState.tenants.get(tenant_id, {})
+	if str(tenant_state.get("presence_state", GameState.TENANT_PRESENCE_HOME)) != GameState.TENANT_PRESENCE_HOME:
+		return
+	if TenantAI.is_startup_entry_active(tenant_id):
+		return
 	if tenant_scene == null:
 		push_error("Room.tscn must assign a tenant_scene template.")
 		return
 	var tenant_view := tenant_scene.instantiate()
 	tenant_view.name = "Tenant_%s" % tenant_id
+	tenant_view.visible = false
 	visual_layer.add_child(tenant_view)
 	tenant_view.setup(tenant_id, room_id)
 
@@ -159,6 +168,28 @@ func set_furniture_instance_hidden(target_instance_id: String, hidden: bool) -> 
 	var furniture_view := visual_layer.get_node_or_null("Furniture_%s" % target_instance_id) as CanvasItem
 	if furniture_view != null:
 		furniture_view.visible = not hidden
+
+func get_room_visual_layer() -> Control:
+	if room_shell == null:
+		_ensure_shell()
+	return room_shell.visual_layer if room_shell != null else null
+
+func get_room_door() -> TrafficDoor:
+	if room_shell == null:
+		_ensure_shell()
+	return room_shell.get_room_door() if room_shell != null else null
+
+func get_room_door_local_position() -> Vector2:
+	return TenantRoomLocator.room_door_inside_position(GameState.rooms.get(room_id, {}))
+
+func get_room_spawn_local_position() -> Vector2:
+	return TenantRoomLocator.spawn_position(GameState.rooms.get(room_id, {}))
+
+func get_room_door_world_position() -> Vector2:
+	var door := get_room_door()
+	if door != null:
+		return door.global_position
+	return get_global_transform() * get_room_door_local_position()
 
 func _add_furniture_view(instance_data: Dictionary, room: Dictionary) -> void:
 	var furniture_id := str(instance_data.get("furniture_id", ""))

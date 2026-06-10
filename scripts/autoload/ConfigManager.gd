@@ -145,6 +145,10 @@ func get_level_data(level: int) -> Dictionary:
 func get_economy_value(key: String, default_value: Variant) -> Variant:
 	return economy.get(key, default_value)
 
+func get_tenant_ai_value(key: String, default_value: Variant) -> Variant:
+	var tenant_ai: Dictionary = economy.get("tenant_ai", {})
+	return tenant_ai.get(key, default_value)
+
 func text(key: String, fallback := "") -> String:
 	return str(ui_text.get(key, fallback))
 

@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://hwnf2e3r5isd"]
+
+[ext_resource type="Script" uid="uid://d162gh5bylts1" path="res://scripts/building/TrafficDoor.gd" id="1_traffic_door"]
+[ext_resource type="Texture2D" uid="uid://c1i8atqwpsyc" path="res://assets/pixel_spaces/building/Infrastructure.png" id="2_rgtwd"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rwnwk"]
+atlas = ExtResource("2_rgtwd")
+region = Rect2(112, 304, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dnk52"]
+atlas = ExtResource("2_rgtwd")
+region = Rect2(144, 304, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vmq6a"]
+atlas = ExtResource("2_rgtwd")
+region = Rect2(176, 304, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_484lp"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rwnwk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dnk52")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vmq6a")
+}],
+"loop": false,
+"name": &"default",
+"speed": 8.5
+}]
+
+[node name="ElevatorDoor" type="Node2D" unique_id=1765481851]
+z_index = 5
+script = ExtResource("1_traffic_door")
+open_frame = 2
+
+[node name="DoorSprite" type="AnimatedSprite2D" parent="." unique_id=202553528]
+sprite_frames = SubResource("SpriteFrames_484lp")

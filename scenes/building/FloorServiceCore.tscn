@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/building/FloorServiceCore.gd" id="1_service_core"]
 [ext_resource type="PackedScene" path="res://scenes/building/ServiceCoreTileMap.tscn" id="2_service_tilemap"]
+[ext_resource type="PackedScene" path="res://scenes/building/ExitDoor.tscn" id="3_exit_door"]
+[ext_resource type="PackedScene" path="res://scenes/building/ElevatorDoor.tscn" id="4_elevator_door"]
 
 [node name="FloorServiceCore" type="Control"]
 custom_minimum_size = Vector2(48, 64)
@@ -9,6 +11,14 @@ mouse_filter = 2
 script = ExtResource("1_service_core")
 
 [node name="ServiceCoreTileMap" parent="." instance=ExtResource("2_service_tilemap")]
+
+[node name="TrafficRoot" type="Node2D" parent="."]
+
+[node name="ExitDoor" parent="TrafficRoot" instance=ExtResource("3_exit_door")]
+position = Vector2(8, 64)
+
+[node name="ElevatorDoor" parent="TrafficRoot" instance=ExtResource("4_elevator_door")]
+position = Vector2(24, 48)
 
 [node name="FloorLabel" type="Label" parent="."]
 custom_minimum_size = Vector2(40, 13)

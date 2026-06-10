@@ -38,5 +38,13 @@ render_target_update_mode = 4
 visible = false
 layout_mode = 3
 
+[node name="TenantWorldLayer" type="Node2D" parent="WorldClip/WorldViewport/WorldRoot" unique_id=150812590]
+z_index = 20
+
+[node name="TenantRouteMarkers" type="Node2D" parent="WorldClip/WorldViewport/WorldRoot" unique_id=673946881]
+
+[node name="LeftOffscreenMarker" type="Marker2D" parent="WorldClip/WorldViewport/WorldRoot/TenantRouteMarkers" unique_id=166114651]
+position = Vector2(-64, 0)
+
 [node name="WorldCamera" type="Camera2D" parent="WorldClip/WorldViewport/WorldRoot" unique_id=1833234222]
 position = Vector2(180, 320)
