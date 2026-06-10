@@ -95,7 +95,7 @@ height = 14.0
 size = Vector2(28, 40)
 
 [node name="Tenant" type="CharacterBody2D" unique_id=385276132]
-z_index = 1
+z_index = 40
 position = Vector2(28, 56)
 motion_mode = 1
 script = ExtResource("1_tenant")

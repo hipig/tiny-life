@@ -18,6 +18,7 @@ const IDLE_MIN_SECONDS := 2.0
 const IDLE_MAX_SECONDS := 4.0
 const JUMP_SECONDS := 0.8
 const DEFAULT_ACTION_SECONDS := 3.0
+const DOOR_STEP_PIXELS := 12.0
 
 var tenant: Tenant
 var tenant_id := ""
@@ -239,21 +240,25 @@ func _enter_away(update_until: bool) -> void:
 	tenant.play_avatar_behavior(GameState.AWAY_TENANT_BEHAVIOR)
 	if update_until:
 		var away_seconds := maxi(1, int(ConfigManager.get_tenant_ai_value("away_seconds", 18)))
-		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_AWAY, TimeManager.now_unix() + away_seconds)
+		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_AWAY, _staggered_away_until(away_seconds))
 
 func _enter_returning() -> void:
 	if route_running:
 		return
+	var should_stagger_route_start := state != AIState.AWAY
 	state = AIState.RETURNING
 	state_elapsed = 0.0
 	route_running = true
 	pending_action_need = ""
-	tenant.visible = true
+	tenant.visible = false
 	tenant.play_avatar_behavior(GameState.RETURNING_TENANT_BEHAVIOR)
 	tenant.hide_behavior_bubble()
 	if _presence_state() != GameState.TENANT_PRESENCE_RETURNING:
 		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_RETURNING)
-	call_deferred("_run_returning_route")
+	if should_stagger_route_start:
+		call_deferred("_run_returning_route_after_stagger")
+	else:
+		call_deferred("_run_returning_route")
 
 func _run_startup_entry_route():
 	await _run_entry_route(false, true)
@@ -276,19 +281,20 @@ func _run_leaving_route():
 	await _move_to_position(service_position)
 	await _play_room_door(view, false)
 	if floor_index > 1:
-		await _play_elevator_door(view, floor_index, true)
-		await _play_elevator_door(view, floor_index, false)
-		tenant.position = view.get_service_elevator_world_position(1)
-		await _play_elevator_door(view, 1, true)
-		await _play_elevator_door(view, 1, false)
-		await _move_to_position(view.get_service_exit_world_position())
-	await _play_exit_door(view, true)
-	await _move_to_position(view.get_offscreen_left_world_position(tenant.position.y))
-	await _play_exit_door(view, false)
+		await _enter_elevator_at_floor(view, floor_index)
+		await _exit_elevator_at_floor(view, 1, -1.0)
+	await _leave_through_exit_door(view)
 	_enter_away(true)
 
 func _run_returning_route():
 	await _run_entry_route(true, false)
+
+func _run_returning_route_after_stagger():
+	var delay := _return_start_delay_seconds()
+	if delay > 0.0:
+		await _wait_seconds(delay)
+	if state == AIState.RETURNING and route_running:
+		await _run_returning_route()
 
 func _run_entry_route(update_presence_on_finish: bool, force_offscreen_start: bool):
 	var view := _building_view()
@@ -305,16 +311,10 @@ func _run_entry_route(update_presence_on_finish: bool, force_offscreen_start: bo
 	if force_offscreen_start or tenant.position == Vector2.ZERO or not tenant.visible:
 		tenant.position = view.get_offscreen_left_world_position(exit_position.y)
 	tenant.visible = true
-	await _move_to_position(exit_position)
-	await _play_exit_door(view, true)
-	await _play_exit_door(view, false)
+	await _enter_through_exit_door(view)
 	if floor_index > 1:
-		await _move_to_position(view.get_service_elevator_world_position(1))
-		await _play_elevator_door(view, 1, true)
-		await _play_elevator_door(view, 1, false)
-		tenant.position = view.get_service_elevator_world_position(floor_index)
-		await _play_elevator_door(view, floor_index, true)
-		await _play_elevator_door(view, floor_index, false)
+		await _enter_elevator_at_floor(view, 1)
+		await _exit_elevator_at_floor(view, floor_index, 1.0)
 	var room_door_world := view.get_room_door_world_position(room_id)
 	if room_door_world == Vector2.ZERO:
 		_finish_route_at_home(update_presence_on_finish)
@@ -345,35 +345,71 @@ func _move_to_position(destination: Vector2):
 	if tenant != null:
 		tenant.position = destination
 
+func _leave_through_exit_door(view: BuildingView):
+	var exit_position := view.get_service_exit_world_position()
+	if exit_position == Vector2.ZERO:
+		exit_position = tenant.position
+	await _move_to_position(exit_position)
+	await _play_exit_door(view, true)
+	await _move_to_position(_route_step_position(exit_position, -1.0))
+	await _play_exit_door(view, false)
+	await _move_to_position(view.get_offscreen_left_world_position(tenant.position.y))
+
+func _enter_through_exit_door(view: BuildingView):
+	var exit_position := view.get_service_exit_world_position()
+	if exit_position == Vector2.ZERO:
+		exit_position = tenant.position
+	await _move_to_position(exit_position)
+	await _play_exit_door(view, true)
+	await _move_to_position(_route_step_position(exit_position, 1.0))
+	await _play_exit_door(view, false)
+
+func _enter_elevator_at_floor(view: BuildingView, floor_index: int):
+	var elevator_position := view.get_service_elevator_world_position(floor_index)
+	await _move_to_position(elevator_position)
+	await _play_elevator_door(view, floor_index, true)
+	await _play_elevator_door(view, floor_index, false)
+	tenant.visible = false
+
+func _exit_elevator_at_floor(view: BuildingView, floor_index: int, direction: float):
+	var elevator_position := view.get_service_elevator_world_position(floor_index)
+	await _play_elevator_door(view, floor_index, true)
+	tenant.position = elevator_position
+	tenant.visible = true
+	await _move_to_position(_route_step_position(elevator_position, direction))
+	await _play_elevator_door(view, floor_index, false)
+
+func _route_step_position(origin: Vector2, direction: float) -> Vector2:
+	var step_direction := -1.0 if direction < 0.0 else 1.0
+	return origin + Vector2(DOOR_STEP_PIXELS * step_direction, 0.0)
+
 func _play_room_door(view: BuildingView, open: bool):
 	var door := view.get_room_door(room_id)
 	var duration := _door_animation_seconds()
-	if door != null:
-		if open:
-			door.play_open(duration)
-		else:
-			door.play_close(duration)
-	await _wait_seconds(duration)
+	await _play_traffic_door(door, open, duration)
 
 func _play_exit_door(view: BuildingView, open: bool):
 	var door := view.get_service_exit_door()
 	var duration := _door_animation_seconds()
-	if door != null:
-		if open:
-			door.play_open(duration)
-		else:
-			door.play_close(duration)
-	await _wait_seconds(duration)
+	await _play_traffic_door(door, open, duration)
 
 func _play_elevator_door(view: BuildingView, floor_index: int, open: bool):
 	var door := view.get_service_elevator_door(floor_index)
 	var duration := _elevator_animation_seconds()
+	await _play_traffic_door(door, open, duration)
+
+func _play_traffic_door(door: TrafficDoor, open: bool, duration: float):
 	if door != null:
 		if open:
 			door.play_open(duration)
 		else:
 			door.play_close(duration)
 	await _wait_seconds(duration)
+	if door != null:
+		if open:
+			door.set_open()
+		else:
+			door.set_closed()
 
 func _wait_seconds(seconds: float):
 	if seconds <= 0.0:
@@ -445,6 +481,57 @@ func _away_is_finished() -> bool:
 	var until := int(tenant_state.get("away_until_timestamp", 0))
 	return until <= TimeManager.now_unix()
 
+func _staggered_away_until(away_seconds: int) -> int:
+	var now := TimeManager.now_unix()
+	var stagger_seconds := _return_stagger_seconds()
+	var target := now + maxi(1, away_seconds)
+	if stagger_seconds <= 0.0:
+		return target
+	var step := maxi(1, int(stagger_seconds + 0.5))
+	target += int(float(_tenant_return_order_index()) * stagger_seconds + 0.5)
+	var occupied_return_times := {}
+	for other_id in GameState.tenants.keys():
+		if str(other_id) == tenant_id:
+			continue
+		var other_tenant: Dictionary = GameState.tenants[other_id]
+		if str(other_tenant.get("presence_state", "")) != GameState.TENANT_PRESENCE_AWAY:
+			continue
+		var other_until := int(other_tenant.get("away_until_timestamp", 0))
+		if other_until > now:
+			occupied_return_times[other_until] = true
+	while occupied_return_times.has(target):
+		target += step
+	return target
+
+func _return_start_delay_seconds() -> float:
+	return float(_tenant_return_order_index()) * _return_stagger_seconds()
+
+func _return_stagger_seconds() -> float:
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("return_stagger_seconds", 4.0)))
+
+func _tenant_return_order_index() -> int:
+	var index := 0
+	for item in ConfigManager.tenants:
+		var tenant_data: Dictionary = item
+		var configured_tenant_id := str(tenant_data.get("id", ""))
+		var tenant_state: Dictionary = GameState.tenants.get(configured_tenant_id, {})
+		if str(tenant_state.get("room_id", "")).is_empty():
+			continue
+		if configured_tenant_id == tenant_id:
+			return index
+		index += 1
+	var tenant_ids := GameState.tenants.keys()
+	tenant_ids.sort()
+	index = 0
+	for id in tenant_ids:
+		var tenant_state: Dictionary = GameState.tenants[id]
+		if str(tenant_state.get("room_id", "")).is_empty():
+			continue
+		if str(id) == tenant_id:
+			return index
+		index += 1
+	return maxi(0, tenant_ids.find(tenant_id))
+
 func _interaction_targets() -> Array:
 	var room := _room()
 	var targets := []
@@ -478,10 +565,10 @@ func _route_speed() -> float:
 	return maxf(1.0, float(ConfigManager.get_tenant_ai_value("route_speed", 24.0)))
 
 func _door_animation_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_animation_seconds", 0.08)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_animation_seconds", 0.24)))
 
 func _elevator_animation_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_animation_seconds", 0.12)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_animation_seconds", 0.36)))
 
 func _building_view() -> BuildingView:
 	var node: Node = tenant

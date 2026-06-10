@@ -21,6 +21,9 @@ func play_open(duration_seconds := -1.0) -> void:
 func play_close(duration_seconds := -1.0) -> void:
 	_play_visual(close_animation, default_animation, open_frame, closed_frame, true, duration_seconds)
 
+func set_open() -> void:
+	_set_frame(default_animation, open_frame)
+
 func set_closed() -> void:
 	_set_frame(default_animation, closed_frame)
 

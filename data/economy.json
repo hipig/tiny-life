@@ -9,10 +9,11 @@
   "tenant_ai": {
     "away_chance": 0.12,
     "away_seconds": 18,
+    "return_stagger_seconds": 4.0,
     "route_speed": 24.0,
     "entry_from_offscreen": true,
-    "door_animation_seconds": 0.08,
-    "elevator_animation_seconds": 0.12,
+    "door_animation_seconds": 0.24,
+    "elevator_animation_seconds": 0.36,
     "offscreen_margin": 64.0
   }
 }
