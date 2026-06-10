@@ -34,15 +34,17 @@ func test_region_candidate_tenants_come_from_region_config() -> void:
 	assert_false(candidate_ids.has("tenant_worker_01"), "affordable region should not include worker")
 
 
-func test_initial_building_starts_with_one_room_and_second_floor_build_slot() -> void:
+func test_initial_building_starts_with_public_entry_and_second_floor_rooms() -> void:
 	var first_floor := _floor_data(1)
 	var second_floor := _floor_data(2)
+	var third_floor := _floor_data(3)
 	assert_true(bool(first_floor.get("initial_built", false)), "first floor should be built at new-game start")
-	assert_eq(str(first_floor.get("display_name", "")), "1F", "first floor should present as a real apartment floor")
-	assert_eq(_room_ids_on_floor(1).size(), 1, "first floor should start with exactly one room")
-	assert_false(bool(second_floor.get("initial_built", true)), "second floor should start as a build slot")
-	assert_eq(int(second_floor.get("required_apartment_level", 0)), 1, "second floor build slot should be visible at Lv.1")
-	assert_true(int(second_floor.get("build_cost", 0)) > 0, "second floor build slot should have a construction cost")
+	assert_eq(str(first_floor.get("visual_role", "")), "public_entry", "first floor should be a visual-only public entry floor")
+	assert_eq(_room_ids_on_floor(1).size(), 0, "first floor should not configure rentable rooms")
+	assert_true(bool(second_floor.get("initial_built", false)), "second floor should be built at new-game start")
+	assert_eq(_room_ids_on_floor(2), ["room_201", "room_202"], "second floor should start with two rentable rooms")
+	assert_false(bool(third_floor.get("initial_built", true)), "third floor should be the next build target")
+	assert_true(int(third_floor.get("build_cost", 0)) > 0, "third floor build slot should have a construction cost")
 
 
 func test_furniture_placement_grid_cells_are_16_pixels() -> void:
@@ -71,7 +73,7 @@ func test_furniture_placement_grid_cells_are_16_pixels() -> void:
 			assert_true(grid_size.size() >= 2, "%s should define grid size" % str(layout_data.get("label", "")))
 			if frame_tiles.size() < 2 or grid_size.size() < 2:
 				continue
-			var cell_width := float(maxi(1, int(frame_tiles[0]) - 2) * tile_size) / float(maxi(1, int(grid_size[0])))
+			var cell_width := float(maxi(1, int(frame_tiles[0])) * tile_size) / float(maxi(1, int(grid_size[0])))
 			var cell_height := float(maxi(1, int(frame_tiles[1])) * tile_size) / float(maxi(1, int(grid_size[1])))
 			assert_eq(Vector2(cell_width, cell_height), Vector2(16.0, 16.0), "%s placement cells should be 16x16 pixels" % str(layout_data.get("label", "")))
 
@@ -86,7 +88,8 @@ func test_furniture_placement_rules_keep_core_restrictions() -> void:
 	assert_true(rules_source.contains("wall_item"), "wall-item furniture should use the wall placement layer")
 	assert_true(rules_source.contains("floor_grid_y_for"), "floor furniture should snap to the bottom floor line in the side-view room")
 	assert_true(rules_source.contains("placement_layer_for(other_data) != layer"), "wall and floor furniture should not collide with each other")
-	assert_true(rules_source.contains("door_cells_for_layer"), "placement rules should reserve door cells by layer")
+	assert_true(rules_source.contains("door_cells_for_layer"), "placement rules should keep a compatibility hook for route helpers")
+	assert_false(rules_source.contains("in door_cells"), "placement rules should not reserve door cells after doors became outward-opening")
 	assert_true(rules_source.contains("_rects_overlap"), "placement rules should reject overlapping furniture footprints")
 	assert_true(rules_source.contains("ignored_instance_id"), "moving furniture should ignore its original footprint")
 
@@ -113,8 +116,8 @@ func test_furniture_placement_rules_validate_floor_and_wall_layers() -> void:
 	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [1, 0]), "painting should be valid on the wall layer")
 	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "wall_clock", _furniture_data("wall_clock"), furniture_lookup, [2, 2]), "wall clock should be valid on lower wall cells above the floor")
 	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [1, 3]), "wall items should not sit on the floor line")
-	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, [0, 3]), "floor door cell should block floor furniture at the left bottom")
-	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [0, 0]), "door cell should not block wall furniture")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, [0, 3]), "outward-opening doors should not block floor furniture at the old door cell")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "painting_small", _furniture_data("painting_small"), furniture_lookup, [0, 0]), "door cells should not block wall furniture")
 
 	room["furniture_instances"] = [
 		{"instance_id": "wall_a", "furniture_id": "painting_small", "grid_pos": [1, 0]}

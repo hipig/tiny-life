@@ -4,7 +4,7 @@
 
 [node name="ApartmentBuilding" type="VBoxContainer"]
 layout_mode = 0
-offset_right = 280.0
+offset_right = 240.0
 offset_bottom = 64.0
 theme_override_constants/separation = 0
 script = ExtResource("1_building")
@@ -13,4 +13,4 @@ script = ExtResource("1_building")
 metadata/floor_scene_path = "res://scenes/building/Floor.tscn"
 metadata/build_slot_scene_path = "res://scenes/building/BuildSlot.tscn"
 metadata/service_core_width = 48.0
-metadata/default_frame_tiles = Vector2i(8, 4)
+metadata/default_frame_tiles = Vector2i(6, 4)

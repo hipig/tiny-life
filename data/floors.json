@@ -2,12 +2,32 @@
   {
     "floor_index": 1,
     "display_name": "1F",
-    "visual_role": "room_floor",
+    "visual_role": "public_entry",
     "floor_scene_path": "res://scenes/building/Floor.tscn",
     "build_slot_scene_path": "res://scenes/building/BuildSlot.tscn",
     "initial_built": true,
     "required_apartment_level": 1,
     "build_cost": 0,
+    "service_label": "前台",
+    "public_areas": [
+      {
+        "id": "lobby",
+        "label": "大厅",
+        "layout_side": "left",
+        "has_entrance_door": true,
+        "door_side": "left",
+        "door_mirrored": false,
+        "public_area_scene_path": "res://scenes/building/PublicAreaShell.tscn",
+        "frame_tiles": [6, 4]
+      },
+      {
+        "id": "lounge",
+        "label": "公共休息区",
+        "layout_side": "right",
+        "public_area_scene_path": "res://scenes/building/PublicAreaShell.tscn",
+        "frame_tiles": [6, 4]
+      }
+    ],
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -44,9 +64,9 @@
     "visual_role": "room_floor",
     "floor_scene_path": "res://scenes/building/Floor.tscn",
     "build_slot_scene_path": "res://scenes/building/BuildSlot.tscn",
-    "initial_built": false,
+    "initial_built": true,
     "required_apartment_level": 1,
-    "build_cost": 500,
+    "build_cost": 0,
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -84,8 +104,8 @@
     "floor_scene_path": "res://scenes/building/Floor.tscn",
     "build_slot_scene_path": "res://scenes/building/BuildSlot.tscn",
     "initial_built": false,
-    "required_apartment_level": 2,
-    "build_cost": 900,
+    "required_apartment_level": 1,
+    "build_cost": 500,
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -123,8 +143,8 @@
     "floor_scene_path": "res://scenes/building/Floor.tscn",
     "build_slot_scene_path": "res://scenes/building/BuildSlot.tscn",
     "initial_built": false,
-    "required_apartment_level": 3,
-    "build_cost": 1600,
+    "required_apartment_level": 2,
+    "build_cost": 900,
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -162,8 +182,8 @@
     "floor_scene_path": "res://scenes/building/Floor.tscn",
     "build_slot_scene_path": "res://scenes/building/BuildSlot.tscn",
     "initial_built": false,
-    "required_apartment_level": 4,
-    "build_cost": 2800,
+    "required_apartment_level": 3,
+    "build_cost": 1600,
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
@@ -201,8 +221,8 @@
     "floor_scene_path": "res://scenes/building/Floor.tscn",
     "build_slot_scene_path": "res://scenes/building/BuildSlot.tscn",
     "initial_built": false,
-    "required_apartment_level": 5,
-    "build_cost": 4600,
+    "required_apartment_level": 4,
+    "build_cost": 2800,
     "roof_asset": {
       "type": "atlas_region",
       "texture": "res://assets/pixel_spaces/building/Infrastructure.png",

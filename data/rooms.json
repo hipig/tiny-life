@@ -1,35 +1,13 @@
 [
   {
-	"id": "room_101",
-	"floor_index": 1,
-	"room_name": "101 房",
-	"room_scene_path": "res://scenes/building/Room.tscn",
-	"frame_tiles": [8, 4],
-	"grid_size": [6, 4],
-	"infrastructure_asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-	  "region": [16, 16, 80, 48]
-	},
-	"wall_asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-	  "region": [0, 448, 64, 48]
-	},
-	"layout_upgrades": [
-	  {
-		"level": 2,
-		"frame_tiles": [10, 4],
-		"grid_size": [8, 4]
-	  }
-	]
-  },
-  {
 	"id": "room_201",
 	"floor_index": 2,
 	"room_name": "201 房",
+	"layout_side": "left",
+	"door_side": "right",
+	"door_mirrored": false,
 	"room_scene_path": "res://scenes/building/Room.tscn",
-	"frame_tiles": [8, 4],
+	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
 	"infrastructure_asset": {
 	  "type": "atlas_region",
@@ -44,7 +22,35 @@
 	"layout_upgrades": [
 	  {
 		"level": 2,
-		"frame_tiles": [10, 4],
+		"frame_tiles": [8, 4],
+		"grid_size": [8, 4]
+	  }
+	]
+  },
+  {
+	"id": "room_202",
+	"floor_index": 2,
+	"room_name": "202 房",
+	"layout_side": "right",
+	"door_side": "left",
+	"door_mirrored": true,
+	"room_scene_path": "res://scenes/building/Room.tscn",
+	"frame_tiles": [6, 4],
+	"grid_size": [6, 4],
+	"infrastructure_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 80, 80, 48]
+	},
+	"wall_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+	  "region": [64, 192, 64, 48]
+	},
+	"layout_upgrades": [
+	  {
+		"level": 2,
+		"frame_tiles": [8, 4],
 		"grid_size": [8, 4]
 	  }
 	]
@@ -53,8 +59,11 @@
 	"id": "room_301",
 	"floor_index": 3,
 	"room_name": "301 房",
+	"layout_side": "left",
+	"door_side": "right",
+	"door_mirrored": false,
 	"room_scene_path": "res://scenes/building/Room.tscn",
-	"frame_tiles": [8, 4],
+	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
 	"infrastructure_asset": {
 	  "type": "atlas_region",
@@ -69,7 +78,35 @@
 	"layout_upgrades": [
 	  {
 		"level": 2,
-		"frame_tiles": [10, 4],
+		"frame_tiles": [8, 4],
+		"grid_size": [8, 4]
+	  }
+	]
+  },
+  {
+	"id": "room_302",
+	"floor_index": 3,
+	"room_name": "302 房",
+	"layout_side": "right",
+	"door_side": "left",
+	"door_mirrored": true,
+	"room_scene_path": "res://scenes/building/Room.tscn",
+	"frame_tiles": [6, 4],
+	"grid_size": [6, 4],
+	"infrastructure_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 144, 80, 48]
+	},
+	"wall_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+	  "region": [64, 128, 64, 48]
+	},
+	"layout_upgrades": [
+	  {
+		"level": 2,
+		"frame_tiles": [8, 4],
 		"grid_size": [8, 4]
 	  }
 	]
@@ -78,8 +115,11 @@
 	"id": "room_401",
 	"floor_index": 4,
 	"room_name": "401 房",
+	"layout_side": "left",
+	"door_side": "right",
+	"door_mirrored": false,
 	"room_scene_path": "res://scenes/building/Room.tscn",
-	"frame_tiles": [8, 4],
+	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
 	"infrastructure_asset": {
 	  "type": "atlas_region",
@@ -94,7 +134,35 @@
 	"layout_upgrades": [
 	  {
 		"level": 2,
-		"frame_tiles": [10, 4],
+		"frame_tiles": [8, 4],
+		"grid_size": [8, 4]
+	  }
+	]
+  },
+  {
+	"id": "room_402",
+	"floor_index": 4,
+	"room_name": "402 房",
+	"layout_side": "right",
+	"door_side": "left",
+	"door_mirrored": true,
+	"room_scene_path": "res://scenes/building/Room.tscn",
+	"frame_tiles": [6, 4],
+	"grid_size": [6, 4],
+	"infrastructure_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 208, 80, 48]
+	},
+	"wall_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+	  "region": [64, 64, 64, 48]
+	},
+	"layout_upgrades": [
+	  {
+		"level": 2,
+		"frame_tiles": [8, 4],
 		"grid_size": [8, 4]
 	  }
 	]
@@ -103,8 +171,11 @@
 	"id": "room_501",
 	"floor_index": 5,
 	"room_name": "501 房",
+	"layout_side": "left",
+	"door_side": "right",
+	"door_mirrored": false,
 	"room_scene_path": "res://scenes/building/Room.tscn",
-	"frame_tiles": [8, 4],
+	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
 	"infrastructure_asset": {
 	  "type": "atlas_region",
@@ -119,7 +190,35 @@
 	"layout_upgrades": [
 	  {
 		"level": 2,
-		"frame_tiles": [10, 4],
+		"frame_tiles": [8, 4],
+		"grid_size": [8, 4]
+	  }
+	]
+  },
+  {
+	"id": "room_502",
+	"floor_index": 5,
+	"room_name": "502 房",
+	"layout_side": "right",
+	"door_side": "left",
+	"door_mirrored": true,
+	"room_scene_path": "res://scenes/building/Room.tscn",
+	"frame_tiles": [6, 4],
+	"grid_size": [6, 4],
+	"infrastructure_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 272, 80, 48]
+	},
+	"wall_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+	  "region": [320, 448, 64, 48]
+	},
+	"layout_upgrades": [
+	  {
+		"level": 2,
+		"frame_tiles": [8, 4],
 		"grid_size": [8, 4]
 	  }
 	]
@@ -128,8 +227,11 @@
 	"id": "room_601",
 	"floor_index": 6,
 	"room_name": "601 房",
+	"layout_side": "left",
+	"door_side": "right",
+	"door_mirrored": false,
 	"room_scene_path": "res://scenes/building/Room.tscn",
-	"frame_tiles": [8, 4],
+	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
 	"infrastructure_asset": {
 	  "type": "atlas_region",
@@ -144,7 +246,35 @@
 	"layout_upgrades": [
 	  {
 		"level": 2,
-		"frame_tiles": [10, 4],
+		"frame_tiles": [8, 4],
+		"grid_size": [8, 4]
+	  }
+	]
+  },
+  {
+	"id": "room_602",
+	"floor_index": 6,
+	"room_name": "602 房",
+	"layout_side": "right",
+	"door_side": "left",
+	"door_mirrored": true,
+	"room_scene_path": "res://scenes/building/Room.tscn",
+	"frame_tiles": [6, 4],
+	"grid_size": [6, 4],
+	"infrastructure_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 336, 80, 48]
+	},
+	"wall_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+	  "region": [320, 320, 64, 48]
+	},
+	"layout_upgrades": [
+	  {
+		"level": 2,
+		"frame_tiles": [8, 4],
 		"grid_size": [8, 4]
 	  }
 	]

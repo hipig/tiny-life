@@ -166,6 +166,11 @@ func get_floor_service_core(floor_index: int) -> FloorServiceCore:
 	return building_root.find_floor_service_core(floor_index)
 
 func get_service_exit_door() -> TrafficDoor:
+	var entry_area := _public_entry_area()
+	if entry_area != null and entry_area.has_method("get_exit_door"):
+		var entry_door := entry_area.call("get_exit_door") as TrafficDoor
+		if entry_door != null:
+			return entry_door
 	var service := get_floor_service_core(1)
 	return service.get_exit_door() if service != null else null
 
@@ -174,6 +179,11 @@ func get_service_elevator_door(floor_index: int) -> TrafficDoor:
 	return service.get_elevator_door() if service != null else null
 
 func get_service_exit_world_position() -> Vector2:
+	var entry_area := _public_entry_area()
+	if entry_area != null and entry_area.has_method("get_exit_anchor_local_position"):
+		var entry_position: Vector2 = entry_area.call("get_exit_anchor_local_position")
+		if entry_position != Vector2.ZERO:
+			return entry_area.get_global_transform() * entry_position
 	var service := get_floor_service_core(1)
 	if service == null:
 		return Vector2.ZERO
@@ -194,6 +204,18 @@ func get_left_offscreen_route_mark_world_position(y: float) -> Vector2:
 		push_error("BuildingView.tscn must expose TenantRouteMarkers/LeftOffscreenMarker.")
 		return marker_position
 	return marker_position
+
+func _public_entry_area() -> Control:
+	if building_root == null:
+		return null
+	var floor_node := building_root.get_node_or_null("Floor_1")
+	if floor_node == null:
+		return null
+	for child in floor_node.get_children():
+		var area := child as Control
+		if area != null and area.has_method("get_exit_door") and area.call("get_exit_door") != null:
+			return area
+	return null
 
 func screen_to_world_viewport_position(screen_position: Vector2) -> Vector2:
 	if world_clip == null:

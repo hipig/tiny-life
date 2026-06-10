@@ -4,6 +4,7 @@ extends "res://scripts/ui/AppPanel.gd"
 signal claim_requested(double: bool)
 
 var list_root: VBoxContainer
+var button_row: HBoxContainer
 var offline_info_row: IconInfoRow
 var amount_card: StatCard
 var claim_button: PanelActionButton
@@ -14,6 +15,8 @@ var offline_duration_title_template := ""
 func open(amount: int, seconds: int) -> void:
 	setup_panel("", false)
 	_bind_scene_nodes()
+	if not _has_required_nodes():
+		return
 	_bind_scene_text()
 	offline_info_row.set_title(offline_duration_title_template % TimeManager.format_duration(seconds))
 	amount_card.set_value("%d" % amount)
@@ -24,10 +27,24 @@ func open(amount: int, seconds: int) -> void:
 
 func _bind_scene_nodes() -> void:
 	list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/ListRoot") as VBoxContainer
+	button_row = get_node_or_null("PanelBox/ButtonRow") as HBoxContainer
+	if list_root == null or button_row == null:
+		return
 	offline_info_row = list_root.get_node_or_null("OfflineInfoRow") as IconInfoRow
 	amount_card = list_root.get_node_or_null("AmountCard") as StatCard
-	claim_button = list_root.get_node_or_null("ButtonRow/ClaimButton") as PanelActionButton
-	double_claim_button = list_root.get_node_or_null("ButtonRow/DoubleClaimButton") as PanelActionButton
+	claim_button = button_row.get_node_or_null("ClaimButton") as PanelActionButton
+	double_claim_button = button_row.get_node_or_null("DoubleClaimButton") as PanelActionButton
+
+func _has_required_nodes() -> bool:
+	var ready := list_root != null \
+		and button_row != null \
+		and offline_info_row != null \
+		and amount_card != null \
+		and claim_button != null \
+		and double_claim_button != null
+	if not ready:
+		push_error("OfflineRewardPopup scene is missing ListRoot, fixed ButtonRow, or one of its content/action nodes.")
+	return ready
 
 func _bind_scene_text() -> void:
 	offline_duration_title_template = _template_text("OfflineDurationTitleTemplate")

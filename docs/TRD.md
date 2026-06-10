@@ -628,6 +628,11 @@ class_name RoomData
 var id: String
 var floor_index: int
 var room_name: String
+var layout_side: String
+var door_side: String
+var door_mirrored: bool
+var frame_tiles: Array
+var grid_size: Array
 var unlocked: bool
 var level: int
 var tenant_id: String
@@ -646,9 +651,14 @@ var rent_per_minute: float
 
 ```json
 {
-  "id": "room_101",
-  "floor_index": 1,
-  "room_name": "101 房",
+  "id": "room_201",
+  "floor_index": 2,
+  "room_name": "201 房",
+  "layout_side": "left",
+  "door_side": "right",
+  "door_mirrored": false,
+  "frame_tiles": [6, 4],
+  "grid_size": [6, 4],
   "unlocked": true,
   "level": 1,
   "tenant_id": "tenant_student_01",

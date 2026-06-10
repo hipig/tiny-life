@@ -1,6 +1,6 @@
 extends Button
 
-const DEFAULT_FRAME_TILES := Vector2i(8, 4)
+const DEFAULT_FRAME_TILES := Vector2i(6, 4)
 
 const META_TENANT_SCENE_PATH := &"tenant_scene_path"
 const META_FURNITURE_SCENE_PATH := &"furniture_scene_path"
@@ -32,7 +32,7 @@ var placement_ignored_instance_id := ""
 func _ready() -> void:
 	_bind_scene_config()
 	custom_minimum_size = _room_pixel_size()
-	clip_contents = true
+	clip_contents = false
 	clip_text = true
 	text = ""
 	if not pressed.is_connected(_on_pressed):
@@ -58,7 +58,7 @@ func _rebuild() -> void:
 	size = custom_minimum_size
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	room_shell.roof_visible = show_roof_eaves
-	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), {}, room_edge_sides)
+	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), {}, room_edge_sides, {}, _room_door_side(), _room_door_mirrored())
 	room_shell.clear_dynamic_views()
 	room_shell.set_roof_visible(show_roof_eaves)
 	_apply_room_badges(room)
@@ -265,9 +265,9 @@ func _grid_rect() -> Rect2:
 func _floor_grid_rect() -> Rect2:
 	var frame_tiles := _frame_tiles()
 	return Rect2(
-		ApartmentTileMap.TILE_SIZE,
 		0.0,
-		float(maxi(1, frame_tiles.x - 2) * ApartmentTileMap.TILE_SIZE),
+		0.0,
+		float(maxi(1, frame_tiles.x) * ApartmentTileMap.TILE_SIZE),
 		float(maxi(1, frame_tiles.y) * ApartmentTileMap.TILE_SIZE)
 	)
 
@@ -304,7 +304,7 @@ func _room_grid_size(room: Dictionary) -> Array:
 	if configured is Array and configured.size() >= 2:
 		return [int(configured[0]), int(configured[1])]
 	var frame_tiles := _frame_tiles()
-	return [maxi(1, frame_tiles.x - 2), maxi(1, frame_tiles.y)]
+	return [maxi(1, frame_tiles.x), maxi(1, frame_tiles.y)]
 
 func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
 	if value is Array and value.size() >= 2:
@@ -312,7 +312,21 @@ func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
 	return fallback
 
 func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
-	return Vector2i(maxi(4, value.x), default_frame_tiles.y)
+	return Vector2i(maxi(2, value.x), default_frame_tiles.y)
+
+func _room_door_side() -> String:
+	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
+	if runtime_room.has("door_side"):
+		return str(runtime_room.get("door_side", "left")).strip_edges().to_lower()
+	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
+	return str(room_config.get("door_side", "left")).strip_edges().to_lower()
+
+func _room_door_mirrored() -> bool:
+	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
+	if runtime_room.has("door_mirrored"):
+		return bool(runtime_room.get("door_mirrored", false))
+	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
+	return bool(room_config.get("door_mirrored", false))
 
 func _asset_region_size(asset: Dictionary) -> Vector2:
 	var asset_type := str(asset.get("type", ""))

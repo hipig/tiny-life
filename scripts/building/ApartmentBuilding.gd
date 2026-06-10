@@ -2,7 +2,7 @@ class_name ApartmentBuilding
 extends VBoxContainer
 
 const DEFAULT_SERVICE_CORE_WIDTH := 48.0
-const DEFAULT_FRAME_TILES := Vector2i(8, 4)
+const DEFAULT_FRAME_TILES := Vector2i(6, 4)
 
 const META_FLOOR_SCENE_PATH := &"floor_scene_path"
 const META_BUILD_SLOT_SCENE_PATH := &"build_slot_scene_path"
@@ -46,15 +46,15 @@ func refresh() -> void:
 func get_building_size() -> Vector2:
 	_bind_scene_config()
 	var default_room_pixel_size := _room_pixel_size_from_frame_tiles(default_frame_tiles)
-	var width: float = service_core_width + default_room_pixel_size.x
+	var width: float = service_core_width + default_room_pixel_size.x * 2.0
 	var height: float = 0.0
 	for floor_index in range(_max_floor_index(), 0, -1):
 		if floor_index <= GameState.highest_built_floor:
-			var floor_size := _floor_size(floor_index)
+			var floor_size := _floor_size(floor_index, true)
 			width = maxf(width, floor_size.x)
 			height += floor_size.y
 		elif floor_index == GameState.highest_built_floor + 1 and _has_visible_next_build_slot():
-			var build_slot_size := _floor_size(floor_index)
+			var build_slot_size := _floor_size(floor_index, false)
 			width = maxf(width, build_slot_size.x)
 			height += build_slot_size.y
 	return Vector2(width, maxf(height, default_room_pixel_size.y))
@@ -88,38 +88,58 @@ func _has_visible_next_build_slot() -> bool:
 	var required_level := int(floor_data.get("required_apartment_level", 1))
 	return GameState.apartment_level >= required_level
 
-func _floor_size(floor_index: int) -> Vector2:
-	var default_room_pixel_size := _room_pixel_size_from_frame_tiles(default_frame_tiles)
-	var floor_height := default_room_pixel_size.y
-	var floor_width := service_core_width
-	var room_count := 0
-	for room in ConfigManager.rooms:
-		var room_data: Dictionary = room
-		if int(room_data.get("floor_index", 0)) != floor_index:
-			continue
-		if not _room_is_visible(room_data):
-			continue
-		var room_pixel_size := _room_pixel_size(room_data)
-		floor_width += room_pixel_size.x
-		floor_height = maxf(floor_height, room_pixel_size.y)
-		room_count += 1
-	if room_count == 0:
-		var floor_data: Dictionary = ConfigManager.get_floor_data(floor_index)
-		var slot_room_pixel_size := _room_pixel_size(floor_data)
-		floor_width += slot_room_pixel_size.x
-		floor_height = maxf(floor_height, slot_room_pixel_size.y)
-	return Vector2(floor_width, floor_height)
+func _floor_size(floor_index: int, built_floor: bool) -> Vector2:
+	var floor_data: Dictionary = ConfigManager.get_floor_data(floor_index)
+	var left_width := _side_width(floor_index, floor_data, "left", built_floor)
+	var right_width := _side_width(floor_index, floor_data, "right", built_floor)
+	var height := _floor_height(floor_index, floor_data, built_floor)
+	return Vector2(left_width + service_core_width + right_width, height)
 
-func _room_pixel_size(room_data: Dictionary) -> Vector2:
-	var room_id := str(room_data.get("id", ""))
+func _floor_height(floor_index: int, floor_data: Dictionary, built_floor: bool) -> float:
+	var height := _room_pixel_size_from_frame_tiles(default_frame_tiles).y
+	for item in _content_configs_for_floor(floor_index, floor_data, built_floor):
+		var content: Dictionary = item
+		height = maxf(height, _content_pixel_size(content).y)
+	return height
+
+func _side_width(floor_index: int, floor_data: Dictionary, side: String, built_floor: bool) -> float:
+	var width := 0.0
+	for item in _content_configs_for_floor(floor_index, floor_data, built_floor):
+		var content: Dictionary = item
+		var layout_side := str(content.get("layout_side", "left")).strip_edges().to_lower()
+		if layout_side == side:
+			width += _content_pixel_size(content).x
+		elif layout_side == "suite" and side == "left":
+			width += _content_pixel_size(content).x
+	if width <= 0.0:
+		width = _room_pixel_size_from_frame_tiles(default_frame_tiles).x
+	return width
+
+func _content_configs_for_floor(floor_index: int, floor_data: Dictionary, built_floor: bool) -> Array:
+	var public_areas: Array = floor_data.get("public_areas", [])
+	if not public_areas.is_empty():
+		return public_areas
+	var result: Array = []
+	for room in ConfigManager.get_room_configs_for_floor(floor_index):
+		var room_data: Dictionary = room
+		if built_floor and not _room_is_visible(room_data):
+			continue
+		result.append(room_data)
+	return result
+
+func _content_pixel_size(content: Dictionary) -> Vector2:
+	return _room_pixel_size_from_frame_tiles(_frame_tiles_for_content(content))
+
+func _frame_tiles_for_content(content: Dictionary) -> Vector2i:
+	var room_id := str(content.get("id", ""))
 	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
 	var runtime_tiles: Variant = runtime_room.get("frame_tiles", [])
 	if runtime_tiles is Array and runtime_tiles.size() >= 2:
-		return _room_pixel_size_from_frame_tiles(_fixed_height_frame_tiles(_vector2i_from_array(runtime_tiles, default_frame_tiles)))
-	var frame_tiles: Variant = room_data.get("frame_tiles", [])
+		return _fixed_height_frame_tiles(_vector2i_from_array(runtime_tiles, default_frame_tiles))
+	var frame_tiles: Variant = content.get("frame_tiles", [])
 	if frame_tiles is Array and frame_tiles.size() >= 2:
-		return _room_pixel_size_from_frame_tiles(_fixed_height_frame_tiles(_vector2i_from_array(frame_tiles, default_frame_tiles)))
-	return _room_pixel_size_from_frame_tiles(default_frame_tiles)
+		return _fixed_height_frame_tiles(_vector2i_from_array(frame_tiles, default_frame_tiles))
+	return default_frame_tiles
 
 func _room_pixel_size_from_frame_tiles(value: Vector2i) -> Vector2:
 	return Vector2(value.x * ApartmentTileMap.TILE_SIZE, value.y * ApartmentTileMap.TILE_SIZE)
@@ -130,7 +150,7 @@ func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
 	return fallback
 
 func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
-	return Vector2i(maxi(4, value.x), default_frame_tiles.y)
+	return Vector2i(maxi(2, value.x), default_frame_tiles.y)
 
 func _room_is_visible(room_data: Dictionary) -> bool:
 	var room_id := str(room_data.get("id", ""))
@@ -140,11 +160,6 @@ func _room_is_visible(room_data: Dictionary) -> bool:
 	if not runtime_room.is_empty():
 		return bool(runtime_room.get("unlocked", false))
 	return bool(room_data.get("initial_unlocked", true)) and int(room_data.get("floor_index", 0)) <= GameState.highest_built_floor
-
-func _vector2_from_array(value: Variant, fallback: Vector2) -> Vector2:
-	if value is Array and value.size() >= 2:
-		return Vector2(float(value[0]), float(value[1]))
-	return fallback
 
 func _clear_runtime_floors() -> void:
 	for child in get_children():

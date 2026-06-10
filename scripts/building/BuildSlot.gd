@@ -1,9 +1,9 @@
 extends Button
 
-const DEFAULT_SLOT_WIDTH := 176.0
+const DEFAULT_SLOT_WIDTH := 240.0
 const DEFAULT_SLOT_HEIGHT := 64.0
 const DEFAULT_SERVICE_WIDTH := 48.0
-const DEFAULT_FRAME_TILES := Vector2i(8, 4)
+const DEFAULT_FRAME_TILES := Vector2i(6, 4)
 
 const META_SERVICE_WIDTH := &"service_width"
 const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
@@ -57,11 +57,22 @@ func _refresh() -> void:
 		disabled = true
 		return
 	disabled = false
-	_add_build_visual(_format_label(buildable_label_template, [display_name, int(floor.get("build_cost", 0))], display_name), floor, false)
+	_add_build_visual(_format_label(buildable_label_template, [display_name, int(floor.get("build_cost", 0))], display_name), false)
 
-func _add_build_visual(label_text: String, _floor: Dictionary, locked: bool) -> void:
-	var slot_size := _slot_size()
-	shell.apply_layout(slot_size, service_width, wall_inset, floor_height, roof_height, _frame_tiles(_floor), {})
+func _add_build_visual(label_text: String, locked: bool) -> void:
+	var frames := _side_frame_tiles()
+	var left_frame_tiles: Vector2i = frames.get("left", default_frame_tiles)
+	var right_frame_tiles: Vector2i = frames.get("right", default_frame_tiles)
+	shell.apply_layout(
+		_slot_size(),
+		service_width,
+		wall_inset,
+		floor_height,
+		roof_height,
+		left_frame_tiles,
+		right_frame_tiles,
+		{}
+	)
 	shell.set_locked_visuals(locked)
 	shell.label.text = label_text
 
@@ -75,24 +86,47 @@ func _on_pressed() -> void:
 		UIManager.open_build_confirm(floor_index)
 
 func _slot_size() -> Vector2:
-	var room_pixel_size := Vector2(_frame_tiles(ConfigManager.get_floor_data(floor_index)) * ApartmentTileMap.TILE_SIZE)
-	return Vector2(service_width + room_pixel_size.x, room_pixel_size.y)
+	var frames := _side_frame_tiles()
+	var left_frame_tiles: Vector2i = frames.get("left", default_frame_tiles)
+	var right_frame_tiles: Vector2i = frames.get("right", default_frame_tiles)
+	var left_size := _room_pixel_size_from_frame_tiles(left_frame_tiles)
+	var right_size := _room_pixel_size_from_frame_tiles(right_frame_tiles)
+	return Vector2(left_size.x + service_width + right_size.x, maxf(left_size.y, right_size.y))
 
-func _frame_tiles(floor_data: Dictionary) -> Vector2i:
-	var configured_frame_tiles: Variant = floor_data.get("frame_tiles", [])
+func _side_frame_tiles() -> Dictionary:
+	var result := {
+		"left": default_frame_tiles,
+		"right": default_frame_tiles
+	}
+	var floor_data: Dictionary = ConfigManager.get_floor_data(floor_index)
+	var public_areas: Array = floor_data.get("public_areas", [])
+	if not public_areas.is_empty():
+		for item in public_areas:
+			var area: Dictionary = item
+			var side := str(area.get("layout_side", "left")).strip_edges().to_lower()
+			if side == "left" or side == "right":
+				result[side] = _frame_tiles(area)
+		return result
+	for room in ConfigManager.get_room_configs_for_floor(floor_index):
+		var room_data: Dictionary = room
+		var side := str(room_data.get("layout_side", "left")).strip_edges().to_lower()
+		if side == "suite":
+			result["left"] = _frame_tiles(room_data)
+		elif side == "left" or side == "right":
+			result[side] = _frame_tiles(room_data)
+	return result
+
+func _frame_tiles(content: Dictionary) -> Vector2i:
+	var configured_frame_tiles: Variant = content.get("frame_tiles", [])
 	if configured_frame_tiles is Array and configured_frame_tiles.size() >= 2:
 		return _fixed_height_frame_tiles(Vector2i(int(configured_frame_tiles[0]), int(configured_frame_tiles[1])))
-	for room in ConfigManager.rooms:
-		var room_data: Dictionary = room
-		if int(room_data.get("floor_index", 0)) != floor_index:
-			continue
-		var room_tiles: Variant = room_data.get("frame_tiles", [])
-		if room_tiles is Array and room_tiles.size() >= 2:
-			return _fixed_height_frame_tiles(Vector2i(int(room_tiles[0]), int(room_tiles[1])))
 	return default_frame_tiles
 
+func _room_pixel_size_from_frame_tiles(value: Vector2i) -> Vector2:
+	return Vector2(value.x * ApartmentTileMap.TILE_SIZE, value.y * ApartmentTileMap.TILE_SIZE)
+
 func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
-	return Vector2i(maxi(4, value.x), default_frame_tiles.y)
+	return Vector2i(maxi(2, value.x), default_frame_tiles.y)
 
 func _bind_scene_config() -> void:
 	var config := get_node_or_null("SceneConfig")

@@ -46,12 +46,6 @@ static func can_place_furniture_in_room(
 	if layer == LAYER_FLOOR and gy != floor_grid_y_for(grid_size, size):
 		return false
 
-	var door_cells := door_cells_for_layer(room, layer)
-	for yy in range(gy, gy + h):
-		for xx in range(gx, gx + w):
-			if [xx, yy] in door_cells:
-				return false
-
 	for instance in room.get("furniture_instances", []):
 		var instance_data: Dictionary = instance
 		if str(instance_data.get("instance_id", "")) == ignored_instance_id:
@@ -128,10 +122,7 @@ static func floor_grid_y_for(grid_size: Array, furniture_size: Array) -> int:
 	return maxi(0, int(grid_size[1]) - maxi(1, int(furniture_size[1])))
 
 static func door_cells_for_layer(room: Dictionary, layer: String) -> Array:
-	if layer != LAYER_FLOOR:
-		return []
-	var grid_size := grid_size_for_layer(room, layer)
-	return [[0, int(grid_size[1]) - 1]]
+	return []
 
 static func _rects_overlap(ax: int, ay: int, aw: int, ah: int, bx: int, by: int, bw: int, bh: int) -> bool:
 	return ax < bx + bw and ax + aw > bx and ay < by + bh and ay + ah > by

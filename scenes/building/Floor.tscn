@@ -9,7 +9,8 @@ script = ExtResource("1_floor")
 
 [node name="SceneConfig" type="Node" parent="."]
 metadata/room_scene_path = "res://scenes/building/Room.tscn"
+metadata/public_area_scene_path = "res://scenes/building/PublicAreaShell.tscn"
 metadata/service_width = 48.0
-metadata/default_frame_tiles = Vector2i(8, 4)
+metadata/default_frame_tiles = Vector2i(6, 4)
 
 [node name="FloorServiceCore" parent="." instance=ExtResource("2_service_core")]

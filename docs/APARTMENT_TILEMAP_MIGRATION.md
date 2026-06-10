@@ -8,8 +8,8 @@
 - `ApartmentTileMap.tscn` 与 `ServiceCoreTileMap.tscn` 已作为共享 TileMap 子场景存在。
 - `ApartmentBuilding.tscn`、`Floor.tscn`、`Room.tscn` 已通过导出属性指定楼层、建造槽、房间、家具和租客子场景模板，脚本只按数据实例化这些编辑器可打开的模板。
 - `floors.json` 可通过 `floor_scene_path` / `build_slot_scene_path` 选择楼层和施工槽模板；`rooms.json` 可通过 `room_scene_path` 选择房间模板。
-- `rooms.json.frame_tiles` 是房间外框尺寸唯一标准，默认 `[8, 4]`，包含墙体；每格固定 16px，所以默认房间像素尺寸为 `128 x 64`。
-- 房间高度固定为 4 格；后续扩建房间只增加宽度，例如 `[10, 4]`。
+- `rooms.json.frame_tiles` 是房间外框尺寸唯一标准，默认 `[6, 4]`，包含墙体；每格固定 16px，所以默认房间像素尺寸为 `96 x 64`。
+- 房间高度固定为 4 格；后续扩建房间只增加宽度，例如 `[8, 4]`。
 - `rooms.json.grid_size` 对应剖面房间摆放格，默认 `[6, 4]`，每格固定 `16px x 16px`；地面家具按自身高度吸附到最下面的地面线，墙面摆放层由上方墙面格派生为 `[columns, rows - 1]`，不写入配置。
 - 家具、租客、摆放预览仍作为子场景挂到房间可视层。
 - `ApartmentTileMap.gd` 是唯一允许调用 `set_cell` 动态生成房间骨架的建筑脚本；`Room.gd`、`Floor.gd`、`BuildSlot.gd`、`ApartmentBuilding.gd` 只传递 `frame_tiles` 和显隐状态。
@@ -23,13 +23,13 @@
   - 固定墙边：`edge_bottom_left_corner_tile`、`edge_bottom_edge_tiles`、`edge_bottom_right_corner_tile`
   - 门口短墙：`body_door_cutout_cells`、`body_door_short_wall_cells`、`body_door_short_wall_tiles`
   - 门口短墙：`edge_door_cutout_cells`、`edge_door_short_wall_cells`、`edge_door_short_wall_tiles`
-  - `door_tile`、`roof_left_tile`、`roof_tiles`、`roof_right_tile`
+  - `door_cell_from_left`、`door_cell_from_bottom`、`roof_left_tile`、`roof_tiles`、`roof_right_tile`
   - `construction_marker_tile`
 
 ## 目标状态
 
 - 房间骨架由壁纸、主题墙体、固定墙边、门和窗构成；不再使用单独 floor 层。壁纸按房间格子铺满，默认可只配置一个壁纸图块。
-- `ApartmentTileMap.tscn` 中手动平铺的示例是默认图块模板来源：`WallpaperTileMap` 填满房间主体，`WallTileMap` 铺房间四周墙体，`InfrastructureTileMap` 铺外扩一格的黑色墙边、左侧门和右侧窗。运行时渲染会先读取这套模板，再按 `frame_tiles` 生成 8x4 或加宽后的房间骨架。
+- `ApartmentTileMap.tscn` 中手动平铺的示例是默认图块模板来源：`WallpaperTileMap` 填满房间主体，`WallTileMap` 铺房间四周墙体，`InfrastructureTileMap` 铺外扩一格的黑色墙边、左侧门和右侧窗。运行时渲染会先读取这套模板，再按 `frame_tiles` 生成 6x4 或加宽后的房间骨架。
 - 房间墙体、墙边、屋檐、服务核心由 `ApartmentTileMap.gd` 基于 `frame_tiles` 渲染到 `TileMapLayer`；施工状态使用 `ConstructionTileMap` 表达 16x16 边条/提示块，并用场景内静态 `ConstructionCover` 贴图覆盖大块施工布。
 - `TileMapLayer` 使用共享 `res://tilesets/apartment_tileset.tres`，不在运行时创建 TileSet。
 - 旧的 `room_size` / `grid_rect` 像素字段已废弃；配置和运行时状态只保留 `frame_tiles` / `grid_size`。
@@ -44,7 +44,7 @@
 
 ## 验收标准
 
-- 运行 `ApartmentTileMap.tscn` 可看到默认 8x4 房间骨架。
+- 运行 `ApartmentTileMap.tscn` 可看到默认 6x4 房间骨架。
 - 静态扫描中，只有 `ApartmentTileMap.gd` 允许调用 `set_cell` 绘制房间骨架。
-- 运行时房间尺寸统一来自 `frame_tiles * 16px`，默认 8x4 = 128x64，扩建 10x4 = 160x64。
+- 运行时房间尺寸统一来自 `frame_tiles * 16px`，默认 6x4 = 96x64，扩建 8x4 = 128x64。
 - 主场景 360x640 逻辑视口和 720x1280 桌面预览下，公寓、背景、UI 比例一致。

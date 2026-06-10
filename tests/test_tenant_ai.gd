@@ -23,10 +23,10 @@ func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	assert_true(tenant_scene.contains("[node name=\"ClickArea\" type=\"Area2D\""), "Tenant clicks should be routed through a scene-authored ClickArea")
 	assert_true(tenant_scene.contains("[node name=\"ClickShape\" type=\"CollisionShape2D\""), "Tenant ClickArea should expose its hit shape in the scene")
 	assert_true(tenant_scene.contains("position = Vector2(28, 56)"), "Tenant standalone preview should place the character inside the viewport")
-	assert_true(tenant_scene.contains("position = Vector2(0, -7)"), "Tenant avatar should compensate for transparent padding in the unscaled 32x32 NPC frame")
-	assert_true(tenant_scene.contains("region = Rect2(0, 32, 32, 32)"), "Tenant atlas frames should match the configured 32x32 Pixel Spaces NPC grid")
-	assert_false(tenant_scene.contains("region = Rect2(0, 32, 16, 32)"), "Tenant atlas frames should not override the configured 32x32 NPC grid")
-	assert_false(tenant_scene.contains("scale = Vector2(1.5, 1.5)"), "Tenant should render the configured 32x32 NPC frames at scene scale")
+	assert_true(tenant_scene.contains("position = Vector2(0, -7)"), "Tenant avatar should compensate for transparent padding in the unscaled 32x42 NPC frame")
+	assert_true(tenant_scene.contains("region = Rect2(0, 32, 32, 32)"), "Tenant atlas frames should match the configured 32x42 Pixel Spaces NPC grid")
+	assert_false(tenant_scene.contains("region = Rect2(0, 32, 16, 32)"), "Tenant atlas frames should not override the configured 32x42 NPC grid")
+	assert_false(tenant_scene.contains("scale = Vector2(1.5, 1.5)"), "Tenant should render the configured 32x42 NPC frames at scene scale")
 	assert_true(tenant_scene.contains("sprite_frames = SubResource"), "Tenant avatar frames should be prebuilt on AvatarSprite in Tenant.tscn")
 	assert_true(tenant_scene.contains("\"name\": &\"walk\""), "Tenant.tscn should prebuild a walk animation on AvatarSprite")
 	assert_true(tenant_scene.contains("BehaviorAnimationMap"), "Tenant behavior-to-animation bindings should be authored in Tenant.tscn")
@@ -92,7 +92,8 @@ func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	assert_true(ai_source.contains("TenantRoomLocator.walk_positions"), "TenantAI should patrol using room floor grid positions")
 	assert_true(ai_source.contains("TenantRoomLocator.interaction_position"), "TenantAI should use grid-based furniture interaction points")
 	assert_true(locator_source.contains("class_name TenantRoomLocator"), "Tenant room positions should live in a dedicated grid locator")
-	assert_true(locator_source.contains("FurniturePlacementRules.door_cells_for_layer"), "Tenant grid positions should avoid floor door cells")
+	assert_true(locator_source.contains("room.get(\"door_side\""), "Tenant door route points should follow the configured room door side")
+	assert_false(locator_source.contains("door_cells_for_layer(room"), "Tenant standing grids should not avoid old door cells after doors became outward-opening")
 	assert_true(need_bubble_source.contains("await bubble_animation.animation_finished"), "NeedBubble should reveal icons only after the bubble animation finishes")
 	assert_true(emote_source.contains("await emote_animation.animation_finished"), "TenantEmote should reveal icons only after the emote animation finishes")
 	assert_false(tenant_scene.contains("behavior_animation_map = {"), "Tenant.tscn should not keep script-exported behavior animation config")
@@ -154,8 +155,9 @@ func test_tenant_room_locator_uses_floor_grid_positions() -> void:
 	var locator_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantRoomLocator.gd")
 	var room := {
 		"id": "__tenant_locator_test",
-		"frame_tiles": [8, 4],
+		"frame_tiles": [6, 4],
 		"grid_size": [6, 4],
+		"door_side": "left",
 		"furniture_instances": []
 	}
 	assert_true(locator_source.contains("static func floor_grid_y"), "TenantRoomLocator should expose floor row calculation")
@@ -165,23 +167,25 @@ func test_tenant_room_locator_uses_floor_grid_positions() -> void:
 	assert_true(locator_source.contains("static func room_door_inside_grid"), "TenantRoomLocator should expose the room-door route grid")
 	assert_true(locator_source.contains("static func room_door_inside_position"), "TenantRoomLocator should expose the room-door route position")
 	var floor_row: int = FurniturePlacementRules.floor_grid_y_for(room["grid_size"], [1, 1])
-	var door_cells: Array = FurniturePlacementRules.door_cells_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
 	var standing_grids: Array = []
 	for x in range(int(room["grid_size"][0])):
 		var cell: Array = [x, floor_row]
-		if not door_cells.has(cell):
-			standing_grids.append(cell)
+		standing_grids.append(cell)
 	var tile_size: int = int(FurniturePlacementRules.TILE_SIZE)
-	var floor_origin: Vector2 = Vector2(float(tile_size), 0.0)
-	var door_route_grid: Array = door_cells.front()
-	var door_route_position: Vector2 = floor_origin + Vector2(0.5 * tile_size, 4.0 * tile_size)
+	var floor_origin := Vector2.ZERO
+	var door_route_grid: Array = TenantRoomLocator.room_door_inside_grid(room)
+	var door_route_position: Vector2 = TenantRoomLocator.room_door_inside_position(room)
 	assert_eq(floor_row, 3, "Tenant floor row should be the bottom floor grid row")
-	assert_eq(standing_grids, [[1, 3], [2, 3], [3, 3], [4, 3], [5, 3]], "Tenant standing grids should avoid the floor door cell")
-	assert_eq(door_route_grid, [0, 3], "Tenant door route should target the reserved left-bottom door cell")
-	assert_eq(door_route_position, Vector2(24.0, 64.0), "Tenant door route should walk to the inside of the left-bottom room door")
-	assert_eq(standing_grids[3], [4, 3], "Tenant spawn should default to a middle-right floor cell")
-	assert_eq(floor_origin + Vector2(4.5 * tile_size, 4.0 * tile_size), Vector2(88.0, 64.0), "Tenant spawn foot point should sit on the room floor")
-	assert_eq([standing_grids.front(), standing_grids.back()], [[1, 3], [5, 3]], "Tenant walk range should avoid the floor door cell")
+	assert_eq(standing_grids, [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3]], "Tenant standing grids should use the full room width")
+	assert_eq(door_route_grid, [0, 3], "Left-door rooms should route to the left-bottom door grid")
+	assert_eq(door_route_position, Vector2(8.0, 64.0), "Left-door route should walk to the inside of the left room door")
+	room["door_side"] = "right"
+	assert_eq(TenantRoomLocator.room_door_inside_grid(room), [5, 3], "Right-door rooms should route to the right-bottom door grid")
+	assert_eq(TenantRoomLocator.room_door_inside_position(room), Vector2(88.0, 64.0), "Right-door route should walk to the inside of the right room door")
+	room["door_side"] = "left"
+	assert_eq(standing_grids[3], [3, 3], "Tenant spawn should default to a middle-right floor cell")
+	assert_eq(floor_origin + Vector2(3.5 * tile_size, 4.0 * tile_size), Vector2(56.0, 64.0), "Tenant spawn foot point should sit on the room floor")
+	assert_eq([standing_grids.front(), standing_grids.back()], [[0, 3], [5, 3]], "Tenant walk range should include the old door cells")
 
 	room["furniture_instances"] = [
 		{"instance_id": "bed_a", "furniture_id": "bed_basic", "grid_pos": [1, 2]}
@@ -190,7 +194,7 @@ func test_tenant_room_locator_uses_floor_grid_positions() -> void:
 	var bed_size: Array = bed_data.get("size", [])
 	var interaction_grid := [int(room["furniture_instances"][0]["grid_pos"][0]) + int(bed_size[0]), floor_row]
 	assert_eq(interaction_grid, [3, 3], "Tenant interaction point should stand beside floor furniture")
-	assert_eq(floor_origin + Vector2(3.5 * tile_size, 4.0 * tile_size), Vector2(72.0, 64.0), "Tenant interaction foot point should remain on the floor")
+	assert_eq(floor_origin + Vector2(3.5 * tile_size, 4.0 * tile_size), Vector2(56.0, 64.0), "Tenant interaction foot point should remain on the floor")
 
 
 func test_tenant_presence_state_is_saved_and_normalized() -> void:

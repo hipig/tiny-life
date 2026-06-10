@@ -1,6 +1,6 @@
 extends Node
 
-const DEFAULT_FRAME_TILES := [8, 4]
+const DEFAULT_FRAME_TILES := [6, 4]
 const DEFAULT_GRID_SIZE := [6, 4]
 const SAVE_SCHEMA_VERSION := 2
 const DEFAULT_TENANT_BEHAVIOR := "wander"
@@ -79,6 +79,9 @@ func reset_new_game() -> void:
 			"id": room_data.get("id", ""),
 			"floor_index": floor_index,
 			"room_name": room_data.get("room_name", ""),
+			"layout_side": str(room_data.get("layout_side", "left")),
+			"door_side": str(room_data.get("door_side", "left")),
+			"door_mirrored": bool(room_data.get("door_mirrored", false)),
 			"frame_tiles": _fixed_height_frame_tiles(_int_pair(room_data.get("frame_tiles", DEFAULT_FRAME_TILES), DEFAULT_FRAME_TILES)),
 			"grid_size": _fixed_height_grid_size(_int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE)),
 			"unlocked": initially_unlocked and floor_index <= highest_built_floor,
@@ -459,6 +462,9 @@ func _ensure_runtime_defaults() -> void:
 			"id": room_id,
 			"floor_index": floor_index,
 			"room_name": str(room_data.get("room_name", "")),
+			"layout_side": str(room_data.get("layout_side", room.get("layout_side", "left"))),
+			"door_side": str(room_data.get("door_side", room.get("door_side", "left"))),
+			"door_mirrored": bool(room_data.get("door_mirrored", room.get("door_mirrored", false))),
 			"level": room_level,
 			"frame_tiles": configured_layout.get("frame_tiles", DEFAULT_FRAME_TILES).duplicate(),
 			"grid_size": configured_layout.get("grid_size", DEFAULT_GRID_SIZE).duplicate(),
@@ -558,7 +564,7 @@ func _configured_room_layout_for_level(room_data: Dictionary, room_level: int) -
 
 func _fixed_height_frame_tiles(value: Array) -> Array:
 	if value.size() >= 2:
-		return [maxi(4, int(value[0])), int(DEFAULT_FRAME_TILES[1])]
+		return [maxi(2, int(value[0])), int(DEFAULT_FRAME_TILES[1])]
 	return DEFAULT_FRAME_TILES.duplicate()
 
 func _fixed_height_grid_size(value: Array) -> Array:

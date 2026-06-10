@@ -11,12 +11,12 @@ extends Control
 var roof_visible := false
 var construction_visible := false
 
-func apply_layout(room_pixel_size: Vector2, _wall_inset: float, _floor_height: float, _roof_height: float, frame_tiles := Vector2i(8, 4), tile_theme: Dictionary = {}, edge_sides: Dictionary = {}, body_sides: Dictionary = {}) -> void:
+func apply_layout(room_pixel_size: Vector2, _wall_inset: float, _floor_height: float, _roof_height: float, frame_tiles := Vector2i(6, 4), tile_theme: Dictionary = {}, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, door_side := "left", door_mirrored := false) -> void:
 	custom_minimum_size = room_pixel_size
 	size = room_pixel_size
 	if apartment_tile_map != null:
-		apartment_tile_map.render_room_skeleton(frame_tiles, tile_theme, roof_visible, construction_visible, edge_sides, body_sides, true)
-	_layout_room_door(room_pixel_size)
+		apartment_tile_map.render_room_skeleton(frame_tiles, tile_theme, roof_visible, construction_visible, edge_sides, body_sides, door_side)
+	_layout_room_door(room_pixel_size, door_side, door_mirrored)
 
 func set_roof_visible(value: bool) -> void:
 	roof_visible = value
@@ -35,10 +35,15 @@ func clear_dynamic_views() -> void:
 func get_room_door() -> TrafficDoor:
 	return room_door
 
-func _layout_room_door(room_pixel_size: Vector2) -> void:
+func _layout_room_door(room_pixel_size: Vector2, door_side: String, door_mirrored: bool) -> void:
 	if room_door == null:
 		return
+	var normalized_side := str(door_side).strip_edges().to_lower()
+	var door_x := -ApartmentTileMap.TILE_SIZE * 0.5
+	if normalized_side == "right":
+		door_x = room_pixel_size.x + ApartmentTileMap.TILE_SIZE * 0.5
 	room_door.position = Vector2(
-		ApartmentTileMap.TILE_SIZE * 0.5,
+		door_x,
 		maxf(ApartmentTileMap.TILE_SIZE, room_pixel_size.y)
 	)
+	room_door.scale.x = -1.0 if door_mirrored else 1.0

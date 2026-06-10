@@ -25,9 +25,11 @@ static func walk_positions(room: Dictionary) -> Array[Vector2]:
 	return [grid_to_position(room, grids[0]), grid_to_position(room, grids[1])]
 
 static func room_door_inside_grid(room: Dictionary) -> Array:
-	var door_cells := FurniturePlacementRules.door_cells_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
-	if not door_cells.is_empty():
-		return door_cells.front()
+	var grid_size := FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
+	var columns := maxi(1, int(grid_size[0]) if grid_size.size() >= 1 else 1)
+	var door_side := str(room.get("door_side", "left")).strip_edges().to_lower()
+	if door_side == "right":
+		return [columns - 1, floor_grid_y(room)]
 	return [0, floor_grid_y(room)]
 
 static func room_door_inside_position(room: Dictionary) -> Vector2:
@@ -68,10 +70,7 @@ static func standing_grids(room: Dictionary) -> Array:
 		cells.append(cell)
 	if cells.is_empty():
 		for x in range(columns):
-			var cell := [x, floor_row]
-			if FurniturePlacementRules.door_cells_for_layer(room, FurniturePlacementRules.LAYER_FLOOR).has(cell):
-				continue
-			cells.append(cell)
+			cells.append([x, floor_row])
 	return cells
 
 static func floor_grid_y(room: Dictionary) -> int:
@@ -97,14 +96,14 @@ static func grid_to_position(room: Dictionary, grid: Array) -> Vector2:
 static func floor_rect(room: Dictionary) -> Rect2:
 	var frame_tiles := _frame_tiles(room)
 	return Rect2(
-		TILE_SIZE,
 		0.0,
-		float(maxi(1, frame_tiles.x - 2) * TILE_SIZE),
+		0.0,
+		float(maxi(1, frame_tiles.x) * TILE_SIZE),
 		float(maxi(1, frame_tiles.y) * TILE_SIZE)
 	)
 
 static func _blocked_floor_grids(room: Dictionary) -> Array:
-	var blocked := FurniturePlacementRules.door_cells_for_layer(room, FurniturePlacementRules.LAYER_FLOOR).duplicate()
+	var blocked := []
 	var grid_size := FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
 	var floor_row := floor_grid_y(room)
 	for instance in room.get("furniture_instances", []):
@@ -135,11 +134,11 @@ static func _nearest_grid(cells: Array, target: Array) -> Array:
 	return nearest
 
 static func _frame_tiles(room: Dictionary) -> Vector2i:
-	var raw: Variant = room.get("frame_tiles", [8, 4])
+	var raw: Variant = room.get("frame_tiles", [6, 4])
 	if raw is Array and raw.size() >= 2:
-		return Vector2i(maxi(4, int(raw[0])), int(raw[1]))
+		return Vector2i(maxi(2, int(raw[0])), int(raw[1]))
 	if raw is Vector2i:
-		return Vector2i(maxi(4, raw.x), raw.y)
+		return Vector2i(maxi(2, raw.x), raw.y)
 	if raw is Vector2:
-		return Vector2i(maxi(4, int(raw.x)), int(raw.y))
-	return Vector2i(8, 4)
+		return Vector2i(maxi(2, int(raw.x)), int(raw.y))
+	return Vector2i(6, 4)

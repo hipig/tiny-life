@@ -3,7 +3,7 @@ class_name ApartmentTileMap
 extends Node2D
 
 const TILE_SIZE := 16
-const DEFAULT_FRAME_TILES := Vector2i(8, 4)
+const DEFAULT_FRAME_TILES := Vector2i(6, 4)
 const MIN_FRAME_WIDTH_TILES := 3
 const EDGE_TOP := "top"
 const EDGE_BOTTOM := "bottom"
@@ -35,8 +35,10 @@ const EDGE_RIGHT := "right"
 @export var body_top_right_corner_tile := Vector2i(5, 17)
 ## 无门左墙的竖向长边 tile 序列；2F+ 服务区左墙闭合时使用。
 @export var body_left_edge_tiles: Array[Vector2i] = [Vector2i(1, 18)]
-## 有门左墙的短边 tile 序列；固定画在门上方一格，房间门和 1F 出口门使用。
+## 有门左墙的短边 tile 序列；固定画在门上方一格，右侧 02 房和 1F 出口门使用。
 @export var body_left_door_edge_tiles: Array[Vector2i] = [Vector2i(2, 18)]
+## 有门右墙的短边 tile 序列；固定画在门上方一格，左侧 01 房使用。
+@export var body_right_door_edge_tiles: Array[Vector2i] = [Vector2i(4, 18)]
 ## 普通墙体右侧竖边 tile 序列；仅右墙存在时使用。
 @export var body_right_edge_tiles: Array[Vector2i] = [Vector2i(5, 18)]
 ## 无门左墙底部的左下角 tile；未装修房间和 2F+ 服务区闭合时使用。
@@ -117,11 +119,13 @@ var current_theme := {}
 var current_edge_sides := {}
 var current_body_sides := {}
 var current_has_left_door := true
+var current_has_right_door := false
+var current_door_side := EDGE_LEFT
 
 func _ready() -> void:
 	render_room_skeleton(DEFAULT_FRAME_TILES, {}, current_roof_visible, current_construction_visible)
 
-func render_room_skeleton(frame_tiles := DEFAULT_FRAME_TILES, theme: Dictionary = {}, show_roof := false, show_construction := false, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, has_left_door := true) -> void:
+func render_room_skeleton(frame_tiles := DEFAULT_FRAME_TILES, theme: Dictionary = {}, show_roof := false, show_construction := false, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, door_config: Variant = EDGE_LEFT) -> void:
 	_bind_layers()
 	current_frame_tiles = _validated_frame_tiles(frame_tiles)
 	current_theme = theme.duplicate()
@@ -129,7 +133,9 @@ func render_room_skeleton(frame_tiles := DEFAULT_FRAME_TILES, theme: Dictionary 
 	current_construction_visible = show_construction
 	current_edge_sides = _normalized_sides(edge_sides, true)
 	current_body_sides = _normalized_sides(body_sides, true)
-	current_has_left_door = has_left_door
+	current_door_side = _normalized_door_side(door_config)
+	current_has_left_door = current_door_side == EDGE_LEFT
+	current_has_right_door = current_door_side == EDGE_RIGHT
 	if show_roof:
 		current_edge_sides[EDGE_TOP] = false
 	_clear_layers()
@@ -201,13 +207,13 @@ func _paint_wall_body() -> void:
 				continue
 			var target := Vector2i(x, y)
 			wall_layer.set_cell(target, wall_body_source_id, _body_tile_at(x, y, max_x, max_y))
-	var door_cell := _door_cell()
-	if _body_side_enabled(EDGE_LEFT) and current_has_left_door:
-		_clear_relative_cells(wall_layer, door_cell, _theme_vector2i_array("body_door_cutout_cells", body_door_cutout_cells))
+	if not current_door_side.is_empty() and _body_side_enabled(current_door_side):
+		var door_cell := _door_cell_for_side(current_door_side)
+		_clear_relative_cells(wall_layer, door_cell, _door_relative_cells_for_side(_theme_vector2i_array("body_door_cutout_cells", body_door_cutout_cells), current_door_side))
 		_paint_relative_tiles(
 			wall_layer,
 			door_cell,
-			_theme_vector2i_array("body_door_short_wall_cells", body_door_short_wall_cells),
+			_door_relative_cells_for_side(_theme_vector2i_array("body_door_short_wall_cells", body_door_short_wall_cells), current_door_side),
 			_theme_vector2i_array("body_door_short_wall_tiles", body_door_short_wall_tiles),
 			wall_body_source_id
 		)
@@ -240,18 +246,19 @@ func _paint_exported_wall_edge() -> void:
 		infrastructure_layer.set_cell(Vector2i(-1, current_frame_tiles.y), wall_edge_source_id, _theme_vector2i("edge_bottom_left_corner_tile", edge_bottom_left_corner_tile))
 	if _edge_side_enabled(EDGE_RIGHT) and _edge_side_enabled(EDGE_BOTTOM):
 		infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, current_frame_tiles.y), wall_edge_source_id, _theme_vector2i("edge_bottom_right_corner_tile", edge_bottom_right_corner_tile))
-	var door_cell := _door_cell()
-	_clear_relative_cells(infrastructure_layer, door_cell, _theme_vector2i_array("edge_door_cutout_cells", edge_door_cutout_cells))
-	_paint_relative_tiles(
-		infrastructure_layer,
-		door_cell,
-		_theme_vector2i_array("edge_door_short_wall_cells", edge_door_short_wall_cells),
-		_theme_vector2i_array("edge_door_short_wall_tiles", edge_door_short_wall_tiles),
-		wall_edge_source_id
-	)
+	if not current_door_side.is_empty():
+		var door_cell := _door_cell_for_side(current_door_side)
+		_clear_relative_cells(infrastructure_layer, door_cell, _door_relative_cells_for_side(_theme_vector2i_array("edge_door_cutout_cells", edge_door_cutout_cells), current_door_side))
+		_paint_relative_tiles(
+			infrastructure_layer,
+			door_cell,
+			_door_relative_cells_for_side(_theme_vector2i_array("edge_door_short_wall_cells", edge_door_short_wall_cells), current_door_side),
+			_theme_vector2i_array("edge_door_short_wall_tiles", edge_door_short_wall_tiles),
+			wall_edge_source_id
+		)
 
 func _paint_room_window() -> void:
-	if infrastructure_layer == null or not _body_side_enabled(EDGE_RIGHT):
+	if infrastructure_layer == null or not _body_side_enabled(EDGE_RIGHT) or current_has_right_door:
 		return
 	var cell := Vector2i(
 		clampi(current_frame_tiles.x - 1 - window_cell_from_right, 0, current_frame_tiles.x - 1),
@@ -292,6 +299,7 @@ func _body_tile_at(x: int, y: int, max_x: int, max_y: int) -> Vector2i:
 	var top_right := _theme_vector2i("body_top_right_corner_tile", body_top_right_corner_tile)
 	var left_edges := _theme_vector2i_array("body_left_edge_tiles", body_left_edge_tiles)
 	var left_door_edges := _theme_vector2i_array("body_left_door_edge_tiles", body_left_door_edge_tiles)
+	var right_door_edges := _theme_vector2i_array("body_right_door_edge_tiles", body_right_door_edge_tiles)
 	var right_edges := _theme_vector2i_array("body_right_edge_tiles", body_right_edge_tiles)
 	var bottom_left := _theme_vector2i("body_bottom_left_corner_tile", body_bottom_left_corner_tile)
 	var bottom_edges := _theme_vector2i_array("body_bottom_edge_tiles", body_bottom_edge_tiles)
@@ -318,6 +326,8 @@ func _body_tile_at(x: int, y: int, max_x: int, max_y: int) -> Vector2i:
 				return _cycled_tile(bottom_edges, x, bottom_left)
 			return _cycled_tile(left_edges, y - 1, top_left)
 		if x == max_x:
+			if current_has_right_door and _body_side_enabled(EDGE_BOTTOM):
+				return _cycled_tile(bottom_edges, x - 1, bottom_left)
 			if _body_side_enabled(EDGE_BOTTOM) and _body_side_enabled(EDGE_RIGHT):
 				return bottom_right
 			if _body_side_enabled(EDGE_BOTTOM):
@@ -331,6 +341,9 @@ func _body_tile_at(x: int, y: int, max_x: int, max_y: int) -> Vector2i:
 			return _cycled_tile(left_edges, y - 1, top_left)
 		return _cycled_tile(left_edges, y - 1, top_left)
 	if x == max_x:
+		if current_has_right_door and _body_side_enabled(EDGE_RIGHT):
+			if y == max_y - 1:
+				return _cycled_tile(right_door_edges, 0, top_right)
 		return _cycled_tile(right_edges, y - 1, top_right)
 	return top_left
 
@@ -344,6 +357,8 @@ func _edge_tile_at(x: int, y: int, max_x: int, max_y: int) -> Vector2i:
 			return _cycled_tile(_theme_vector2i_array("edge_left_door_edge_tiles", edge_left_door_edge_tiles), 0, _theme_vector2i("edge_left_edge_tile", edge_top_left_corner_tile))
 		return _cycled_tile(_theme_vector2i_array("edge_left_edge_tiles", edge_left_edge_tiles), y, _theme_vector2i("edge_left_edge_tile", edge_top_left_corner_tile))
 	if x > max_x:
+		if current_has_right_door and y == max_y - 1:
+			return _cycled_tile(_theme_vector2i_array("edge_left_door_edge_tiles", edge_left_door_edge_tiles), 0, _theme_vector2i("edge_right_edge_tile", edge_top_right_corner_tile))
 		return _cycled_tile(_theme_vector2i_array("edge_right_edge_tiles", edge_right_edge_tiles), y, _theme_vector2i("edge_right_edge_tile", edge_top_right_corner_tile))
 	return _theme_vector2i("edge_top_left_corner_tile", edge_top_left_corner_tile)
 
@@ -380,10 +395,24 @@ func _border_tile_at(
 	return top_left_corner
 
 func _door_cell() -> Vector2i:
+	return _door_cell_for_side(EDGE_LEFT)
+
+func _door_cell_for_side(side: String) -> Vector2i:
+	var x := door_cell_from_left
+	if side == EDGE_RIGHT:
+		x = current_frame_tiles.x - 1 - door_cell_from_left
 	return Vector2i(
-		clampi(door_cell_from_left, 0, current_frame_tiles.x - 1),
+		clampi(x, 0, current_frame_tiles.x - 1),
 		clampi(current_frame_tiles.y - 1 - door_cell_from_bottom, 0, current_frame_tiles.y - 1)
 	)
+
+func _door_relative_cells_for_side(cells: Array[Vector2i], side: String) -> Array[Vector2i]:
+	if side != EDGE_RIGHT:
+		return cells
+	var mirrored: Array[Vector2i] = []
+	for cell in cells:
+		mirrored.append(Vector2i(-cell.x, cell.y))
+	return mirrored
 
 func _clear_relative_cells(layer: TileMapLayer, origin: Vector2i, cells: Array[Vector2i]) -> void:
 	for cell in cells:
@@ -421,6 +450,14 @@ func _normalized_sides(sides: Dictionary, default_value: bool) -> Dictionary:
 		EDGE_LEFT: bool(sides.get(EDGE_LEFT, default_value)),
 		EDGE_RIGHT: bool(sides.get(EDGE_RIGHT, default_value))
 	}
+
+func _normalized_door_side(value: Variant) -> String:
+	if value is bool:
+		return EDGE_LEFT if bool(value) else ""
+	var side := str(value).strip_edges().to_lower()
+	if side == EDGE_LEFT or side == EDGE_RIGHT:
+		return side
+	return ""
 
 func _cycled_tile(tiles: Array[Vector2i], index: int, fallback: Vector2i) -> Vector2i:
 	if tiles.is_empty():

@@ -16,7 +16,7 @@ border_width_right = 2
 border_width_bottom = 2
 
 [node name="BuildSlot" type="Button"]
-custom_minimum_size = Vector2(176, 64)
+custom_minimum_size = Vector2(240, 64)
 theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
@@ -29,7 +29,7 @@ script = ExtResource("1_slot")
 
 [node name="SceneConfig" type="Node" parent="."]
 metadata/service_width = 48.0
-metadata/default_frame_tiles = Vector2i(8, 4)
+metadata/default_frame_tiles = Vector2i(6, 4)
 metadata/wall_inset = 9.0
 metadata/floor_height = 22.0
 metadata/roof_height = 13.0
