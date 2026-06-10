@@ -47,7 +47,6 @@ var _pinch_center: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	if not resized.is_connected(_on_resized):
 		resized.connect(_on_resized)
-	TenantAI.reset_startup_entry_session()
 	world_camera.make_current()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -198,6 +197,25 @@ func get_service_elevator_world_position(floor_index: int) -> Vector2:
 func get_offscreen_left_world_position(y: float) -> Vector2:
 	return get_left_offscreen_route_mark_world_position(y)
 
+func get_tenant_entry_start_world_position(target_room_id: String) -> Vector2:
+	var exit_position := get_service_exit_world_position()
+	if exit_position != Vector2.ZERO:
+		return exit_position
+	var room: Dictionary = GameState.rooms.get(target_room_id, {})
+	var floor_index := int(room.get("floor_index", 1))
+	if floor_index > 1:
+		var entry_elevator_position := get_service_elevator_world_position(1)
+		if entry_elevator_position != Vector2.ZERO:
+			return entry_elevator_position
+	var room_door_position := get_room_door_world_position(target_room_id)
+	if room_door_position != Vector2.ZERO:
+		return room_door_position
+	if floor_index > 1:
+		var target_elevator_position := get_service_elevator_world_position(floor_index)
+		if target_elevator_position != Vector2.ZERO:
+			return target_elevator_position
+	return Vector2.ZERO
+
 func get_left_offscreen_route_mark_world_position(y: float) -> Vector2:
 	var marker_position := Vector2(_visible_world_left() - _tenant_route_offscreen_margin(), y)
 	if left_offscreen_marker == null:
@@ -286,9 +304,8 @@ func _ensure_world_tenants() -> void:
 		var room_id := str(tenant_state.get("room_id", ""))
 		var node_name := "Tenant_%s" % str(tenant_id)
 		var existing := tenant_world_layer.get_node_or_null(node_name)
-		var startup_entry_active := TenantAI.is_startup_entry_active(str(tenant_id))
 		if presence == GameState.TENANT_PRESENCE_HOME or room_id.is_empty():
-			if existing != null and not startup_entry_active:
+			if existing != null:
 				existing.queue_free()
 			continue
 		if existing != null:
@@ -298,10 +315,11 @@ func _ensure_world_tenants() -> void:
 			continue
 		tenant_view.name = node_name
 		tenant_world_layer.add_child(tenant_view)
-		var exit_position := get_service_exit_world_position()
-		if exit_position == Vector2.ZERO:
-			exit_position = get_room_door_world_position(room_id)
-		tenant_view.position = get_offscreen_left_world_position(exit_position.y)
+		var route_start := get_tenant_entry_start_world_position(room_id)
+		if route_start == Vector2.ZERO:
+			var room_door_position := get_room_door_world_position(room_id)
+			route_start = get_offscreen_left_world_position(room_door_position.y)
+		tenant_view.position = route_start
 		tenant_view.visible = presence != GameState.TENANT_PRESENCE_AWAY
 		tenant_view.setup(str(tenant_id), room_id)
 

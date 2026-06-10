@@ -6,7 +6,6 @@ enum AIState {
 	WALK,
 	JUMP,
 	BUBBLE_ACTION,
-	ENTERING,
 	LEAVING,
 	AWAY,
 	RETURNING
@@ -31,26 +30,6 @@ var pending_action_need := ""
 var pending_action_duration := DEFAULT_ACTION_SECONDS
 var route_running := false
 
-static var startup_entry_tenant_ids: Dictionary = {}
-static var startup_entry_active_tenant_ids: Dictionary = {}
-static var startup_entry_refresh_active := false
-
-static func reset_startup_entry_session() -> void:
-	startup_entry_tenant_ids.clear()
-	startup_entry_active_tenant_ids.clear()
-	startup_entry_refresh_active = false
-
-static func begin_startup_entry_refresh() -> void:
-	startup_entry_tenant_ids.clear()
-	startup_entry_active_tenant_ids.clear()
-	startup_entry_refresh_active = true
-
-static func end_startup_entry_refresh() -> void:
-	startup_entry_refresh_active = false
-
-static func is_startup_entry_active(id: String) -> bool:
-	return startup_entry_active_tenant_ids.has(id)
-
 func setup(owner: Tenant, id: String, target_room_id: String) -> void:
 	tenant = owner
 	tenant_id = id
@@ -59,11 +38,8 @@ func setup(owner: Tenant, id: String, target_room_id: String) -> void:
 		return
 	var presence := _presence_state()
 	if presence == GameState.TENANT_PRESENCE_HOME:
-		if _should_play_startup_entry():
-			_enter_startup_entry()
-			return
 		tenant.visible = true
-		tenant.position = TenantRoomLocator.spawn_position(_room())
+		tenant.position = TenantRoomLocator.spawn_position(_room(), tenant_id)
 	elif presence == GameState.TENANT_PRESENCE_AWAY:
 		tenant.visible = false
 	else:
@@ -92,7 +68,7 @@ func _process(delta: float) -> void:
 		AIState.AWAY:
 			if _away_is_finished():
 				_enter_returning()
-		AIState.ENTERING, AIState.LEAVING, AIState.RETURNING:
+		AIState.LEAVING, AIState.RETURNING:
 			pass
 
 func _choose_next_state() -> void:
@@ -215,21 +191,6 @@ func _enter_leaving() -> void:
 	GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_LEAVING)
 	call_deferred("_run_leaving_route")
 
-func _enter_startup_entry() -> void:
-	if route_running:
-		return
-	startup_entry_tenant_ids[tenant_id] = true
-	startup_entry_active_tenant_ids[tenant_id] = true
-	state = AIState.ENTERING
-	state_elapsed = 0.0
-	route_running = true
-	pending_action_need = ""
-	tenant.visible = false
-	tenant.position = Vector2.ZERO
-	tenant.play_avatar_behavior(GameState.DEFAULT_TENANT_BEHAVIOR)
-	tenant.hide_behavior_bubble()
-	call_deferred("_run_startup_entry_route")
-
 func _enter_away(update_until: bool) -> void:
 	state = AIState.AWAY
 	state_elapsed = 0.0
@@ -260,9 +221,6 @@ func _enter_returning() -> void:
 	else:
 		call_deferred("_run_returning_route")
 
-func _run_startup_entry_route():
-	await _run_entry_route(false, true)
-
 func _run_leaving_route():
 	var view := _building_view()
 	if view == null:
@@ -287,7 +245,7 @@ func _run_leaving_route():
 	_enter_away(true)
 
 func _run_returning_route():
-	await _run_entry_route(true, false)
+	await _run_entry_route(true)
 
 func _run_returning_route_after_stagger():
 	var delay := _return_start_delay_seconds()
@@ -296,7 +254,7 @@ func _run_returning_route_after_stagger():
 	if state == AIState.RETURNING and route_running:
 		await _run_returning_route()
 
-func _run_entry_route(update_presence_on_finish: bool, force_offscreen_start: bool):
+func _run_entry_route(update_presence_on_finish: bool):
 	var view := _building_view()
 	if view == null:
 		_finish_route_at_home(update_presence_on_finish)
@@ -308,8 +266,8 @@ func _run_entry_route(update_presence_on_finish: bool, force_offscreen_start: bo
 	var exit_position := view.get_service_exit_world_position()
 	if exit_position == Vector2.ZERO:
 		exit_position = view.get_room_door_world_position(room_id)
-	if force_offscreen_start or tenant.position == Vector2.ZERO or not tenant.visible:
-		tenant.position = view.get_offscreen_left_world_position(exit_position.y)
+	if tenant.position == Vector2.ZERO or not tenant.visible:
+		tenant.position = _visible_return_start_position(view, floor_index, exit_position)
 	tenant.visible = true
 	await _enter_through_exit_door(view)
 	if floor_index > 1:
@@ -325,10 +283,9 @@ func _run_entry_route(update_presence_on_finish: bool, force_offscreen_start: bo
 		_finish_route_at_home(update_presence_on_finish)
 		return
 	tenant.position = TenantRoomLocator.room_door_inside_position(_room())
-	await _move_to_position(TenantRoomLocator.spawn_position(_room()))
+	await _move_to_position(TenantRoomLocator.spawn_position(_room(), tenant_id))
 	await _play_room_door(view, false)
 	route_running = false
-	_mark_startup_entry_finished()
 	if update_presence_on_finish:
 		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_HOME)
 	_enter_idle()
@@ -363,6 +320,18 @@ func _enter_through_exit_door(view: BuildingView):
 	await _play_exit_door(view, true)
 	await _move_to_position(_route_step_position(exit_position, 1.0))
 	await _play_exit_door(view, false)
+
+func _visible_return_start_position(view: BuildingView, floor_index: int, exit_position: Vector2) -> Vector2:
+	if exit_position != Vector2.ZERO:
+		return exit_position
+	if floor_index > 1:
+		var elevator_position := view.get_service_elevator_world_position(1)
+		if elevator_position != Vector2.ZERO:
+			return elevator_position
+	var room_door_world := view.get_room_door_world_position(room_id)
+	if room_door_world != Vector2.ZERO:
+		return room_door_world
+	return tenant.position
 
 func _enter_elevator_at_floor(view: BuildingView, floor_index: int):
 	var elevator_position := view.get_service_elevator_world_position(floor_index)
@@ -445,11 +414,10 @@ func _place_in_room_layer(view: BuildingView) -> bool:
 
 func _finish_route_at_home(update_presence := true) -> void:
 	route_running = false
-	_mark_startup_entry_finished()
 	tenant.visible = true
 	if update_presence:
 		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_HOME)
-	tenant.position = TenantRoomLocator.spawn_position(_room())
+	tenant.position = TenantRoomLocator.spawn_position(_room(), tenant_id)
 	_enter_idle()
 
 func _should_go_outside() -> bool:
@@ -459,22 +427,6 @@ func _should_go_outside() -> bool:
 		return false
 	var chance := clampf(float(ConfigManager.get_tenant_ai_value("away_chance", 0.12)), 0.0, 1.0)
 	return chance > 0.0 and randf() < chance
-
-func _should_play_startup_entry() -> bool:
-	if not startup_entry_refresh_active:
-		return false
-	if startup_entry_tenant_ids.has(tenant_id):
-		return false
-	if not bool(ConfigManager.get_tenant_ai_value("entry_from_offscreen", true)):
-		return false
-	if _room().is_empty():
-		return false
-	return _building_view() != null
-
-func _mark_startup_entry_finished() -> void:
-	if tenant_id.is_empty():
-		return
-	startup_entry_active_tenant_ids.erase(tenant_id)
 
 func _away_is_finished() -> bool:
 	var tenant_state := _tenant_state()

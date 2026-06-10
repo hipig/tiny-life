@@ -5,14 +5,14 @@ extends RefCounted
 const TENANT_FOOTPRINT := [1, 1]
 const TILE_SIZE := FurniturePlacementRules.TILE_SIZE
 
-static func spawn_grid(room: Dictionary) -> Array:
+static func spawn_grid(room: Dictionary, stable_key := "") -> Array:
 	var cells := standing_grids(room)
 	if cells.is_empty():
 		return [0, 0]
-	return cells[mini(cells.size() - 1, int(floor(float(cells.size()) * 0.6)))]
+	return cells[_stable_spawn_index(stable_key, cells.size())]
 
-static func spawn_position(room: Dictionary) -> Vector2:
-	return grid_to_position(room, spawn_grid(room))
+static func spawn_position(room: Dictionary, stable_key := "") -> Vector2:
+	return grid_to_position(room, spawn_grid(room, stable_key))
 
 static func walk_grids(room: Dictionary) -> Array:
 	var cells := standing_grids(room)
@@ -132,6 +132,13 @@ static func _nearest_grid(cells: Array, target: Array) -> Array:
 			nearest = cell
 			nearest_distance = distance
 	return nearest
+
+static func _stable_spawn_index(stable_key: String, cell_count: int) -> int:
+	if cell_count <= 0:
+		return 0
+	if stable_key.is_empty():
+		return mini(cell_count - 1, int(floor(float(cell_count) * 0.6)))
+	return posmod(int(stable_key.hash()), cell_count)
 
 static func _frame_tiles(room: Dictionary) -> Vector2i:
 	var raw: Variant = room.get("frame_tiles", [6, 4])

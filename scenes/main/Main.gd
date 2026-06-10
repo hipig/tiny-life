@@ -56,10 +56,8 @@ func _refresh_all() -> void:
 	_refresh_building()
 
 func _on_state_loaded() -> void:
-	TenantAI.begin_startup_entry_refresh()
 	state_loaded_once = true
 	_refresh_all()
-	TenantAI.end_startup_entry_refresh()
 
 func _on_rent_changed(_value: float) -> void:
 	_refresh_top_bar()

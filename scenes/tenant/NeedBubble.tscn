@@ -72,10 +72,11 @@ mouse_filter = 2
 script = ExtResource("1_need_bubble")
 
 [node name="BubbleAnimation" type="AnimatedSprite2D" parent="." unique_id=1809037741]
-scale = Vector2(2, 2)
+scale = Vector2(1.2, 1.2)
 sprite_frames = SubResource("SpriteFrames_bubble")
 autoplay = "default"
-frame_progress = 0.20185049
+frame = 5
+frame_progress = 1.0
 
 [node name="IconRoot" type="Control" parent="." unique_id=906555994]
 layout_mode = 1

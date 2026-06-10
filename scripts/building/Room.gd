@@ -90,8 +90,6 @@ func _bind_visual_layer(room: Dictionary) -> void:
 	var tenant_state: Dictionary = GameState.tenants.get(tenant_id, {})
 	if str(tenant_state.get("presence_state", GameState.TENANT_PRESENCE_HOME)) != GameState.TENANT_PRESENCE_HOME:
 		return
-	if TenantAI.is_startup_entry_active(tenant_id):
-		return
 	if tenant_scene == null:
 		push_error("Room.tscn must assign a tenant_scene template.")
 		return
