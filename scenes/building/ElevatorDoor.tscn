@@ -1,31 +1,50 @@
 [gd_scene format=3 uid="uid://hwnf2e3r5isd"]
 
 [ext_resource type="Script" uid="uid://d162gh5bylts1" path="res://scripts/building/TrafficDoor.gd" id="1_traffic_door"]
-[ext_resource type="Texture2D" uid="uid://c1i8atqwpsyc" path="res://assets/pixel_spaces/building/Infrastructure.png" id="2_rgtwd"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_rwnwk"]
-atlas = ExtResource("2_rgtwd")
-region = Rect2(112, 304, 32, 32)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_dnk52"]
-atlas = ExtResource("2_rgtwd")
-region = Rect2(144, 304, 32, 32)
+[ext_resource type="Texture2D" uid="uid://hkdw2p7nf8bu" path="res://assets/pixel_spaces/building/Wallpaper Tilesets.png" id="2_rwnwk"]
+[ext_resource type="Texture2D" uid="uid://cuiy2rab3r0bn" path="res://assets/pixel_spaces/building/SpriteSheets/Elevator.png" id="3_dnk52"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_vmq6a"]
-atlas = ExtResource("2_rgtwd")
-region = Rect2(176, 304, 32, 32)
+atlas = ExtResource("2_rwnwk")
+region = Rect2(4, 568, 24, 22)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_484lp"]
+atlas = ExtResource("3_dnk52")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aa7he"]
+atlas = ExtResource("3_dnk52")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kk1a7"]
+atlas = ExtResource("3_dnk52")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rq0vi"]
+atlas = ExtResource("3_dnk52")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_we5uj"]
+atlas = ExtResource("3_dnk52")
+region = Rect2(128, 0, 32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_484lp"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_rwnwk")
+"texture": SubResource("AtlasTexture_484lp")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_dnk52")
+"texture": SubResource("AtlasTexture_aa7he")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_vmq6a")
+"texture": SubResource("AtlasTexture_kk1a7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rq0vi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_we5uj")
 }],
 "loop": false,
 "name": &"default",
@@ -37,5 +56,11 @@ z_index = 5
 script = ExtResource("1_traffic_door")
 open_frame = 2
 
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=223276189]
+position = Vector2(0, 3)
+texture = SubResource("AtlasTexture_vmq6a")
+
 [node name="DoorSprite" type="AnimatedSprite2D" parent="." unique_id=202553528]
 sprite_frames = SubResource("SpriteFrames_484lp")
+frame = 4
+frame_progress = 1.0

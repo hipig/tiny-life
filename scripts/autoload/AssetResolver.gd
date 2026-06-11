@@ -1,3 +1,4 @@
+@tool
 extends Node
 
 var _placeholder_texture_cache := {}

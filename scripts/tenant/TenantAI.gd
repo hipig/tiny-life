@@ -291,6 +291,8 @@ func _run_entry_route(update_presence_on_finish: bool):
 	_enter_idle()
 
 func _move_to_position(destination: Vector2):
+	if tenant != null and tenant.position.distance_to(destination) > ARRIVE_DISTANCE:
+		_play_route_walk()
 	while tenant != null and tenant.position.distance_to(destination) > ARRIVE_DISTANCE:
 		if _ai_paused():
 			await get_tree().process_frame
@@ -336,15 +338,33 @@ func _visible_return_start_position(view: BuildingView, floor_index: int, exit_p
 func _enter_elevator_at_floor(view: BuildingView, floor_index: int):
 	var elevator_position := view.get_service_elevator_world_position(floor_index)
 	await _move_to_position(elevator_position)
-	await _play_elevator_door(view, floor_index, true)
-	await _play_elevator_door(view, floor_index, false)
-	tenant.visible = false
+	_play_route_idle()
+	var door := view.get_service_elevator_door(floor_index)
+	var duration := _elevator_animation_seconds()
+	await _play_traffic_door(door, true, duration)
+	await _wait_seconds(_elevator_idle_seconds())
+	var hide_progress := _elevator_close_hide_progress()
+	_start_traffic_door(door, false, duration)
+	await _wait_seconds(duration * hide_progress)
+	if tenant != null:
+		tenant.visible = false
+	await _wait_seconds(duration * (1.0 - hide_progress))
+	_finish_traffic_door(door, false)
 
 func _exit_elevator_at_floor(view: BuildingView, floor_index: int, direction: float):
 	var elevator_position := view.get_service_elevator_world_position(floor_index)
-	await _play_elevator_door(view, floor_index, true)
-	tenant.position = elevator_position
-	tenant.visible = true
+	var door := view.get_service_elevator_door(floor_index)
+	var duration := _elevator_animation_seconds()
+	var show_progress := _elevator_open_show_progress()
+	_start_traffic_door(door, true, duration)
+	await _wait_seconds(duration * show_progress)
+	if tenant != null:
+		tenant.position = elevator_position
+		tenant.visible = true
+		_play_route_idle()
+	await _wait_seconds(duration * (1.0 - show_progress))
+	_finish_traffic_door(door, true)
+	await _wait_seconds(_elevator_idle_seconds())
 	await _move_to_position(_route_step_position(elevator_position, direction))
 	await _play_elevator_door(view, floor_index, false)
 
@@ -355,30 +375,59 @@ func _route_step_position(origin: Vector2, direction: float) -> Vector2:
 func _play_room_door(view: BuildingView, open: bool):
 	var door := view.get_room_door(room_id)
 	var duration := _door_animation_seconds()
-	await _play_traffic_door(door, open, duration)
+	if open:
+		await _play_route_door_open(door, duration)
+	else:
+		await _play_traffic_door(door, open, duration)
 
 func _play_exit_door(view: BuildingView, open: bool):
 	var door := view.get_service_exit_door()
 	var duration := _door_animation_seconds()
-	await _play_traffic_door(door, open, duration)
+	if open:
+		await _play_route_door_open(door, duration)
+	else:
+		await _play_traffic_door(door, open, duration)
 
 func _play_elevator_door(view: BuildingView, floor_index: int, open: bool):
 	var door := view.get_service_elevator_door(floor_index)
 	var duration := _elevator_animation_seconds()
 	await _play_traffic_door(door, open, duration)
 
+func _play_route_door_open(door: TrafficDoor, duration: float):
+	_play_route_idle()
+	await _play_traffic_door(door, true, duration)
+	await _wait_seconds(_door_open_idle_seconds())
+
 func _play_traffic_door(door: TrafficDoor, open: bool, duration: float):
+	_start_traffic_door(door, open, duration)
+	await _wait_seconds(duration)
+	_finish_traffic_door(door, open)
+
+func _start_traffic_door(door: TrafficDoor, open: bool, duration: float) -> void:
 	if door != null:
 		if open:
 			door.play_open(duration)
 		else:
 			door.play_close(duration)
-	await _wait_seconds(duration)
+
+func _finish_traffic_door(door: TrafficDoor, open: bool) -> void:
 	if door != null:
 		if open:
 			door.set_open()
 		else:
 			door.set_closed()
+
+func _play_route_idle() -> void:
+	if tenant == null:
+		return
+	tenant.play_avatar_behavior(GameState.IDLE_TENANT_BEHAVIOR)
+	tenant.hide_behavior_bubble()
+
+func _play_route_walk() -> void:
+	if tenant == null:
+		return
+	tenant.play_avatar_behavior(GameState.DEFAULT_TENANT_BEHAVIOR)
+	tenant.hide_behavior_bubble()
 
 func _wait_seconds(seconds: float):
 	if seconds <= 0.0:
@@ -520,7 +569,19 @@ func _door_animation_seconds() -> float:
 	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_animation_seconds", 0.24)))
 
 func _elevator_animation_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_animation_seconds", 0.36)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_animation_seconds", 0.56)))
+
+func _door_open_idle_seconds() -> float:
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_open_idle_seconds", 0.12)))
+
+func _elevator_idle_seconds() -> float:
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_idle_seconds", 0.25)))
+
+func _elevator_open_show_progress() -> float:
+	return clampf(float(ConfigManager.get_tenant_ai_value("elevator_open_show_progress", 0.75)), 0.0, 1.0)
+
+func _elevator_close_hide_progress() -> float:
+	return clampf(float(ConfigManager.get_tenant_ai_value("elevator_close_hide_progress", 0.85)), 0.0, 1.0)
 
 func _building_view() -> BuildingView:
 	var node: Node = tenant

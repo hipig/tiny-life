@@ -29,13 +29,7 @@ func apply_visual_theme(theme: Dictionary) -> void:
 	open_animation = str(theme.get("open_animation", "open" if animations.has("open") else open_animation))
 	close_animation = str(theme.get("close_animation", "close" if animations.has("close") else close_animation))
 	if not door_asset.is_empty():
-		AssetResolver.apply_asset_to_animated_sprite(
-			door_sprite,
-			door_asset,
-			default_animation,
-			Color.WHITE,
-			_vector2i_from_array(door_asset.get("frame_size", [16, 32]), Vector2i(16, 32))
-		)
+		_apply_door_asset(door_asset)
 	var sprite_offset: Variant = theme.get("sprite_offset", [])
 	if sprite_offset is Array and sprite_offset.size() >= 2:
 		door_sprite.position = Vector2(float(sprite_offset[0]), float(sprite_offset[1]))
@@ -52,6 +46,30 @@ func set_open() -> void:
 
 func set_closed() -> void:
 	_set_frame(default_animation, closed_frame)
+
+func _apply_door_asset(door_asset: Dictionary) -> void:
+	var placeholder_size := _vector2i_from_array(door_asset.get("frame_size", [16, 32]), Vector2i(16, 32))
+	if not Engine.is_editor_hint() and AssetResolver.has_method("apply_asset_to_animated_sprite"):
+		AssetResolver.apply_asset_to_animated_sprite(
+			door_sprite,
+			door_asset,
+			default_animation,
+			Color.WHITE,
+			placeholder_size
+		)
+		return
+	var resolver_script := load("res://scripts/autoload/AssetResolver.gd") as Script
+	if resolver_script == null:
+		return
+	var resolver: Object = resolver_script.new()
+	if resolver != null and resolver.has_method("apply_asset_to_animated_sprite"):
+		resolver.apply_asset_to_animated_sprite(
+			door_sprite,
+			door_asset,
+			default_animation,
+			Color.WHITE,
+			placeholder_size
+		)
 
 func _play_visual(animation_name: String, fallback_animation: String, start_frame: int, fallback_frame: int, backwards: bool, duration_seconds: float) -> void:
 	if door_sprite == null or door_sprite.sprite_frames == null:

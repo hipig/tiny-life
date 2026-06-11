@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bxsi83773j8k"]
+
+[ext_resource type="Texture2D" uid="uid://c1i8atqwpsyc" path="res://assets/pixel_spaces/building/Infrastructure.png" id="1_np6ej"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n5fwk"]
+atlas = ExtResource("1_np6ej")
+region = Rect2(48, 144, 16, 16)
+
+[node name="TextureRect" type="TextureRect" unique_id=1466661856]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = SubResource("AtlasTexture_n5fwk")

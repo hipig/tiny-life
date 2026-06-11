@@ -7,6 +7,7 @@ const META_AVATAR_ANIMATION := &"avatar_animation"
 
 @onready var avatar_sprite: AnimatedSprite2D = $AvatarSprite
 @onready var need_bubble: NeedBubble = $NeedBubble
+@onready var body_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 @onready var click_area: Area2D = get_node_or_null("ClickArea") as Area2D
 @onready var click_shape: CollisionShape2D = get_node_or_null("ClickArea/ClickShape") as CollisionShape2D
 @onready var animation_bindings: Node = get_node_or_null("BehaviorAnimationMap")
@@ -110,7 +111,7 @@ func _apply_avatar_asset() -> void:
 		return
 	var avatar_offset: Variant = tenant_data.get("avatar_offset", asset.get("avatar_offset", [0, -7]))
 	if avatar_offset is Array and avatar_offset.size() >= 2:
-		avatar_sprite.set("position", Vector2(float(avatar_offset[0]), float(avatar_offset[1])))
+		_apply_avatar_offset(Vector2(float(avatar_offset[0]), float(avatar_offset[1])))
 	var default_animation := str(asset.get("default_animation", "idle"))
 	AssetResolver.apply_asset_to_animated_sprite(
 		avatar_sprite,
@@ -120,6 +121,13 @@ func _apply_avatar_asset() -> void:
 		_vector2i_from_array(asset.get("frame_size", [32, 32]), Vector2i(32, 32))
 	)
 	current_animation = ""
+
+func _apply_avatar_offset(offset: Vector2) -> void:
+	avatar_sprite.position = offset
+	if body_shape != null:
+		body_shape.position = offset
+	if click_shape != null:
+		click_shape.position = offset
 
 func _connect_click_area() -> void:
 	if click_area == null:

@@ -1,3 +1,4 @@
+@tool
 class_name RoomShell
 extends Control
 
@@ -11,12 +12,12 @@ extends Control
 var roof_visible := false
 var construction_visible := false
 
-func apply_layout(room_pixel_size: Vector2, _wall_inset: float, _floor_height: float, _roof_height: float, frame_tiles := Vector2i(6, 4), tile_theme: Dictionary = {}, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, door_side := "left", door_mirrored := false, door_theme: Dictionary = {}) -> void:
+func apply_layout(room_pixel_size: Vector2, _wall_inset: float, _floor_height: float, _roof_height: float, frame_tiles := Vector2i(6, 4), tile_theme: Dictionary = {}, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, door_side := "left", door_mirrored := false, door_theme: Dictionary = {}, door_visual_offset := Vector2.ZERO) -> void:
 	custom_minimum_size = room_pixel_size
 	size = room_pixel_size
 	if apartment_tile_map != null:
 		apartment_tile_map.render_room_skeleton(frame_tiles, tile_theme, roof_visible, construction_visible, edge_sides, body_sides, door_side)
-	_layout_room_door(room_pixel_size, door_side, door_mirrored)
+	_layout_room_door(room_pixel_size, door_side, door_mirrored, door_visual_offset)
 	if room_door != null:
 		room_door.apply_visual_theme(door_theme)
 
@@ -37,7 +38,7 @@ func clear_dynamic_views() -> void:
 func get_room_door() -> TrafficDoor:
 	return room_door
 
-func _layout_room_door(room_pixel_size: Vector2, door_side: String, door_mirrored: bool) -> void:
+func _layout_room_door(room_pixel_size: Vector2, door_side: String, door_mirrored: bool, door_visual_offset := Vector2.ZERO) -> void:
 	if room_door == null:
 		return
 	var normalized_side := str(door_side).strip_edges().to_lower()
@@ -47,5 +48,5 @@ func _layout_room_door(room_pixel_size: Vector2, door_side: String, door_mirrore
 	room_door.position = Vector2(
 		door_x,
 		maxf(ApartmentTileMap.TILE_SIZE, room_pixel_size.y)
-	)
+	) + door_visual_offset
 	room_door.scale.x = -1.0 if door_mirrored else 1.0

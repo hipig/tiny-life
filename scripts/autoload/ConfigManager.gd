@@ -1,6 +1,5 @@
 extends Node
 
-const TILE_SIZE := 16
 const DECOR_WALLPAPER := "wallpaper"
 const DECOR_WALL := "wall"
 const DECOR_DOOR := "door"
@@ -252,17 +251,6 @@ func _room_decor_default_field_for_category(category: String) -> String:
 
 func _wallpaper_theme_from_item(item: Dictionary) -> Dictionary:
 	var theme := {}
-	var region := _array_from_config(item.get("wallpaper_region", []))
-	if region.size() >= 4:
-		var origin := _region_tile_origin(region)
-		var columns := maxi(1, int(int(region[2]) / TILE_SIZE))
-		var rows := maxi(1, int(int(region[3]) / TILE_SIZE))
-		theme["wallpaper_source_id"] = int(item.get("wallpaper_source_id", 2))
-		theme["wallpaper_pattern"] = {
-			"top": _tile_row(origin.x, origin.y, columns),
-			"middle": _tile_row(origin.x, origin.y + mini(1, rows - 1), columns),
-			"bottom": _tile_row(origin.x, origin.y + maxi(0, rows - 1), columns)
-		}
 	var explicit_theme: Variant = item.get("theme", {})
 	if explicit_theme is Dictionary:
 		_merge_theme(theme, explicit_theme)
@@ -270,20 +258,6 @@ func _wallpaper_theme_from_item(item: Dictionary) -> Dictionary:
 
 func _wall_theme_from_item(item: Dictionary) -> Dictionary:
 	var theme := {}
-	var region := _array_from_config(item.get("wall_region", []))
-	if region.size() >= 4:
-		var origin := _region_tile_origin(region)
-		theme["wall_body_source_id"] = int(item.get("wall_body_source_id", 0))
-		theme["body_top_left_corner_tile"] = [origin.x, origin.y]
-		theme["body_top_edge_tiles"] = [[origin.x + 2, origin.y]]
-		theme["body_top_right_corner_tile"] = [origin.x + 4, origin.y]
-		theme["body_left_edge_tiles"] = [[origin.x, origin.y + 1]]
-		theme["body_left_door_edge_tiles"] = [[origin.x + 1, origin.y + 1]]
-		theme["body_right_door_edge_tiles"] = [[origin.x + 3, origin.y + 1]]
-		theme["body_right_edge_tiles"] = [[origin.x + 4, origin.y + 1]]
-		theme["body_bottom_left_corner_tile"] = [origin.x, origin.y + 2]
-		theme["body_bottom_edge_tiles"] = [[origin.x + 1, origin.y + 2], [origin.x + 2, origin.y + 2], [origin.x + 3, origin.y + 2]]
-		theme["body_bottom_right_corner_tile"] = [origin.x + 4, origin.y + 2]
 	var explicit_theme: Variant = item.get("theme", {})
 	if explicit_theme is Dictionary:
 		_merge_theme(theme, explicit_theme)
@@ -292,15 +266,3 @@ func _wall_theme_from_item(item: Dictionary) -> Dictionary:
 func _merge_theme(target: Dictionary, source: Dictionary) -> void:
 	for key in source.keys():
 		target[key] = source[key]
-
-func _region_tile_origin(region: Array) -> Vector2i:
-	return Vector2i(int(int(region[0]) / TILE_SIZE), int(int(region[1]) / TILE_SIZE))
-
-func _tile_row(origin_x: int, y: int, columns: int) -> Array:
-	var result := []
-	for x in range(columns):
-		result.append([origin_x + x, y])
-	return result
-
-func _array_from_config(value: Variant) -> Array:
-	return value if value is Array else []

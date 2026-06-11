@@ -488,6 +488,7 @@ func _ensure_runtime_defaults() -> void:
 			"layout_side": str(room_data.get("layout_side", room.get("layout_side", "left"))),
 			"door_side": str(room_data.get("door_side", room.get("door_side", "left"))),
 			"door_mirrored": bool(room_data.get("door_mirrored", room.get("door_mirrored", false))),
+			"door_visual_offset": _float_pair(room.get("door_visual_offset", room_data.get("door_visual_offset", [0.0, 0.0])), [0.0, 0.0]),
 			"level": room_level,
 			"frame_tiles": configured_layout.get("frame_tiles", DEFAULT_FRAME_TILES).duplicate(),
 			"grid_size": configured_layout.get("grid_size", DEFAULT_GRID_SIZE).duplicate(),
@@ -610,4 +611,9 @@ func _fixed_height_grid_size(value: Array) -> Array:
 func _int_pair(value: Variant, fallback: Array) -> Array:
 	if value is Array and value.size() >= 2:
 		return [int(value[0]), int(value[1])]
+	return fallback.duplicate()
+
+func _float_pair(value: Variant, fallback: Array) -> Array:
+	if value is Array and value.size() >= 2:
+		return [float(value[0]), float(value[1])]
 	return fallback.duplicate()

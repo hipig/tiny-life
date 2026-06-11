@@ -101,20 +101,20 @@ motion_mode = 1
 script = ExtResource("1_tenant")
 
 [node name="AvatarSprite" type="AnimatedSprite2D" parent="." unique_id=755068810]
-position = Vector2(0, -7)
+position = Vector2(0, -9)
 sprite_frames = SubResource("SpriteFrames_dqi23")
 animation = &"idle"
 autoplay = "idle"
 frame_progress = 0.25714666
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1077295502]
-position = Vector2(0, -7)
+position = Vector2(0, -9)
 shape = SubResource("CapsuleShape2D_ki6lv")
 
 [node name="ClickArea" type="Area2D" parent="." unique_id=1476930362]
 
 [node name="ClickShape" type="CollisionShape2D" parent="ClickArea" unique_id=1482714742]
-position = Vector2(0, -7)
+position = Vector2(0, -9)
 shape = SubResource("RectangleShape2D_click")
 
 [node name="NeedBubble" parent="." unique_id=1790016221 instance=ExtResource("2_need_bubble")]

@@ -194,45 +194,26 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="WallpaperSectionTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+[node name="DecorCategoryRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_constants/separation = 6
+
+[node name="WallpaperDecorFilter" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow" instance=ExtResource("3_tab")]
+layout_mode = 2
 text = "壁纸"
+metadata/tab_id = "wallpaper"
 
-[node name="WallpaperListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+[node name="WallDecorFilter" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow" instance=ExtResource("3_tab")]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 2
-
-[node name="WallSectionTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
 text = "墙体"
+metadata/tab_id = "wall"
 
-[node name="WallListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+[node name="DoorDecorFilter" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow" instance=ExtResource("3_tab")]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 2
-
-[node name="DoorSectionTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
-theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
 text = "房门"
+metadata/tab_id = "door"
 
-[node name="DoorListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+[node name="DecorListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 8

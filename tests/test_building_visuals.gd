@@ -28,6 +28,8 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(room_shell_source.contains("func get_room_door()"), "RoomShell should expose the room door to route scripts")
 	assert_true(room_shell_source.contains("apply_visual_theme(door_theme)"), "RoomShell should apply per-room door themes only to RoomDoor")
 	assert_true(room_shell_source.contains("door_mirrored"), "RoomShell should support mirrored outward-opening room doors")
+	assert_true(room_shell_source.contains("door_visual_offset"), "RoomShell should support per-room door visual offsets")
+	assert_true(room_source.contains("_room_door_visual_offset"), "Room should pass configured door visual offsets to RoomShell")
 	assert_true(room_shell_source.contains("normalized_side == \"right\""), "RoomShell should support right-wall room doors")
 	assert_true(room_shell_source.contains("-ApartmentTileMap.TILE_SIZE * 0.5"), "Left-wall room doors should sit outside the room wall")
 	assert_true(room_shell_source.contains("room_pixel_size.x + ApartmentTileMap.TILE_SIZE * 0.5"), "Right-wall room doors should sit outside the room wall")
@@ -93,13 +95,21 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(ai_source.contains("await _wait_seconds(duration)"), "TenantAI should wait for door/elevator timing before continuing route movement")
 	assert_true(ai_source.contains("door.set_open()"), "TenantAI should force door animations onto their final open frame after waiting")
 	assert_true(ai_source.contains("door.set_closed()"), "TenantAI should force door animations onto their final closed frame after waiting")
+	assert_true(ai_source.contains("func _play_route_door_open"), "TenantAI should isolate open-door idle timing for room and exit doors")
+	assert_true(ai_source.contains("func _play_route_idle"), "TenantAI should switch tenants to idle while waiting at doors")
 	assert_true(ai_source.contains("func _enter_elevator_at_floor"), "TenantAI should isolate source-floor elevator entry timing")
-	assert_true(ai_source.contains("await _play_elevator_door(view, floor_index, true)\n\tawait _play_elevator_door(view, floor_index, false)\n\ttenant.visible = false"), "Source elevator flow should close the door before hiding the tenant")
+	assert_true(ai_source.contains("var hide_progress := _elevator_close_hide_progress()"), "Source elevator flow should hide tenants at a configured close progress")
+	assert_true(ai_source.contains("await _wait_seconds(duration * hide_progress)\n\tif tenant != null:\n\t\ttenant.visible = false"), "Source elevator flow should hide tenants before the close animation fully finishes")
 	assert_true(ai_source.contains("func _exit_elevator_at_floor"), "TenantAI should isolate target-floor elevator exit timing")
-	assert_true(ai_source.contains("await _play_elevator_door(view, floor_index, true)\n\ttenant.position = elevator_position\n\ttenant.visible = true"), "Target elevator flow should open before showing the tenant")
+	assert_true(ai_source.contains("var show_progress := _elevator_open_show_progress()"), "Target elevator flow should show tenants at a configured open progress")
+	assert_true(ai_source.contains("await _wait_seconds(duration * show_progress)\n\tif tenant != null:\n\t\ttenant.position = elevator_position\n\t\ttenant.visible = true"), "Target elevator flow should show tenants before the open animation fully finishes")
 	assert_true(ai_source.contains("await _move_to_position(_route_step_position(elevator_position, direction))\n\tawait _play_elevator_door(view, floor_index, false)"), "Target elevator flow should let the tenant leave before closing")
 	assert_eq(float(ai_config.get("door_animation_seconds", 0.0)), 0.24, "Room and exit doors should open and close slowly enough to read")
-	assert_eq(float(ai_config.get("elevator_animation_seconds", 0.0)), 0.36, "Elevators should wait long enough before tenant floor transitions")
+	assert_eq(float(ai_config.get("door_open_idle_seconds", 0.0)), 0.12, "Room and exit doors should hold a short open idle beat")
+	assert_eq(float(ai_config.get("elevator_animation_seconds", 0.0)), 0.56, "Five-frame elevators should play near their natural animation timing")
+	assert_eq(float(ai_config.get("elevator_idle_seconds", 0.0)), 0.25, "Elevators should hold briefly while open")
+	assert_eq(float(ai_config.get("elevator_open_show_progress", 0.0)), 0.75, "Target elevator tenants should appear near the end of the open animation")
+	assert_eq(float(ai_config.get("elevator_close_hide_progress", 0.0)), 0.85, "Source elevator tenants should disappear near the end of the close animation")
 	assert_false(room_door_scene.contains("\"speed\": 1.0"), "Room door should animate quickly enough before tenants walk through")
 	assert_false(exit_door_scene.contains("\"speed\": 1.0"), "Exit door should animate quickly enough before tenants walk through")
 	assert_false(elevator_door_scene.contains("\"speed\": 3.0"), "Elevator door should animate quickly enough for route timing")
@@ -236,6 +246,8 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 		assert_true(room_data.has("layout_side"), "%s should declare its side relative to the central elevator" % room_data.get("id", ""))
 		assert_true(room_data.has("door_side"), "%s should declare which wall owns its outward door" % room_data.get("id", ""))
 		assert_true(room_data.has("door_mirrored"), "%s should declare whether its door scene is mirrored" % room_data.get("id", ""))
+		var door_visual_offset: Array = room_data.get("door_visual_offset", [])
+		assert_eq(door_visual_offset.size(), 2, "%s should configure its door visual offset as [x, y]" % room_data.get("id", ""))
 		if frame_tiles.size() >= 2 and grid_size.size() >= 2:
 			assert_eq(int(frame_tiles[0]), 6, "%s should start as a 6-tile-wide room frame" % room_data.get("id", ""))
 			assert_eq(int(frame_tiles[1]), 4, "%s room frame height should stay fixed at 4 tiles" % room_data.get("id", ""))
@@ -245,10 +257,12 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 			assert_eq(str(room_data.get("layout_side", "")), "left", "%s should sit left of the elevator" % room_data.get("id", ""))
 			assert_eq(str(room_data.get("door_side", "")), "right", "%s should put its door on the right wall" % room_data.get("id", ""))
 			assert_false(bool(room_data.get("door_mirrored", true)), "%s should use the existing door scene orientation" % room_data.get("id", ""))
+			assert_eq([int(door_visual_offset[0]), int(door_visual_offset[1])], [-2, 0], "%s right-wall door should tuck 2px back toward the room" % room_data.get("id", ""))
 		if str(room_data.get("id", "")).ends_with("02"):
 			assert_eq(str(room_data.get("layout_side", "")), "right", "%s should sit right of the elevator" % room_data.get("id", ""))
 			assert_eq(str(room_data.get("door_side", "")), "left", "%s should put its door on the left wall" % room_data.get("id", ""))
 			assert_true(bool(room_data.get("door_mirrored", false)), "%s should mirror the reusable door scene" % room_data.get("id", ""))
+			assert_eq([int(door_visual_offset[0]), int(door_visual_offset[1])], [2, 0], "%s left-wall door should tuck 2px back toward the room" % room_data.get("id", ""))
 		for item in room_data.get("layout_upgrades", []):
 			var upgrade: Dictionary = item
 			var upgraded_frame_tiles: Array = upgrade.get("frame_tiles", [])
@@ -374,8 +388,22 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(room_shell_source.contains("render_room_skeleton"), "RoomShell should delegate room-frame drawing to ApartmentTileMap")
 	assert_true(room_source.contains("ConfigManager.tile_theme_for_room(room)"), "Room should render configured wallpaper and wall themes")
 	assert_true(room_source.contains("ConfigManager.door_theme_for_room(room)"), "Room should pass configured door themes to RoomShell")
+	assert_true(room_source.contains("_room_door_visual_offset()"), "Room should pass configured door visual offsets to RoomShell")
 	assert_true(room_source.contains("tenant_view.setup(tenant_id, room_id)"), "Room should bind tenant scene instances to their room")
 	assert_true(room_source.contains("_furniture_position"), "Furniture should be positioned inside the room instead of listed as thumbnails")
+	var room_shell_packed := ResourceLoader.load("res://scenes/building/RoomShell.tscn", "PackedScene", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene
+	assert_true(room_shell_packed != null, "RoomShell should load for direct door-position tests")
+	if room_shell_packed != null:
+		var shell := room_shell_packed.instantiate() as RoomShell
+		assert_true(shell != null, "RoomShell should instantiate for direct door-position tests")
+		if shell != null:
+			shell.set("apartment_tile_map", shell.get_node_or_null("ApartmentTileMap"))
+			shell.set("room_door", shell.get_node_or_null("RoomDoor"))
+			shell.apply_layout(Vector2(96, 64), 0.0, 0.0, 0.0, Vector2i(6, 4), {}, {}, {}, "right", false, {}, Vector2(-2, 0))
+			assert_eq((shell.get_node("RoomDoor") as Node2D).position, Vector2(102, 64), "Right-wall 01 room doors should tuck 2px left from the old room_width + 8 anchor")
+			shell.apply_layout(Vector2(96, 64), 0.0, 0.0, 0.0, Vector2i(6, 4), {}, {}, {}, "left", true, {}, Vector2(2, 0))
+			assert_eq((shell.get_node("RoomDoor") as Node2D).position, Vector2(-6, 64), "Left-wall 02 room doors should tuck 2px right from the old -8 anchor")
+			shell.free()
 
 
 func test_apartment_tilemap_renders_room_frame_tiles_on_16px_grid() -> void:
@@ -493,6 +521,7 @@ func test_apartment_tilemap_renders_room_frame_tiles_on_16px_grid() -> void:
 
 
 func test_room_door_theme_replaces_sprite_frames_without_breaking_routes() -> void:
+	var traffic_script := ResourceLoader.load("res://scripts/building/TrafficDoor.gd", "Script", ResourceLoader.CACHE_MODE_IGNORE) as Script
 	var scene := ResourceLoader.load("res://scenes/building/RoomDoor.tscn", "PackedScene", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene
 	assert_true(scene != null, "RoomDoor scene should load for direct theme tests")
 	if scene == null:
@@ -501,6 +530,8 @@ func test_room_door_theme_replaces_sprite_frames_without_breaking_routes() -> vo
 	assert_true(door != null, "RoomDoor scene should instantiate as TrafficDoor")
 	if door == null:
 		return
+	if traffic_script != null:
+		door.set_script(traffic_script)
 	var theme := _room_decor_item("door_panel")
 	assert_false(theme.is_empty(), "door_panel decor theme should exist")
 	var sprite := door.get_node("DoorSprite") as AnimatedSprite2D
@@ -508,10 +539,14 @@ func test_room_door_theme_replaces_sprite_frames_without_breaking_routes() -> vo
 	door.apply_visual_theme(theme)
 	assert_true(sprite.sprite_frames != null, "Door theme should assign SpriteFrames")
 	assert_true(sprite.sprite_frames.has_animation("default"), "Door theme should keep the default animation")
-	assert_eq(sprite.sprite_frames.get_frame_count("default"), 2, "Door default animation should expose closed and open frames")
+	assert_true(sprite.sprite_frames.has_animation("open"), "Door theme should expose the route open animation")
+	assert_true(sprite.sprite_frames.has_animation("close"), "Door theme should expose the route close animation")
+	assert_eq(sprite.sprite_frames.get_frame_count("default"), 4, "Door default animation should expose all four spritesheet frames")
+	assert_eq(sprite.sprite_frames.get_frame_count("open"), 4, "Door open animation should expose all four spritesheet frames")
+	assert_eq(sprite.sprite_frames.get_frame_count("close"), 4, "Door close animation should expose all four spritesheet frames")
 	assert_eq(sprite.position, Vector2(0, -16), "Door theme should apply configured sprite offset")
 	door.set_open()
-	assert_eq(sprite.frame, 1, "The themed door should keep the route open-frame setter")
+	assert_eq(sprite.frame, 3, "The themed door should keep the route open-frame setter on the fully open frame")
 	door.set_closed()
 	assert_eq(sprite.frame, 0, "The themed door should keep the route closed-frame setter")
 	door.queue_free()

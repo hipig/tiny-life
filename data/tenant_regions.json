@@ -1,38 +1,38 @@
 [
   {
-    "id": "region_affordable",
-    "name": "平价社区",
-    "required_apartment_level": 1,
-    "rent_tolerance_level": "入门",
-    "max_rent_per_minute": 28.0,
-    "tenant_ids": ["tenant_student_01", "tenant_elder_01"],
-    "application_count": 3
+	"id": "region_affordable",
+	"name": "平价社区",
+	"required_apartment_level": 1,
+	"rent_tolerance_level": "入门",
+	"max_rent_per_minute": 28.0,
+	"tenant_ids": ["tenant_student_01", "tenant_elder_01"],
+	"application_count": 3
   },
   {
-    "id": "region_digital",
-    "name": "数码街区",
-    "required_apartment_level": 2,
-    "rent_tolerance_level": "普通",
-    "max_rent_per_minute": 45.0,
-    "tenant_ids": ["tenant_gamer_01", "tenant_student_01"],
-    "application_count": 3
+	"id": "region_digital",
+	"name": "数码街区",
+	"required_apartment_level": 2,
+	"rent_tolerance_level": "普通",
+	"max_rent_per_minute": 45.0,
+	"tenant_ids": ["tenant_gamer_01", "tenant_student_01"],
+	"application_count": 3
   },
   {
-    "id": "region_business",
-    "name": "商务中心",
-    "required_apartment_level": 3,
-    "rent_tolerance_level": "稳定",
-    "max_rent_per_minute": 60.0,
-    "tenant_ids": ["tenant_worker_01", "tenant_gamer_01"],
-    "application_count": 3
+	"id": "region_business",
+	"name": "商务中心",
+	"required_apartment_level": 3,
+	"rent_tolerance_level": "稳定",
+	"max_rent_per_minute": 60.0,
+	"tenant_ids": ["tenant_worker_01", "tenant_gamer_01"],
+	"application_count": 3
   },
   {
-    "id": "region_arts",
-    "name": "文艺街巷",
-    "required_apartment_level": 4,
-    "rent_tolerance_level": "进阶",
-    "max_rent_per_minute": 70.0,
-    "tenant_ids": ["tenant_artist_01", "tenant_worker_01", "tenant_elder_01"],
-    "application_count": 3
+	"id": "region_arts",
+	"name": "文艺街巷",
+	"required_apartment_level": 4,
+	"rent_tolerance_level": "进阶",
+	"max_rent_per_minute": 70.0,
+	"tenant_ids": ["tenant_artist_01", "tenant_worker_01", "tenant_elder_01"],
+	"application_count": 3
   }
 ]

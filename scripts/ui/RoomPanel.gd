@@ -14,6 +14,7 @@ signal recycle_furniture_requested(instance_id: String)
 
 var room_id := ""
 var selected_tab := "furniture"
+var selected_decor_category := ConfigManager.DECOR_WALLPAPER
 var tab_row: HBoxContainer
 var overview_content: VBoxContainer
 var furniture_content: VBoxContainer
@@ -32,9 +33,8 @@ var recruit_tenant_button: PanelActionButton
 var tenant_stat_card: StatCard
 var tenant_info_row: IconInfoRow
 var view_tenant_button: PanelActionButton
-var wallpaper_list_root: GridContainer
-var wall_list_root: GridContainer
-var door_list_root: GridContainer
+var decor_category_row: HBoxContainer
+var decor_list_root: GridContainer
 
 var title_template := ""
 var room_fallback_name := ""
@@ -91,9 +91,8 @@ func _bind_scene_nodes() -> void:
 	tenant_stat_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantStatCard") as StatCard
 	tenant_info_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantInfoRow") as IconInfoRow
 	view_tenant_button = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/ViewTenantButton") as PanelActionButton
-	wallpaper_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/WallpaperListRoot") as GridContainer
-	wall_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/WallListRoot") as GridContainer
-	door_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DoorListRoot") as GridContainer
+	decor_category_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow") as HBoxContainer
+	decor_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorListRoot") as GridContainer
 	if overview_content == null or furniture_content == null or tenant_content == null or decor_content == null:
 		push_error("RoomPanel.tscn must expose OverviewContent, FurnitureContent, TenantContent, and DecorContent.")
 	if add_furniture_button != null and not add_furniture_button.action_requested.is_connected(_on_add_furniture_pressed):
@@ -198,9 +197,21 @@ func _render_tenant_tab(room: Dictionary) -> void:
 	])
 
 func _render_decor_tab(room: Dictionary) -> void:
-	_render_decor_category(room, ConfigManager.DECOR_WALLPAPER, wallpaper_list_root)
-	_render_decor_category(room, ConfigManager.DECOR_WALL, wall_list_root)
-	_render_decor_category(room, ConfigManager.DECOR_DOOR, door_list_root)
+	_configure_decor_category_filters()
+	_render_decor_category(room, selected_decor_category, decor_list_root)
+
+func _configure_decor_category_filters() -> void:
+	if decor_category_row == null:
+		return
+	if not _is_decor_category(selected_decor_category):
+		selected_decor_category = ConfigManager.DECOR_WALLPAPER
+	for node_name in ["WallpaperDecorFilter", "WallDecorFilter", "DoorDecorFilter"]:
+		var filter_button := decor_category_row.get_node_or_null(node_name) as PanelTabButton
+		if filter_button == null:
+			continue
+		if not filter_button.tab_selected.is_connected(_on_decor_filter_pressed):
+			filter_button.tab_selected.connect(_on_decor_filter_pressed)
+		filter_button.setup("", selected_decor_category == filter_button.tab_id)
 
 func _render_decor_category(room: Dictionary, category: String, root: Node) -> void:
 	if root == null:
@@ -224,8 +235,17 @@ func _behavior_label(value: String) -> String:
 		return fallback_behavior_label
 	return key
 
+func _is_decor_category(category: String) -> bool:
+	return category == ConfigManager.DECOR_WALLPAPER \
+		or category == ConfigManager.DECOR_WALL \
+		or category == ConfigManager.DECOR_DOOR
+
 func _on_tab_pressed(tab: String) -> void:
 	selected_tab = tab
+	_refresh()
+
+func _on_decor_filter_pressed(category: String) -> void:
+	selected_decor_category = category
 	_refresh()
 
 func _on_add_furniture_pressed() -> void:

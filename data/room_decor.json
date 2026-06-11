@@ -1,262 +1,398 @@
 {
   "items": [
-    {
-      "id": "wallpaper_201",
-      "category": "wallpaper",
-      "name": "暖橙格纹",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [0, 192, 64, 48]
-      },
-      "wallpaper_region": [0, 192, 64, 48]
-    },
-    {
-      "id": "wallpaper_202",
-      "category": "wallpaper",
-      "name": "浅蓝格纹",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [64, 192, 64, 48]
-      },
-      "wallpaper_region": [64, 192, 64, 48]
-    },
-    {
-      "id": "wallpaper_301",
-      "category": "wallpaper",
-      "name": "青绿花墙",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [0, 128, 64, 48]
-      },
-      "wallpaper_region": [0, 128, 64, 48]
-    },
-    {
-      "id": "wallpaper_302",
-      "category": "wallpaper",
-      "name": "蓝白花墙",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [64, 128, 64, 48]
-      },
-      "wallpaper_region": [64, 128, 64, 48]
-    },
-    {
-      "id": "wallpaper_401",
-      "category": "wallpaper",
-      "name": "粉色花墙",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [0, 64, 64, 48]
-      },
-      "wallpaper_region": [0, 64, 64, 48]
-    },
-    {
-      "id": "wallpaper_402",
-      "category": "wallpaper",
-      "name": "湖蓝花墙",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [64, 64, 64, 48]
-      },
-      "wallpaper_region": [64, 64, 64, 48]
-    },
-    {
-      "id": "wallpaper_501",
-      "category": "wallpaper",
-      "name": "深色木纹",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [256, 448, 64, 48]
-      },
-      "wallpaper_region": [256, 448, 64, 48]
-    },
-    {
-      "id": "wallpaper_502",
-      "category": "wallpaper",
-      "name": "褐色木纹",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [320, 448, 64, 48]
-      },
-      "wallpaper_region": [320, 448, 64, 48]
-    },
-    {
-      "id": "wallpaper_601",
-      "category": "wallpaper",
-      "name": "紫调墙纸",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [256, 320, 64, 48]
-      },
-      "wallpaper_region": [256, 320, 64, 48]
-    },
-    {
-      "id": "wallpaper_602",
-      "category": "wallpaper",
-      "name": "海蓝墙纸",
-      "price": 120,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-        "region": [320, 320, 64, 48]
-      },
-      "wallpaper_region": [320, 320, 64, 48]
-    },
-    {
-      "id": "wall_floor_2",
-      "category": "wall",
-      "name": "二层暖墙",
-      "price": 180,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-        "region": [16, 80, 80, 48]
-      },
-      "wall_region": [16, 80, 80, 48]
-    },
-    {
-      "id": "wall_floor_3",
-      "category": "wall",
-      "name": "三层绿墙",
-      "price": 180,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-        "region": [16, 144, 80, 48]
-      },
-      "wall_region": [16, 144, 80, 48]
-    },
-    {
-      "id": "wall_floor_4",
-      "category": "wall",
-      "name": "四层粉墙",
-      "price": 180,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-        "region": [16, 208, 80, 48]
-      },
-      "wall_region": [16, 208, 80, 48]
-    },
-    {
-      "id": "wall_floor_5",
-      "category": "wall",
-      "name": "五层深墙",
-      "price": 180,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-        "region": [16, 272, 80, 48]
-      },
-      "wall_region": [16, 272, 80, 48]
-    },
-    {
-      "id": "wall_floor_6",
-      "category": "wall",
-      "name": "六层蓝墙",
-      "price": 180,
-      "preview_asset": {
-        "type": "atlas_region",
-        "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-        "region": [16, 336, 80, 48]
-      },
-      "wall_region": [16, 336, 80, 48]
-    },
-    {
-      "id": "door_wood",
-      "category": "door",
-      "name": "木门",
-      "price": 140,
-      "preview_asset": {
-        "type": "spritesheet_frame",
-        "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
-        "frame_size": [16, 32],
-        "frame": [0, 0]
-      },
-      "door_asset": {
-        "type": "spritesheet_animation",
-        "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
-        "frame_size": [16, 32],
-        "default_animation": "default",
-        "fps": 8.0,
-        "loop": false,
-        "animations": {
-          "default": [[0, 0], [1, 0]]
-        }
-      },
-      "sprite_offset": [0, -16],
-      "closed_frame": 0,
-      "open_frame": 1
-    },
-    {
-      "id": "door_panel",
-      "category": "door",
-      "name": "面板门",
-      "price": 140,
-      "preview_asset": {
-        "type": "spritesheet_frame",
-        "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
-        "frame_size": [16, 32],
-        "frame": [0, 0]
-      },
-      "door_asset": {
-        "type": "spritesheet_animation",
-        "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
-        "frame_size": [16, 32],
-        "default_animation": "default",
-        "fps": 8.0,
-        "loop": false,
-        "animations": {
-          "default": [[0, 0], [1, 0]]
-        }
-      },
-      "sprite_offset": [0, -16],
-      "closed_frame": 0,
-      "open_frame": 1
-    },
-    {
-      "id": "door_glass",
-      "category": "door",
-      "name": "玻璃门",
-      "price": 140,
-      "preview_asset": {
-        "type": "spritesheet_frame",
-        "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
-        "frame_size": [16, 32],
-        "frame": [0, 0]
-      },
-      "door_asset": {
-        "type": "spritesheet_animation",
-        "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
-        "frame_size": [16, 32],
-        "default_animation": "default",
-        "fps": 8.0,
-        "loop": false,
-        "animations": {
-          "default": [[0, 0], [1, 0]]
-        }
-      },
-      "sprite_offset": [0, -16],
-      "closed_frame": 0,
-      "open_frame": 1
-    }
+	{
+	  "id": "wallpaper_201",
+	  "category": "wallpaper",
+	  "name": "暖橙格纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [0, 192, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[5, 3]],
+		  "middle": [[5, 4]],
+		  "bottom": [[5, 5]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_202",
+	  "category": "wallpaper",
+	  "name": "浅蓝格纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [64, 192, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[5, 12]],
+		  "middle": [[5, 13]],
+		  "bottom": [[5, 14]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_301",
+	  "category": "wallpaper",
+	  "name": "青绿花墙",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [0, 128, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[25, 9]],
+		  "middle": [[25, 10]],
+		  "bottom": [[25, 11]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_302",
+	  "category": "wallpaper",
+	  "name": "蓝白花墙",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [64, 128, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[25, 12]],
+		  "middle": [[25, 13]],
+		  "bottom": [[25, 14]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_401",
+	  "category": "wallpaper",
+	  "name": "粉色花墙",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [0, 64, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[25, 18]],
+		  "middle": [[25, 19]],
+		  "bottom": [[25, 20]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_402",
+	  "category": "wallpaper",
+	  "name": "湖蓝花墙",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [64, 64, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[4, 4], [5, 4], [6, 4], [7, 4]],
+		  "middle": [[4, 5], [5, 5], [6, 5], [7, 5]],
+		  "bottom": [[4, 6], [5, 6], [6, 6], [7, 6]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_501",
+	  "category": "wallpaper",
+	  "name": "深色木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [256, 448, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[16, 28], [17, 28], [18, 28], [19, 28]],
+		  "middle": [[16, 29], [17, 29], [18, 29], [19, 29]],
+		  "bottom": [[16, 30], [17, 30], [18, 30], [19, 30]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_502",
+	  "category": "wallpaper",
+	  "name": "褐色木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [320, 448, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[20, 28], [21, 28], [22, 28], [23, 28]],
+		  "middle": [[20, 29], [21, 29], [22, 29], [23, 29]],
+		  "bottom": [[20, 30], [21, 30], [22, 30], [23, 30]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_601",
+	  "category": "wallpaper",
+	  "name": "紫调墙纸",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [256, 320, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[16, 20], [17, 20], [18, 20], [19, 20]],
+		  "middle": [[16, 21], [17, 21], [18, 21], [19, 21]],
+		  "bottom": [[16, 22], [17, 22], [18, 22], [19, 22]]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_602",
+	  "category": "wallpaper",
+	  "name": "海蓝墙纸",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [320, 320, 64, 48]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [[20, 20], [21, 20], [22, 20], [23, 20]],
+		  "middle": [[20, 21], [21, 21], [22, 21], [23, 21]],
+		  "bottom": [[20, 22], [21, 22], [22, 22], [23, 22]]
+		}
+	  }
+	},
+	{
+	  "id": "wall_floor_2",
+	  "category": "wall",
+	  "name": "酒红色",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [48, 96, 16, 16]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [1, 5],
+		"body_top_edge_tiles": [[3, 5]],
+		"body_top_right_corner_tile": [5, 5],
+		"body_left_edge_tiles": [[1, 6]],
+		"body_left_door_edge_tiles": [[2, 6]],
+		"body_right_door_edge_tiles": [[4, 6]],
+		"body_right_edge_tiles": [[5, 6]],
+		"body_bottom_left_corner_tile": [1, 7],
+		"body_bottom_edge_tiles": [[2, 7]],
+		"body_bottom_right_corner_tile": [5, 7]
+	  }
+	},
+	{
+	  "id": "wall_floor_3",
+	  "category": "wall",
+	  "name": "三层绿墙",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [48, 144, 16, 16]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [1, 8],
+		"body_top_edge_tiles": [[3, 9]],
+		"body_top_right_corner_tile": [5, 9],
+		"body_left_edge_tiles": [[1, 10]],
+		"body_left_door_edge_tiles": [[2, 10]],
+		"body_right_door_edge_tiles": [[4, 10]],
+		"body_right_edge_tiles": [[5, 10]],
+		"body_bottom_left_corner_tile": [1, 11],
+		"body_bottom_edge_tiles": [[2, 11]],
+		"body_bottom_right_corner_tile": [5, 11]
+	  }
+	},
+	{
+	  "id": "wall_floor_4",
+	  "category": "wall",
+	  "name": "四层粉墙",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [16, 208, 80, 48]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [1, 13],
+		"body_top_edge_tiles": [[3, 13]],
+		"body_top_right_corner_tile": [5, 13],
+		"body_left_edge_tiles": [[1, 14]],
+		"body_left_door_edge_tiles": [[2, 14]],
+		"body_right_door_edge_tiles": [[4, 14]],
+		"body_right_edge_tiles": [[5, 14]],
+		"body_bottom_left_corner_tile": [1, 15],
+		"body_bottom_edge_tiles": [[2, 15]],
+		"body_bottom_right_corner_tile": [5, 15]
+	  }
+	},
+	{
+	  "id": "wall_floor_5",
+	  "category": "wall",
+	  "name": "五层深墙",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [16, 272, 80, 48]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [1, 17],
+		"body_top_edge_tiles": [[3, 17]],
+		"body_top_right_corner_tile": [5, 17],
+		"body_left_edge_tiles": [[1, 18]],
+		"body_left_door_edge_tiles": [[2, 18]],
+		"body_right_door_edge_tiles": [[4, 18]],
+		"body_right_edge_tiles": [[5, 18]],
+		"body_bottom_left_corner_tile": [1, 19],
+		"body_bottom_edge_tiles": [[2, 19]],
+		"body_bottom_right_corner_tile": [5, 19]
+	  }
+	},
+	{
+	  "id": "wall_floor_6",
+	  "category": "wall",
+	  "name": "六层蓝墙",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [16, 336, 80, 48]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [1, 21],
+		"body_top_edge_tiles": [[3, 21]],
+		"body_top_right_corner_tile": [5, 21],
+		"body_left_edge_tiles": [[1, 22]],
+		"body_left_door_edge_tiles": [[2, 22]],
+		"body_right_door_edge_tiles": [[4, 22]],
+		"body_right_edge_tiles": [[5, 22]],
+		"body_bottom_left_corner_tile": [1, 23],
+		"body_bottom_edge_tiles": [[2, 23]],
+		"body_bottom_right_corner_tile": [5, 23]
+	  }
+	},
+	{
+	  "id": "door_wood",
+	  "category": "door",
+	  "name": "木门",
+	  "price": 140,
+	  "preview_asset": {
+		"type": "spritesheet_frame",
+		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
+		"frame_size": [16, 32],
+		"frame": [0, 0]
+	  },
+	  "door_asset": {
+		"type": "spritesheet_animation",
+		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
+		"frame_size": [16, 32],
+		"default_animation": "default",
+		"fps": 12.0,
+		"loop": false,
+		"animations": {
+		  "default": [[0, 0], [1, 0], [2, 0], [3, 0]],
+		  "open": [[0, 0], [1, 0], [2, 0], [3, 0]],
+		  "close": [[3, 0], [2, 0], [1, 0], [0, 0]]
+		}
+	  },
+	  "sprite_offset": [0, -16],
+	  "closed_frame": 0,
+	  "open_frame": 3
+	},
+	{
+	  "id": "door_panel",
+	  "category": "door",
+	  "name": "面板门",
+	  "price": 140,
+	  "preview_asset": {
+		"type": "spritesheet_frame",
+		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
+		"frame_size": [16, 32],
+		"frame": [0, 0]
+	  },
+	  "door_asset": {
+		"type": "spritesheet_animation",
+		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
+		"frame_size": [16, 32],
+		"default_animation": "default",
+		"fps": 12.0,
+		"loop": false,
+		"animations": {
+		  "default": [[0, 0], [1, 0], [2, 0], [3, 0]],
+		  "open": [[0, 0], [1, 0], [2, 0], [3, 0]],
+		  "close": [[3, 0], [2, 0], [1, 0], [0, 0]]
+		}
+	  },
+	  "sprite_offset": [0, -16],
+	  "closed_frame": 0,
+	  "open_frame": 3
+	},
+	{
+	  "id": "door_glass",
+	  "category": "door",
+	  "name": "玻璃门",
+	  "price": 140,
+	  "preview_asset": {
+		"type": "spritesheet_frame",
+		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
+		"frame_size": [16, 32],
+		"frame": [0, 0]
+	  },
+	  "door_asset": {
+		"type": "spritesheet_animation",
+		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
+		"frame_size": [16, 32],
+		"default_animation": "default",
+		"fps": 12.0,
+		"loop": false,
+		"animations": {
+		  "default": [[0, 0], [1, 0], [2, 0], [3, 0]],
+		  "open": [[0, 0], [1, 0], [2, 0], [3, 0]],
+		  "close": [[3, 0], [2, 0], [1, 0], [0, 0]]
+		}
+	  },
+	  "sprite_offset": [0, -16],
+	  "closed_frame": 0,
+	  "open_frame": 3
+	}
   ]
 }

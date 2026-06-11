@@ -60,7 +60,7 @@ func _rebuild() -> void:
 	room_shell.roof_visible = show_roof_eaves
 	var tile_theme := ConfigManager.tile_theme_for_room(room)
 	var door_theme := ConfigManager.door_theme_for_room(room)
-	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), tile_theme, room_edge_sides, {}, _room_door_side(), _room_door_mirrored(), door_theme)
+	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), tile_theme, room_edge_sides, {}, _room_door_side(), _room_door_mirrored(), door_theme, _room_door_visual_offset())
 	room_shell.clear_dynamic_views()
 	room_shell.set_roof_visible(show_roof_eaves)
 	_apply_room_badges(room)
@@ -328,6 +328,13 @@ func _room_door_mirrored() -> bool:
 	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
 	return bool(room_config.get("door_mirrored", false))
 
+func _room_door_visual_offset() -> Vector2:
+	var runtime_room: Dictionary = GameState.rooms.get(room_id, {})
+	if runtime_room.has("door_visual_offset"):
+		return _vector2_from_array(runtime_room.get("door_visual_offset", []), Vector2.ZERO)
+	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
+	return _vector2_from_array(room_config.get("door_visual_offset", []), Vector2.ZERO)
+
 func _asset_region_size(asset: Dictionary) -> Vector2:
 	var asset_type := str(asset.get("type", ""))
 	if asset_type == "atlas_region":
@@ -390,6 +397,15 @@ func _scene_meta_vector2i(node: Node, meta_key: StringName, fallback: Vector2i) 
 		return Vector2i(int(value.x), int(value.y))
 	if value is Array and value.size() >= 2:
 		return Vector2i(int(value[0]), int(value[1]))
+	return fallback
+
+func _vector2_from_array(value: Variant, fallback: Vector2) -> Vector2:
+	if value is Vector2:
+		return value
+	if value is Vector2i:
+		return Vector2(float(value.x), float(value.y))
+	if value is Array and value.size() >= 2:
+		return Vector2(float(value[0]), float(value[1]))
 	return fallback
 
 func _on_pressed() -> void:
