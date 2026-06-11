@@ -2,11 +2,13 @@ class_name RoomPanel
 extends "res://scripts/ui/AppPanel.gd"
 
 const ROOM_FURNITURE_ITEM_ROW_SCENE := preload("res://scenes/ui/RoomFurnitureItemRow.tscn")
+const ROOM_DECOR_ITEM_ROW_SCENE := preload("res://scenes/ui/RoomDecorItemRow.tscn")
 const PANEL_ACTION_BUTTON_SCENE := preload("res://scenes/ui/PanelActionButton.tscn")
 
 signal furniture_shop_requested(room_id: String)
 signal tenant_recruit_requested(room_id: String)
 signal tenant_view_requested(room_id: String)
+signal decor_apply_requested(room_id: String, decor_id: String)
 signal move_furniture_requested(instance_id: String)
 signal recycle_furniture_requested(instance_id: String)
 
@@ -16,6 +18,7 @@ var tab_row: HBoxContainer
 var overview_content: VBoxContainer
 var furniture_content: VBoxContainer
 var tenant_content: VBoxContainer
+var decor_content: VBoxContainer
 var score_card: StatCard
 var rent_card: StatCard
 var attribute_row: IconInfoRow
@@ -29,6 +32,9 @@ var recruit_tenant_button: PanelActionButton
 var tenant_stat_card: StatCard
 var tenant_info_row: IconInfoRow
 var view_tenant_button: PanelActionButton
+var wallpaper_list_root: GridContainer
+var wall_list_root: GridContainer
+var door_list_root: GridContainer
 
 var title_template := ""
 var room_fallback_name := ""
@@ -61,6 +67,8 @@ func _refresh() -> void:
 			_render_furniture_tab(room)
 		"tenant":
 			_render_tenant_tab(room)
+		"decor":
+			_render_decor_tab(room)
 		_:
 			_render_overview_tab(room)
 
@@ -69,6 +77,7 @@ func _bind_scene_nodes() -> void:
 	overview_content = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent") as VBoxContainer
 	furniture_content = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/FurnitureContent") as VBoxContainer
 	tenant_content = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent") as VBoxContainer
+	decor_content = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent") as VBoxContainer
 	score_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/ScoreCard") as StatCard
 	rent_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/OverviewStatsGrid/RentCard") as StatCard
 	attribute_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/OverviewContent/AttributeRow") as IconInfoRow
@@ -82,8 +91,11 @@ func _bind_scene_nodes() -> void:
 	tenant_stat_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantStatCard") as StatCard
 	tenant_info_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantInfoRow") as IconInfoRow
 	view_tenant_button = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/ViewTenantButton") as PanelActionButton
-	if overview_content == null or furniture_content == null or tenant_content == null:
-		push_error("RoomPanel.tscn must expose OverviewContent, FurnitureContent, and TenantContent.")
+	wallpaper_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/WallpaperListRoot") as GridContainer
+	wall_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/WallListRoot") as GridContainer
+	door_list_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DoorListRoot") as GridContainer
+	if overview_content == null or furniture_content == null or tenant_content == null or decor_content == null:
+		push_error("RoomPanel.tscn must expose OverviewContent, FurnitureContent, TenantContent, and DecorContent.")
 	if add_furniture_button != null and not add_furniture_button.action_requested.is_connected(_on_add_furniture_pressed):
 		add_furniture_button.action_requested.connect(_on_add_furniture_pressed)
 	if recruit_tenant_button != null and not recruit_tenant_button.action_requested.is_connected(_on_recruit_tenant_pressed):
@@ -128,7 +140,7 @@ func _behavior_label_key(node: Node) -> String:
 	return str(node.get_meta("behavior_key")).strip_edges()
 
 func _configure_tabs() -> void:
-	for node_name in ["FurnitureTab", "TenantTab", "OverviewTab"]:
+	for node_name in ["FurnitureTab", "TenantTab", "DecorTab", "OverviewTab"]:
 		var tab_button := tab_row.get_node_or_null(node_name) as PanelTabButton
 		if tab_button == null:
 			continue
@@ -143,6 +155,8 @@ func _show_selected_content() -> void:
 		furniture_content.visible = selected_tab == "furniture"
 	if tenant_content != null:
 		tenant_content.visible = selected_tab == "tenant"
+	if decor_content != null:
+		decor_content.visible = selected_tab == "decor"
 
 func _render_overview_tab(room: Dictionary) -> void:
 	score_card.set_value("%d" % int(room.get("score", 0)))
@@ -183,6 +197,25 @@ func _render_tenant_tab(room: Dictionary) -> void:
 		float(room.get("rent_per_minute", 0.0))
 	])
 
+func _render_decor_tab(room: Dictionary) -> void:
+	_render_decor_category(room, ConfigManager.DECOR_WALLPAPER, wallpaper_list_root)
+	_render_decor_category(room, ConfigManager.DECOR_WALL, wall_list_root)
+	_render_decor_category(room, ConfigManager.DECOR_DOOR, door_list_root)
+
+func _render_decor_category(room: Dictionary, category: String, root: Node) -> void:
+	if root == null:
+		return
+	UIPanelFactory.clear_children(root)
+	var current_id := ConfigManager.get_room_decor_id(room, category)
+	for item in ConfigManager.get_room_decor_items(category):
+		var decor_item: Dictionary = item
+		var row: Variant = ROOM_DECOR_ITEM_ROW_SCENE.instantiate()
+		root.add_child(row)
+		var item_id := str(decor_item.get("id", ""))
+		var price := int(decor_item.get("price", 0))
+		row.setup(decor_item, item_id == current_id, GameState.coins >= price)
+		row.apply_requested.connect(_on_decor_apply_pressed)
+
 func _behavior_label(value: String) -> String:
 	var key := ConfigManager.normalize_behavior_key(value, "")
 	if behavior_label_by_key.has(key):
@@ -203,6 +236,9 @@ func _on_recruit_tenant_pressed() -> void:
 
 func _on_view_tenant_pressed() -> void:
 	tenant_view_requested.emit(room_id)
+
+func _on_decor_apply_pressed(decor_id: String) -> void:
+	decor_apply_requested.emit(room_id, decor_id)
 
 func _on_move_pressed(instance_id: String) -> void:
 	move_furniture_requested.emit(instance_id)

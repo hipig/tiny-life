@@ -43,7 +43,11 @@ metadata/tab_id = "furniture"
 text = "租客"
 metadata/tab_id = "tenant"
 
-[node name="OverviewTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="2" instance=ExtResource("3_tab")]
+[node name="DecorTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="2" instance=ExtResource("3_tab")]
+text = "装修"
+metadata/tab_id = "decor"
+
+[node name="OverviewTab" parent="PanelBox/ScrollContainer/ContentRoot/TabRow" index="3" instance=ExtResource("3_tab")]
 text = "概览"
 metadata/tab_id = "overview"
 
@@ -184,6 +188,56 @@ text = "当前行为\n租金贡献"
 layout_mode = 2
 text = "查看租客"
 icon = ExtResource("12_icon_population")
+
+[node name="DecorContent" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WallpaperSectionTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "壁纸"
+
+[node name="WallpaperListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="WallSectionTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "墙体"
+
+[node name="WallListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="DoorSectionTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "房门"
+
+[node name="DoorListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2
 
 [node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
 visible = false

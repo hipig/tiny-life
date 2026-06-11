@@ -188,15 +188,35 @@ func _paint_wallpaper() -> void:
 	if wallpaper_layer == null:
 		return
 	var fallback_tiles := _theme_vector2i_array("wallpaper_tiles", wallpaper_tiles)
+	var source_id := _theme_int("wallpaper_source_id", wallpaper_source_id)
+	var pattern: Variant = current_theme.get("wallpaper_pattern", {})
+	if pattern is Dictionary and not pattern.is_empty():
+		var max_y := current_frame_tiles.y - 1
+		var fallback_tile := _theme_vector2i("wallpaper_tile", wallpaper_tile)
+		for y in range(current_frame_tiles.y):
+			var row_key := "middle"
+			if y == 0:
+				row_key = "top"
+			elif y == max_y:
+				row_key = "bottom"
+			var row_tiles := _vector2i_array_from_value(pattern.get(row_key, []))
+			if row_tiles.is_empty() and row_key != "middle":
+				row_tiles = _vector2i_array_from_value(pattern.get("middle", []))
+			if row_tiles.is_empty():
+				row_tiles = fallback_tiles
+			for x in range(current_frame_tiles.x):
+				wallpaper_layer.set_cell(Vector2i(x, y), source_id, _cycled_tile(row_tiles, x, fallback_tile))
+		return
 	for y in range(current_frame_tiles.y):
 		for x in range(current_frame_tiles.x):
 			var index := y * current_frame_tiles.x + x
 			var atlas := _cycled_tile(fallback_tiles, index, _theme_vector2i("wallpaper_tile", wallpaper_tile))
-			wallpaper_layer.set_cell(Vector2i(x, y), wallpaper_source_id, atlas)
+			wallpaper_layer.set_cell(Vector2i(x, y), source_id, atlas)
 
 func _paint_wall_body() -> void:
 	if wall_layer == null:
 		return
+	var source_id := _theme_int("wall_body_source_id", wall_body_source_id)
 	var max_x := current_frame_tiles.x - 1
 	var max_y := current_frame_tiles.y - 1
 	for y in range(current_frame_tiles.y):
@@ -206,7 +226,7 @@ func _paint_wall_body() -> void:
 			if not _should_paint_body_cell(x, y, max_x, max_y):
 				continue
 			var target := Vector2i(x, y)
-			wall_layer.set_cell(target, wall_body_source_id, _body_tile_at(x, y, max_x, max_y))
+			wall_layer.set_cell(target, source_id, _body_tile_at(x, y, max_x, max_y))
 	if not current_door_side.is_empty() and _body_side_enabled(current_door_side):
 		var door_cell := _door_cell_for_side(current_door_side)
 		_clear_relative_cells(wall_layer, door_cell, _door_relative_cells_for_side(_theme_vector2i_array("body_door_cutout_cells", body_door_cutout_cells), current_door_side))
@@ -215,7 +235,7 @@ func _paint_wall_body() -> void:
 			door_cell,
 			_door_relative_cells_for_side(_theme_vector2i_array("body_door_short_wall_cells", body_door_short_wall_cells), current_door_side),
 			_theme_vector2i_array("body_door_short_wall_tiles", body_door_short_wall_tiles),
-			wall_body_source_id
+			source_id
 		)
 
 func _paint_wall_edge() -> void:
@@ -224,28 +244,29 @@ func _paint_wall_edge() -> void:
 	_paint_exported_wall_edge()
 
 func _paint_exported_wall_edge() -> void:
+	var source_id := _theme_int("wall_edge_source_id", wall_edge_source_id)
 	var max_x := current_frame_tiles.x - 1
 	var max_y := current_frame_tiles.y - 1
 	if _edge_side_enabled(EDGE_TOP):
 		for x in range(current_frame_tiles.x):
-			infrastructure_layer.set_cell(Vector2i(x, -1), wall_edge_source_id, _edge_tile_at(x, -1, max_x, max_y))
+			infrastructure_layer.set_cell(Vector2i(x, -1), source_id, _edge_tile_at(x, -1, max_x, max_y))
 	if _edge_side_enabled(EDGE_BOTTOM):
 		for x in range(current_frame_tiles.x):
-			infrastructure_layer.set_cell(Vector2i(x, current_frame_tiles.y), wall_edge_source_id, _edge_tile_at(x, current_frame_tiles.y, max_x, max_y))
+			infrastructure_layer.set_cell(Vector2i(x, current_frame_tiles.y), source_id, _edge_tile_at(x, current_frame_tiles.y, max_x, max_y))
 	if _edge_side_enabled(EDGE_LEFT):
 		for y in range(current_frame_tiles.y):
-			infrastructure_layer.set_cell(Vector2i(-1, y), wall_edge_source_id, _edge_tile_at(-1, y, max_x, max_y))
+			infrastructure_layer.set_cell(Vector2i(-1, y), source_id, _edge_tile_at(-1, y, max_x, max_y))
 	if _edge_side_enabled(EDGE_RIGHT):
 		for y in range(current_frame_tiles.y):
-			infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, y), wall_edge_source_id, _edge_tile_at(current_frame_tiles.x, y, max_x, max_y))
+			infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, y), source_id, _edge_tile_at(current_frame_tiles.x, y, max_x, max_y))
 	if _edge_side_enabled(EDGE_LEFT) and _edge_side_enabled(EDGE_TOP):
-		infrastructure_layer.set_cell(Vector2i(-1, -1), wall_edge_source_id, _theme_vector2i("edge_top_left_corner_tile", edge_top_left_corner_tile))
+		infrastructure_layer.set_cell(Vector2i(-1, -1), source_id, _theme_vector2i("edge_top_left_corner_tile", edge_top_left_corner_tile))
 	if _edge_side_enabled(EDGE_RIGHT) and _edge_side_enabled(EDGE_TOP):
-		infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, -1), wall_edge_source_id, _theme_vector2i("edge_top_right_corner_tile", edge_top_right_corner_tile))
+		infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, -1), source_id, _theme_vector2i("edge_top_right_corner_tile", edge_top_right_corner_tile))
 	if _edge_side_enabled(EDGE_LEFT) and _edge_side_enabled(EDGE_BOTTOM):
-		infrastructure_layer.set_cell(Vector2i(-1, current_frame_tiles.y), wall_edge_source_id, _theme_vector2i("edge_bottom_left_corner_tile", edge_bottom_left_corner_tile))
+		infrastructure_layer.set_cell(Vector2i(-1, current_frame_tiles.y), source_id, _theme_vector2i("edge_bottom_left_corner_tile", edge_bottom_left_corner_tile))
 	if _edge_side_enabled(EDGE_RIGHT) and _edge_side_enabled(EDGE_BOTTOM):
-		infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, current_frame_tiles.y), wall_edge_source_id, _theme_vector2i("edge_bottom_right_corner_tile", edge_bottom_right_corner_tile))
+		infrastructure_layer.set_cell(Vector2i(current_frame_tiles.x, current_frame_tiles.y), source_id, _theme_vector2i("edge_bottom_right_corner_tile", edge_bottom_right_corner_tile))
 	if not current_door_side.is_empty():
 		var door_cell := _door_cell_for_side(current_door_side)
 		_clear_relative_cells(infrastructure_layer, door_cell, _door_relative_cells_for_side(_theme_vector2i_array("edge_door_cutout_cells", edge_door_cutout_cells), current_door_side))
@@ -254,7 +275,7 @@ func _paint_exported_wall_edge() -> void:
 			door_cell,
 			_door_relative_cells_for_side(_theme_vector2i_array("edge_door_short_wall_cells", edge_door_short_wall_cells), current_door_side),
 			_theme_vector2i_array("edge_door_short_wall_tiles", edge_door_short_wall_tiles),
-			wall_edge_source_id
+			source_id
 		)
 
 func _paint_room_window() -> void:
@@ -264,24 +285,26 @@ func _paint_room_window() -> void:
 		clampi(current_frame_tiles.x - 1 - window_cell_from_right, 0, current_frame_tiles.x - 1),
 		clampi(window_cell_from_top, 0, current_frame_tiles.y - 1)
 	)
-	infrastructure_layer.set_cell(cell, wall_edge_source_id, _theme_vector2i("window_tile", window_tile))
+	infrastructure_layer.set_cell(cell, _theme_int("wall_edge_source_id", wall_edge_source_id), _theme_vector2i("window_tile", window_tile))
 
 func _paint_roof() -> void:
 	if roof_layer == null:
 		return
 	var tiles := _theme_vector2i_array("roof_tiles", roof_tiles)
+	var source_id := _theme_int("wall_edge_source_id", wall_edge_source_id)
 	for x in range(current_frame_tiles.x):
 		var atlas := _cycled_tile(tiles, x - 1, roof_left_tile)
 		if x == 0:
 			atlas = _theme_vector2i("roof_left_tile", roof_left_tile)
 		elif x == current_frame_tiles.x - 1:
 			atlas = _theme_vector2i("roof_right_tile", roof_right_tile)
-		roof_layer.set_cell(Vector2i(x, -1), wall_edge_source_id, atlas)
+		roof_layer.set_cell(Vector2i(x, -1), source_id, atlas)
 
 func _paint_construction() -> void:
 	if construction_layer == null:
 		return
 	var marker_tile := _theme_vector2i("construction_marker_tile", construction_marker_tile)
+	var source_id := _theme_int("construction_source_id", construction_source_id)
 	var left_cell := Vector2i(
 		clampi(construction_left_marker_cell.x, 0, current_frame_tiles.x - 1),
 		clampi(construction_left_marker_cell.y, 0, current_frame_tiles.y - 1)
@@ -290,8 +313,8 @@ func _paint_construction() -> void:
 		clampi(current_frame_tiles.x - construction_right_marker_from_bottom.x, 0, current_frame_tiles.x - 1),
 		clampi(current_frame_tiles.y - construction_right_marker_from_bottom.y, 0, current_frame_tiles.y - 1)
 	)
-	construction_layer.set_cell(left_cell, construction_source_id, marker_tile)
-	construction_layer.set_cell(right_cell, construction_source_id, marker_tile)
+	construction_layer.set_cell(left_cell, source_id, marker_tile)
+	construction_layer.set_cell(right_cell, source_id, marker_tile)
 
 func _body_tile_at(x: int, y: int, max_x: int, max_y: int) -> Vector2i:
 	var top_left := _theme_vector2i("body_top_left_corner_tile", body_top_left_corner_tile)
@@ -476,6 +499,12 @@ func _theme_vector2i(key: String, fallback: Vector2i) -> Vector2i:
 
 func _theme_vector2i_array(key: String, fallback: Array[Vector2i]) -> Array[Vector2i]:
 	var value: Variant = current_theme.get(key, fallback)
+	var result := _vector2i_array_from_value(value)
+	if result.is_empty():
+		return fallback
+	return result
+
+func _vector2i_array_from_value(value: Variant) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if value is Array:
 		for item in value:
@@ -485,9 +514,10 @@ func _theme_vector2i_array(key: String, fallback: Array[Vector2i]) -> Array[Vect
 				result.append(Vector2i(int(item.x), int(item.y)))
 			elif item is Array and item.size() >= 2:
 				result.append(Vector2i(int(item[0]), int(item[1])))
-	if result.is_empty():
-		return fallback
 	return result
+
+func _theme_int(key: String, fallback: int) -> int:
+	return int(current_theme.get(key, fallback))
 
 func _validated_frame_tiles(value: Vector2i) -> Vector2i:
 	return Vector2i(maxi(MIN_FRAME_WIDTH_TILES, value.x), DEFAULT_FRAME_TILES.y)

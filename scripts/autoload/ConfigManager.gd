@@ -1,8 +1,15 @@
 extends Node
 
+const TILE_SIZE := 16
+const DECOR_WALLPAPER := "wallpaper"
+const DECOR_WALL := "wall"
+const DECOR_DOOR := "door"
+
 var furniture: Array = []
 var tenants: Array = []
 var tenant_regions: Array = []
+var room_decor: Dictionary = {}
+var room_decor_items: Array = []
 var rooms: Array = []
 var floors: Array = []
 var tasks: Array = []
@@ -15,6 +22,8 @@ var platform_config: Dictionary = {}
 var furniture_by_id: Dictionary = {}
 var tenant_by_id: Dictionary = {}
 var tenant_region_by_id: Dictionary = {}
+var room_decor_by_id: Dictionary = {}
+var room_decor_by_category: Dictionary = {}
 var floor_by_index: Dictionary = {}
 var room_by_id: Dictionary = {}
 var level_by_value: Dictionary = {}
@@ -26,6 +35,7 @@ func load_all() -> void:
 	furniture = _load_json_array("res://data/furniture.json")
 	tenants = _load_json_array("res://data/tenants.json")
 	tenant_regions = _load_json_array("res://data/tenant_regions.json")
+	room_decor = _load_json_dict("res://data/room_decor.json")
 	rooms = _load_json_array("res://data/rooms.json")
 	floors = _load_json_array("res://data/floors.json")
 	tasks = _load_json_array("res://data/tasks.json")
@@ -67,6 +77,7 @@ func _rebuild_indexes() -> void:
 	for item in tenant_regions:
 		var region_data: Dictionary = item
 		tenant_region_by_id[region_data.get("id", "")] = region_data
+	_rebuild_room_decor_indexes()
 	floor_by_index.clear()
 	for item in floors:
 		var floor_data: Dictionary = item
@@ -88,6 +99,40 @@ func get_tenant_data(id: String) -> Dictionary:
 
 func get_tenant_region_data(id: String) -> Dictionary:
 	return tenant_region_by_id.get(id, {})
+
+func get_room_decor_item(id: String) -> Dictionary:
+	return room_decor_by_id.get(id, {})
+
+func get_room_decor_items(category: String) -> Array:
+	return room_decor_by_category.get(category, [])
+
+func get_room_decor_id(room: Dictionary, category: String) -> String:
+	var field := _room_decor_field_for_category(category)
+	if not field.is_empty():
+		var runtime_id := str(room.get(field, "")).strip_edges()
+		if not runtime_id.is_empty():
+			return runtime_id
+	var room_config := get_room_config(str(room.get("id", "")))
+	var default_field := _room_decor_default_field_for_category(category)
+	if default_field.is_empty():
+		return ""
+	return str(room_config.get(default_field, "")).strip_edges()
+
+func tile_theme_for_room(room: Dictionary) -> Dictionary:
+	var theme := {}
+	_merge_theme(theme, _wall_theme_from_item(get_room_decor_item(get_room_decor_id(room, DECOR_WALL))))
+	_merge_theme(theme, _wallpaper_theme_from_item(get_room_decor_item(get_room_decor_id(room, DECOR_WALLPAPER))))
+	return theme
+
+func door_theme_for_room(room: Dictionary) -> Dictionary:
+	var item := get_room_decor_item(get_room_decor_id(room, DECOR_DOOR))
+	return item.duplicate(true) if not item.is_empty() else {}
+
+func room_decor_field_for_category(category: String) -> String:
+	return _room_decor_field_for_category(category)
+
+func room_decor_default_field_for_category(category: String) -> String:
+	return _room_decor_default_field_for_category(category)
 
 func get_unlocked_tenant_regions(apartment_level: int) -> Array:
 	var result: Array = []
@@ -164,3 +209,98 @@ func furniture_with_tag(tag: String) -> Array:
 		if tag in data.get("tags", []):
 			result.append(data)
 	return result
+
+func _rebuild_room_decor_indexes() -> void:
+	room_decor_by_id.clear()
+	room_decor_by_category.clear()
+	var raw_items: Variant = room_decor.get("items", [])
+	room_decor_items = raw_items if raw_items is Array else []
+	for item in room_decor_items:
+		var decor_data: Dictionary = item
+		var decor_id := str(decor_data.get("id", "")).strip_edges()
+		if decor_id.is_empty():
+			continue
+		room_decor_by_id[decor_id] = decor_data
+		var category := str(decor_data.get("category", "")).strip_edges()
+		if category.is_empty():
+			continue
+		var list: Array = room_decor_by_category.get(category, [])
+		list.append(decor_data)
+		room_decor_by_category[category] = list
+
+func _room_decor_field_for_category(category: String) -> String:
+	match category:
+		DECOR_WALLPAPER:
+			return "wallpaper_id"
+		DECOR_WALL:
+			return "wall_style_id"
+		DECOR_DOOR:
+			return "door_style_id"
+		_:
+			return ""
+
+func _room_decor_default_field_for_category(category: String) -> String:
+	match category:
+		DECOR_WALLPAPER:
+			return "default_wallpaper_id"
+		DECOR_WALL:
+			return "default_wall_style_id"
+		DECOR_DOOR:
+			return "default_door_style_id"
+		_:
+			return ""
+
+func _wallpaper_theme_from_item(item: Dictionary) -> Dictionary:
+	var theme := {}
+	var region := _array_from_config(item.get("wallpaper_region", []))
+	if region.size() >= 4:
+		var origin := _region_tile_origin(region)
+		var columns := maxi(1, int(int(region[2]) / TILE_SIZE))
+		var rows := maxi(1, int(int(region[3]) / TILE_SIZE))
+		theme["wallpaper_source_id"] = int(item.get("wallpaper_source_id", 2))
+		theme["wallpaper_pattern"] = {
+			"top": _tile_row(origin.x, origin.y, columns),
+			"middle": _tile_row(origin.x, origin.y + mini(1, rows - 1), columns),
+			"bottom": _tile_row(origin.x, origin.y + maxi(0, rows - 1), columns)
+		}
+	var explicit_theme: Variant = item.get("theme", {})
+	if explicit_theme is Dictionary:
+		_merge_theme(theme, explicit_theme)
+	return theme
+
+func _wall_theme_from_item(item: Dictionary) -> Dictionary:
+	var theme := {}
+	var region := _array_from_config(item.get("wall_region", []))
+	if region.size() >= 4:
+		var origin := _region_tile_origin(region)
+		theme["wall_body_source_id"] = int(item.get("wall_body_source_id", 0))
+		theme["body_top_left_corner_tile"] = [origin.x, origin.y]
+		theme["body_top_edge_tiles"] = [[origin.x + 2, origin.y]]
+		theme["body_top_right_corner_tile"] = [origin.x + 4, origin.y]
+		theme["body_left_edge_tiles"] = [[origin.x, origin.y + 1]]
+		theme["body_left_door_edge_tiles"] = [[origin.x + 1, origin.y + 1]]
+		theme["body_right_door_edge_tiles"] = [[origin.x + 3, origin.y + 1]]
+		theme["body_right_edge_tiles"] = [[origin.x + 4, origin.y + 1]]
+		theme["body_bottom_left_corner_tile"] = [origin.x, origin.y + 2]
+		theme["body_bottom_edge_tiles"] = [[origin.x + 1, origin.y + 2], [origin.x + 2, origin.y + 2], [origin.x + 3, origin.y + 2]]
+		theme["body_bottom_right_corner_tile"] = [origin.x + 4, origin.y + 2]
+	var explicit_theme: Variant = item.get("theme", {})
+	if explicit_theme is Dictionary:
+		_merge_theme(theme, explicit_theme)
+	return theme
+
+func _merge_theme(target: Dictionary, source: Dictionary) -> void:
+	for key in source.keys():
+		target[key] = source[key]
+
+func _region_tile_origin(region: Array) -> Vector2i:
+	return Vector2i(int(int(region[0]) / TILE_SIZE), int(int(region[1]) / TILE_SIZE))
+
+func _tile_row(origin_x: int, y: int, columns: int) -> Array:
+	var result := []
+	for x in range(columns):
+		result.append([origin_x + x, y])
+	return result
+
+func _array_from_config(value: Variant) -> Array:
+	return value if value is Array else []

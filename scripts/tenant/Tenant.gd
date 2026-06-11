@@ -24,6 +24,7 @@ func _ready() -> void:
 	_connect_click_area()
 	_connect_events()
 	if not tenant_id.is_empty():
+		_apply_avatar_asset()
 		_start_ai()
 		_refresh()
 
@@ -31,6 +32,7 @@ func setup(id: String, target_room_id := "") -> void:
 	tenant_id = id
 	room_id = target_room_id
 	if is_inside_tree():
+		_apply_avatar_asset()
 		_start_ai()
 		_refresh()
 
@@ -101,6 +103,24 @@ func _bind_scene_animation_config() -> void:
 		for behavior_key in behavior_keys:
 			behavior_animation_by_key[behavior_key] = animation_name
 
+func _apply_avatar_asset() -> void:
+	var tenant_data: Dictionary = ConfigManager.get_tenant_data(tenant_id)
+	var asset: Dictionary = tenant_data.get("asset", {})
+	if asset.is_empty():
+		return
+	var avatar_offset: Variant = tenant_data.get("avatar_offset", asset.get("avatar_offset", [0, -7]))
+	if avatar_offset is Array and avatar_offset.size() >= 2:
+		avatar_sprite.set("position", Vector2(float(avatar_offset[0]), float(avatar_offset[1])))
+	var default_animation := str(asset.get("default_animation", "idle"))
+	AssetResolver.apply_asset_to_animated_sprite(
+		avatar_sprite,
+		asset,
+		default_animation,
+		Color.WHITE,
+		_vector2i_from_array(asset.get("frame_size", [32, 32]), Vector2i(32, 32))
+	)
+	current_animation = ""
+
 func _connect_click_area() -> void:
 	if click_area == null:
 		push_error("Tenant.tscn must expose a ClickArea Area2D child.")
@@ -122,10 +142,12 @@ func _on_tenant_behavior_changed(changed_tenant_id: String, _behavior: String) -
 
 func _on_tenant_recruited(changed_tenant_id: String, _room_id: String) -> void:
 	if changed_tenant_id == tenant_id:
+		_apply_avatar_asset()
 		_refresh()
 
 func _on_state_loaded() -> void:
 	if not tenant_id.is_empty():
+		_apply_avatar_asset()
 		_refresh()
 
 func _input(event: InputEvent) -> void:
@@ -241,3 +263,8 @@ func _append_metadata_key(keys: Array[String], raw_key: String) -> void:
 	if key.is_empty() or keys.has(key):
 		return
 	keys.append(key)
+
+func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
+	if value is Array and value.size() >= 2:
+		return Vector2i(int(value[0]), int(value[1]))
+	return fallback

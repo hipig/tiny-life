@@ -84,6 +84,9 @@ func reset_new_game() -> void:
 			"door_mirrored": bool(room_data.get("door_mirrored", false)),
 			"frame_tiles": _fixed_height_frame_tiles(_int_pair(room_data.get("frame_tiles", DEFAULT_FRAME_TILES), DEFAULT_FRAME_TILES)),
 			"grid_size": _fixed_height_grid_size(_int_pair(room_data.get("grid_size", DEFAULT_GRID_SIZE), DEFAULT_GRID_SIZE)),
+			"wallpaper_id": str(room_data.get("default_wallpaper_id", "")),
+			"wall_style_id": str(room_data.get("default_wall_style_id", "")),
+			"door_style_id": str(room_data.get("default_door_style_id", "")),
 			"unlocked": initially_unlocked and floor_index <= highest_built_floor,
 			"level": 1,
 			"tenant_id": "",
@@ -210,6 +213,26 @@ func apply_room_layout_upgrade(room_id: String, target_level := 0) -> bool:
 		upgrade.get("frame_tiles", []),
 		upgrade.get("grid_size", [])
 	)
+
+func apply_room_decor(room_id: String, decor_id: String) -> bool:
+	var room: Dictionary = rooms.get(room_id, {})
+	if room.is_empty():
+		return false
+	var item: Dictionary = ConfigManager.get_room_decor_item(decor_id)
+	if item.is_empty():
+		return false
+	var category := str(item.get("category", "")).strip_edges()
+	var field := ConfigManager.room_decor_field_for_category(category)
+	if field.is_empty():
+		return false
+	if str(room.get(field, "")) == decor_id:
+		return false
+	room[field] = decor_id
+	rooms[room_id] = room
+	save_needs_writeback = true
+	GameEvents.room_decor_changed.emit(room_id, decor_id, category)
+	GameEvents.room_updated.emit(room_id)
+	return true
 
 func recalculate_room_stats(room_id: String) -> void:
 	if not rooms.has(room_id):
@@ -468,6 +491,9 @@ func _ensure_runtime_defaults() -> void:
 			"level": room_level,
 			"frame_tiles": configured_layout.get("frame_tiles", DEFAULT_FRAME_TILES).duplicate(),
 			"grid_size": configured_layout.get("grid_size", DEFAULT_GRID_SIZE).duplicate(),
+			"wallpaper_id": _room_decor_id_or_default(room, room_data, ConfigManager.DECOR_WALLPAPER),
+			"wall_style_id": _room_decor_id_or_default(room, room_data, ConfigManager.DECOR_WALL),
+			"door_style_id": _room_decor_id_or_default(room, room_data, ConfigManager.DECOR_DOOR),
 			"unlocked": bool(room.get("unlocked", initially_unlocked and floor_index <= highest_built_floor)),
 			"tenant_id": str(room.get("tenant_id", "")),
 			"furniture_instances": room.get("furniture_instances", []),
@@ -524,6 +550,15 @@ func _ensure_stats_defaults() -> void:
 	stats["furniture_placed_count"] = int(stats.get("furniture_placed_count", 0))
 	stats["tenant_recruited_count"] = int(stats.get("tenant_recruited_count", 0))
 	stats["offline_claimed_count"] = int(stats.get("offline_claimed_count", 0))
+
+func _room_decor_id_or_default(room: Dictionary, room_data: Dictionary, category: String) -> String:
+	var field := ConfigManager.room_decor_field_for_category(category)
+	if not field.is_empty():
+		var runtime_id := str(room.get(field, "")).strip_edges()
+		if not runtime_id.is_empty():
+			return runtime_id
+	var default_field := ConfigManager.room_decor_default_field_for_category(category)
+	return str(room_data.get(default_field, "")).strip_edges()
 
 func _normalize_tenant_behavior(value: String) -> String:
 	var key := ConfigManager.normalize_behavior_key(value, DEFAULT_TENANT_BEHAVIOR)

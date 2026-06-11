@@ -11,12 +11,14 @@ extends Control
 var roof_visible := false
 var construction_visible := false
 
-func apply_layout(room_pixel_size: Vector2, _wall_inset: float, _floor_height: float, _roof_height: float, frame_tiles := Vector2i(6, 4), tile_theme: Dictionary = {}, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, door_side := "left", door_mirrored := false) -> void:
+func apply_layout(room_pixel_size: Vector2, _wall_inset: float, _floor_height: float, _roof_height: float, frame_tiles := Vector2i(6, 4), tile_theme: Dictionary = {}, edge_sides: Dictionary = {}, body_sides: Dictionary = {}, door_side := "left", door_mirrored := false, door_theme: Dictionary = {}) -> void:
 	custom_minimum_size = room_pixel_size
 	size = room_pixel_size
 	if apartment_tile_map != null:
 		apartment_tile_map.render_room_skeleton(frame_tiles, tile_theme, roof_visible, construction_visible, edge_sides, body_sides, door_side)
 	_layout_room_door(room_pixel_size, door_side, door_mirrored)
+	if room_door != null:
+		room_door.apply_visual_theme(door_theme)
 
 func set_roof_visible(value: bool) -> void:
 	roof_visible = value

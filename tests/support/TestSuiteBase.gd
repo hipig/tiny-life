@@ -7,6 +7,7 @@ var tenants: Array = []
 var regions: Array = []
 var rooms: Array = []
 var floors: Array = []
+var room_decor: Dictionary = {}
 
 func setup() -> void:
 	economy = _load_json_dict("res://data/economy.json")
@@ -15,6 +16,7 @@ func setup() -> void:
 	regions = _load_json_array("res://data/tenant_regions.json")
 	rooms = _load_json_array("res://data/rooms.json")
 	floors = _load_json_array("res://data/floors.json")
+	room_decor = _load_json_dict("res://data/room_decor.json")
 
 
 func _panel_scene_paths() -> Array[String]:
@@ -67,6 +69,7 @@ func _support_scene_paths() -> Array[String]:
 		"res://scenes/ui/TaskItemRow.tscn",
 		"res://scenes/ui/FurnitureShopItemRow.tscn",
 		"res://scenes/ui/RoomFurnitureItemRow.tscn",
+		"res://scenes/ui/RoomDecorItemRow.tscn",
 		"res://scenes/ui/RentRoomRow.tscn",
 		"res://scenes/ui/FloorOverviewRow.tscn",
 		"res://scenes/ui/TenantOverviewRow.tscn"
@@ -96,6 +99,7 @@ func _ui_script_paths() -> Array[String]:
 		"res://scripts/ui/RentRoomRow.gd",
 		"res://scripts/ui/RewardPanel.gd",
 		"res://scripts/ui/RoomFurnitureItemRow.gd",
+		"res://scripts/ui/RoomDecorItemRow.gd",
 		"res://scripts/ui/RoomPanel.gd",
 		"res://scripts/ui/SettingsPanel.gd",
 		"res://scripts/ui/StatCard.gd",
@@ -196,6 +200,14 @@ func _room_ids_on_floor(floor_index: int) -> Array:
 		if int(room_data.get("floor_index", 0)) == floor_index:
 			ids.append(str(room_data.get("id", "")))
 	return ids
+
+
+func _room_decor_item(decor_id: String) -> Dictionary:
+	for item in room_decor.get("items", []):
+		var decor_item: Dictionary = item
+		if str(decor_item.get("id", "")) == decor_id:
+			return decor_item
+	return {}
 
 
 func _bind_apartment_tilemap_layers(tilemap: Variant) -> void:

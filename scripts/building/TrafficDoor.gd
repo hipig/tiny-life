@@ -15,6 +15,32 @@ var _warned_missing_frames := false
 func _ready() -> void:
 	set_closed()
 
+func apply_visual_theme(theme: Dictionary) -> void:
+	if door_sprite == null:
+		return
+	if theme.is_empty():
+		set_closed()
+		return
+	var door_asset: Dictionary = theme.get("door_asset", {})
+	closed_frame = int(theme.get("closed_frame", closed_frame))
+	open_frame = int(theme.get("open_frame", open_frame))
+	default_animation = str(theme.get("default_animation", door_asset.get("default_animation", default_animation)))
+	var animations: Dictionary = door_asset.get("animations", {}) if door_asset.get("animations", {}) is Dictionary else {}
+	open_animation = str(theme.get("open_animation", "open" if animations.has("open") else open_animation))
+	close_animation = str(theme.get("close_animation", "close" if animations.has("close") else close_animation))
+	if not door_asset.is_empty():
+		AssetResolver.apply_asset_to_animated_sprite(
+			door_sprite,
+			door_asset,
+			default_animation,
+			Color.WHITE,
+			_vector2i_from_array(door_asset.get("frame_size", [16, 32]), Vector2i(16, 32))
+		)
+	var sprite_offset: Variant = theme.get("sprite_offset", [])
+	if sprite_offset is Array and sprite_offset.size() >= 2:
+		door_sprite.position = Vector2(float(sprite_offset[0]), float(sprite_offset[1]))
+	set_closed()
+
 func play_open(duration_seconds := -1.0) -> void:
 	_play_visual(open_animation, default_animation, closed_frame, open_frame, false, duration_seconds)
 
@@ -87,3 +113,8 @@ func _animation_duration(animation_name: String) -> float:
 	if speed <= 0.0:
 		return duration
 	return duration / speed
+
+func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
+	if value is Array and value.size() >= 2:
+		return Vector2i(int(value[0]), int(value[1]))
+	return fallback

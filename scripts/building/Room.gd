@@ -58,7 +58,9 @@ func _rebuild() -> void:
 	size = custom_minimum_size
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	room_shell.roof_visible = show_roof_eaves
-	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), {}, room_edge_sides, {}, _room_door_side(), _room_door_mirrored())
+	var tile_theme := ConfigManager.tile_theme_for_room(room)
+	var door_theme := ConfigManager.door_theme_for_room(room)
+	room_shell.apply_layout(size, wall_inset, floor_height, roof_height, _frame_tiles(), tile_theme, room_edge_sides, {}, _room_door_side(), _room_door_mirrored(), door_theme)
 	room_shell.clear_dynamic_views()
 	room_shell.set_roof_visible(show_roof_eaves)
 	_apply_room_badges(room)

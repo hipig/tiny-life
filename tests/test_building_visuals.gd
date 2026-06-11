@@ -26,6 +26,7 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(room_shell_scene.contains("res://scenes/building/RoomDoor.tscn"), "RoomShell should overlay a reusable room door scene")
 	assert_true(room_shell_scene.contains("[node name=\"RoomDoor\""), "RoomShell should expose a RoomDoor child")
 	assert_true(room_shell_source.contains("func get_room_door()"), "RoomShell should expose the room door to route scripts")
+	assert_true(room_shell_source.contains("apply_visual_theme(door_theme)"), "RoomShell should apply per-room door themes only to RoomDoor")
 	assert_true(room_shell_source.contains("door_mirrored"), "RoomShell should support mirrored outward-opening room doors")
 	assert_true(room_shell_source.contains("normalized_side == \"right\""), "RoomShell should support right-wall room doors")
 	assert_true(room_shell_source.contains("-ApartmentTileMap.TILE_SIZE * 0.5"), "Left-wall room doors should sit outside the room wall")
@@ -37,9 +38,11 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(service_scene.contains("res://scenes/building/ElevatorDoor.tscn"), "FloorServiceCore should instance the elevator door scene")
 	assert_true(service_source.contains("exit_door.visible = false"), "Central elevator halls should not own the 1F entrance door")
 	assert_true(service_source.contains("elevator_door.visible = true"), "Every floor service core should show an elevator door")
+	assert_false(service_source.contains("door_theme"), "Elevator service doors should not consume room door themes")
 	assert_true(public_area_scene.contains("res://scenes/building/ExitDoor.tscn"), "1F public lobby should own the reusable exit door scene")
 	assert_true(public_area_source.contains("has_entrance_door"), "Public areas should opt into a visible entrance door through floor config")
 	assert_true(public_area_source.contains("door_side"), "Public entrance doors should be positioned from their configured wall side")
+	assert_false(public_area_source.contains("apply_visual_theme"), "Public entrance doors should not consume room door themes")
 	assert_true(public_area_source.contains("var door_x := ApartmentTileMap.TILE_SIZE * 0.5"), "1F entrance doors should sit inside the left wall tile")
 	assert_true(public_area_source.contains("area_pixel_size.x - ApartmentTileMap.TILE_SIZE * 0.5"), "Right-side public entrance doors should sit inside the right wall tile")
 	assert_true(public_area_scene.contains("position = Vector2(8, 64)"), "PublicAreaShell preview should show the entrance door on the left wall tile")
@@ -83,6 +86,8 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(traffic_source.contains("func play_close(duration_seconds"), "TrafficDoor should provide a duration-aware close animation hook")
 	assert_true(traffic_source.contains("func set_open()"), "TrafficDoor should expose a final open-frame setter for route cleanup")
 	assert_true(traffic_source.contains("func set_closed()"), "TrafficDoor should expose a final closed-frame setter for route cleanup")
+	assert_true(traffic_source.contains("func apply_visual_theme"), "TrafficDoor should accept configured room door themes")
+	assert_true(traffic_source.contains("AssetResolver.apply_asset_to_animated_sprite"), "TrafficDoor should rebuild door SpriteFrames through AssetResolver")
 	assert_true(traffic_source.contains("_custom_speed_for_duration"), "TrafficDoor should scale animation playback to the configured route timing")
 	assert_true(ai_source.contains("door.play_open(duration)"), "TenantAI should pass configured door timing into TrafficDoor")
 	assert_true(ai_source.contains("await _wait_seconds(duration)"), "TenantAI should wait for door/elevator timing before continuing route movement")
@@ -213,8 +218,16 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 		var grid_size: Array = room_data.get("grid_size", [])
 		floor_counts[floor_index] = int(floor_counts.get(floor_index, 0)) + 1
 		assert_true(ResourceLoader.exists(str(room_data.get("room_scene_path", ""))), "%s should configure a loadable room scene template" % room_data.get("id", ""))
-		assert_true(_asset_texture_exists(room_data.get("infrastructure_asset", {})), "%s should use Infrastructure.png for its room frame" % room_data.get("id", ""))
-		assert_true(_asset_texture_exists(room_data.get("wall_asset", {})), "%s wallpaper asset should exist" % room_data.get("id", ""))
+		for pair in [
+			["default_wallpaper_id", "wallpaper"],
+			["default_wall_style_id", "wall"],
+			["default_door_style_id", "door"]
+		]:
+			var decor_item := _room_decor_item(str(room_data.get(str(pair[0]), "")))
+			assert_false(decor_item.is_empty(), "%s should configure %s through room_decor.json" % [room_data.get("id", ""), pair[0]])
+			assert_eq(str(decor_item.get("category", "")), str(pair[1]), "%s %s should point at the expected decor category" % [room_data.get("id", ""), pair[0]])
+		assert_false(room_data.has("infrastructure_asset"), "%s should not keep hard-coded infrastructure_asset" % room_data.get("id", ""))
+		assert_false(room_data.has("wall_asset"), "%s should not keep hard-coded wall_asset" % room_data.get("id", ""))
 		assert_false(room_data.has("floor_asset"), "%s should not keep a separate floor layer asset for room skeletons" % room_data.get("id", ""))
 		assert_false(room_data.has("room_size"), "%s should not keep legacy pixel room_size config" % room_data.get("id", ""))
 		assert_false(room_data.has("grid_rect"), "%s should not keep legacy pixel grid_rect config" % room_data.get("id", ""))
@@ -313,6 +326,8 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(apartment_tilemap_source.contains("@export var body_top_left_corner_tile"), "ApartmentTileMap should export themed wall-body corner coordinates for editor filling")
 	assert_true(apartment_tilemap_source.contains("@export var edge_top_left_corner_tile"), "ApartmentTileMap should export fixed wall-edge corner coordinates for editor filling")
 	assert_true(apartment_tilemap_source.contains("@export var wallpaper_tile"), "ApartmentTileMap should export the default wallpaper tile coordinate")
+	assert_true(apartment_tilemap_source.contains("wallpaper_pattern"), "ApartmentTileMap should support top/middle/bottom wallpaper patterns from decor config")
+	assert_true(apartment_tilemap_source.contains("_theme_int(\"wallpaper_source_id\""), "ApartmentTileMap should let decor themes override TileSet source ids")
 	assert_true(apartment_tilemap_source.contains("@export var body_door_short_wall_cells"), "ApartmentTileMap should export body short-wall cells around doors")
 	assert_true(apartment_tilemap_source.contains("@export var edge_door_short_wall_cells"), "ApartmentTileMap should export edge short-wall cells around doors")
 	assert_false(apartment_tilemap_source.contains("@export var floor_tiles"), "ApartmentTileMap should not expose a separate floor layer for room skeletons")
@@ -357,6 +372,8 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(room_source.contains("world_position_to_placement_grid"), "Room should translate scene taps through furniture-aware placement layers")
 	assert_true(room_source.contains("floor_grid_y_for"), "Floor furniture should map pointer input to the bottom floor line")
 	assert_true(room_shell_source.contains("render_room_skeleton"), "RoomShell should delegate room-frame drawing to ApartmentTileMap")
+	assert_true(room_source.contains("ConfigManager.tile_theme_for_room(room)"), "Room should render configured wallpaper and wall themes")
+	assert_true(room_source.contains("ConfigManager.door_theme_for_room(room)"), "Room should pass configured door themes to RoomShell")
 	assert_true(room_source.contains("tenant_view.setup(tenant_id, room_id)"), "Room should bind tenant scene instances to their room")
 	assert_true(room_source.contains("_furniture_position"), "Furniture should be positioned inside the room instead of listed as thumbnails")
 
@@ -398,6 +415,26 @@ func test_apartment_tilemap_renders_room_frame_tiles_on_16px_grid() -> void:
 	var room_bottom_tiles: Array = tilemap.get("body_bottom_edge_tiles")
 	assert_eq(wall_layer.get_cell_atlas_coords(Vector2i(0, 3)), room_bottom_tiles[0], "Room left wall with a door should use a bottom edge below the door")
 	assert_eq(infrastructure_layer.get_cell_atlas_coords(Vector2i(5, 1)), Vector2i(5, 2), "Room window should use the configured right-wall tile")
+
+	var wallpaper_theme := {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+			"top": [Vector2i(0, 12), Vector2i(1, 12)],
+			"middle": [Vector2i(0, 13), Vector2i(1, 13)],
+			"bottom": [Vector2i(0, 14), Vector2i(1, 14)]
+		}
+	}
+	tilemap.render_room_skeleton(Vector2i(6, 4), wallpaper_theme, false, false)
+	assert_eq(wallpaper_layer.get_cell_source_id(Vector2i(0, 0)), 2, "Decor wallpaper should use the configured TileSet source")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(0, 0)), Vector2i(0, 12), "Top wallpaper row should use the top strip")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(1, 0)), Vector2i(1, 12), "Top wallpaper row should cycle horizontally")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(2, 0)), Vector2i(0, 12), "Top wallpaper row should repeat after its pattern width")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(0, 1)), Vector2i(0, 13), "Middle wallpaper rows should use the middle strip")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(0, 2)), Vector2i(0, 13), "Every non-edge wallpaper row should use the middle strip")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(0, 3)), Vector2i(0, 14), "Bottom wallpaper row should use the bottom strip")
+	tilemap.render_room_skeleton(Vector2i(8, 4), wallpaper_theme, false, false)
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(6, 0)), Vector2i(0, 12), "Expanded top wallpaper should keep cycling")
+	assert_eq(wallpaper_layer.get_cell_atlas_coords(Vector2i(7, 3)), Vector2i(1, 14), "Expanded bottom wallpaper should keep cycling")
 
 	tilemap.render_room_skeleton(Vector2i(6, 4), {}, false, false, {"left": true, "right": false, "top": false, "bottom": false}, {}, "right")
 	assert_eq(tilemap.get("current_door_side"), "right", "01 rooms should render a right-wall door cutout")
@@ -455,6 +492,31 @@ func test_apartment_tilemap_renders_room_frame_tiles_on_16px_grid() -> void:
 	tilemap.free()
 
 
+func test_room_door_theme_replaces_sprite_frames_without_breaking_routes() -> void:
+	var scene := ResourceLoader.load("res://scenes/building/RoomDoor.tscn", "PackedScene", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene
+	assert_true(scene != null, "RoomDoor scene should load for direct theme tests")
+	if scene == null:
+		return
+	var door := scene.instantiate() as TrafficDoor
+	assert_true(door != null, "RoomDoor scene should instantiate as TrafficDoor")
+	if door == null:
+		return
+	var theme := _room_decor_item("door_panel")
+	assert_false(theme.is_empty(), "door_panel decor theme should exist")
+	var sprite := door.get_node("DoorSprite") as AnimatedSprite2D
+	door.set("door_sprite", sprite)
+	door.apply_visual_theme(theme)
+	assert_true(sprite.sprite_frames != null, "Door theme should assign SpriteFrames")
+	assert_true(sprite.sprite_frames.has_animation("default"), "Door theme should keep the default animation")
+	assert_eq(sprite.sprite_frames.get_frame_count("default"), 2, "Door default animation should expose closed and open frames")
+	assert_eq(sprite.position, Vector2(0, -16), "Door theme should apply configured sprite offset")
+	door.set_open()
+	assert_eq(sprite.frame, 1, "The themed door should keep the route open-frame setter")
+	door.set_closed()
+	assert_eq(sprite.frame, 0, "The themed door should keep the route closed-frame setter")
+	door.queue_free()
+
+
 func test_room_layout_upgrades_are_config_driven_and_future_rooms_can_stay_hidden() -> void:
 	var config_source := FileAccess.get_file_as_string("res://scripts/autoload/ConfigManager.gd")
 	var state_source := FileAccess.get_file_as_string("res://scripts/autoload/GameState.gd")
@@ -490,6 +552,10 @@ func test_saved_room_layouts_are_normalized_to_current_config() -> void:
 	assert_true(state_source.contains("\"layout_side\""), "Room saves should preserve left/right/suite layout side")
 	assert_true(state_source.contains("\"door_side\""), "Room saves should preserve door-side routing")
 	assert_true(state_source.contains("\"door_mirrored\""), "Room saves should preserve mirrored door state")
+	assert_true(state_source.contains("\"wallpaper_id\""), "Room saves should preserve applied wallpaper")
+	assert_true(state_source.contains("\"wall_style_id\""), "Room saves should preserve applied wall style")
+	assert_true(state_source.contains("\"door_style_id\""), "Room saves should preserve applied door style")
+	assert_true(state_source.contains("func apply_room_decor"), "GameState should expose per-room decor application")
 	assert_false(state_source.contains("\"room_size\""), "GameState should not preserve legacy pixel room_size fields")
 	assert_false(state_source.contains("\"grid_rect\""), "GameState should not preserve legacy pixel grid_rect fields")
 	assert_false(state_source.contains("[448, 176]"), "Old 720px-era room-size fallback should not survive in GameState")
