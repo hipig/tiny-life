@@ -34,6 +34,7 @@ theme_override_font_sizes/font_size = 9
 text = "房间"
 
 [node name="RoomRentBadge" type="Label" parent="." unique_id=828452324]
+visible = false
 custom_minimum_size = Vector2(58, 13)
 layout_mode = 1
 anchors_preset = 1

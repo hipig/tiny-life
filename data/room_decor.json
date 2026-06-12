@@ -2731,9 +2731,9 @@
 	  }
 	},
 	{
-	  "id": "wall_floor_2",
+	  "id": "wall_frame_red",
 	  "category": "wall",
-	  "name": "酒红色",
+	  "name": "赤莓",
 	  "price": 180,
 	  "preview_asset": {
 		"type": "atlas_region",
@@ -2802,9 +2802,9 @@
 	  }
 	},
 	{
-	  "id": "wall_floor_3",
+	  "id": "wall_frame_orange",
 	  "category": "wall",
-	  "name": "三层绿墙",
+	  "name": "暖橙",
 	  "price": 180,
 	  "preview_asset": {
 		"type": "atlas_region",
@@ -2825,137 +2825,208 @@
 		"body_top_edge_tiles": [
 		  [
 			3,
-			9
+			8
 		  ]
 		],
 		"body_top_right_corner_tile": [
 		  5,
-		  9
+		  8
 		],
 		"body_left_edge_tiles": [
 		  [
 			1,
-			10
+			9
 		  ]
 		],
 		"body_left_door_edge_tiles": [
 		  [
 			2,
-			10
+			9
 		  ]
 		],
 		"body_right_door_edge_tiles": [
 		  [
 			4,
-			10
+			9
 		  ]
 		],
 		"body_right_edge_tiles": [
 		  [
 			5,
-			10
+			9
 		  ]
 		],
 		"body_bottom_left_corner_tile": [
 		  1,
-		  11
+		  10
 		],
 		"body_bottom_edge_tiles": [
 		  [
 			2,
-			11
+			10
 		  ]
 		],
 		"body_bottom_right_corner_tile": [
 		  5,
-		  11
+		  10
 		]
 	  }
 	},
 	{
-	  "id": "wall_floor_4",
+	  "id": "wall_frame_teal",
 	  "category": "wall",
-	  "name": "四层粉墙",
+	  "name": "青绿",
 	  "price": 180,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
 		"region": [
+		  48,
+		  192,
 		  16,
-		  208,
-		  80,
-		  48
+		  16
 		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
 		"body_top_left_corner_tile": [
 		  1,
-		  13
+		  11
 		],
 		"body_top_edge_tiles": [
 		  [
 			3,
-			13
+			11
 		  ]
 		],
 		"body_top_right_corner_tile": [
 		  5,
-		  13
+		  11
 		],
 		"body_left_edge_tiles": [
 		  [
 			1,
-			14
+			12
 		  ]
 		],
 		"body_left_door_edge_tiles": [
 		  [
 			2,
-			14
+			12
 		  ]
 		],
 		"body_right_door_edge_tiles": [
 		  [
 			4,
-			14
+			12
 		  ]
 		],
 		"body_right_edge_tiles": [
 		  [
 			5,
-			14
+			12
 		  ]
 		],
 		"body_bottom_left_corner_tile": [
 		  1,
-		  15
+		  13
 		],
 		"body_bottom_edge_tiles": [
 		  [
 			2,
-			15
+			13
 		  ]
 		],
 		"body_bottom_right_corner_tile": [
 		  5,
-		  15
+		  13
 		]
 	  }
 	},
 	{
-	  "id": "wall_floor_5",
+	  "id": "wall_frame_indigo",
 	  "category": "wall",
-	  "name": "五层深墙",
+	  "name": "靛蓝",
 	  "price": 180,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
 		"region": [
+		  48,
+		  240,
 		  16,
-		  272,
-		  80,
-		  48
+		  16
+		]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [
+		  1,
+		  14
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			14
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  14
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			15
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			15
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			15
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			15
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  16
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			16
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  16
+		]
+	  }
+	},
+	{
+	  "id": "wall_frame_purple",
+	  "category": "wall",
+	  "name": "紫藤",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [
+		  48,
+		  288,
+		  16,
+		  16
 		]
 	  },
 	  "theme": {
@@ -3015,73 +3086,144 @@
 	  }
 	},
 	{
-	  "id": "wall_floor_6",
+	  "id": "wall_frame_magenta",
 	  "category": "wall",
-	  "name": "六层蓝墙",
+	  "name": "玫红",
 	  "price": 180,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
 		"region": [
-		  16,
+		  48,
 		  336,
-		  80,
-		  48
+		  16,
+		  16
 		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
 		"body_top_left_corner_tile": [
 		  1,
-		  21
+		  20
 		],
 		"body_top_edge_tiles": [
 		  [
 			3,
-			21
+			20
 		  ]
 		],
 		"body_top_right_corner_tile": [
 		  5,
-		  21
+		  20
 		],
 		"body_left_edge_tiles": [
 		  [
 			1,
-			22
+			21
 		  ]
 		],
 		"body_left_door_edge_tiles": [
 		  [
 			2,
-			22
+			21
 		  ]
 		],
 		"body_right_door_edge_tiles": [
 		  [
 			4,
-			22
+			21
 		  ]
 		],
 		"body_right_edge_tiles": [
 		  [
 			5,
-			22
+			21
 		  ]
 		],
 		"body_bottom_left_corner_tile": [
 		  1,
-		  23
+		  22
 		],
 		"body_bottom_edge_tiles": [
 		  [
 			2,
-			23
+			22
 		  ]
 		],
 		"body_bottom_right_corner_tile": [
 		  5,
+		  22
+		]
+	  }
+	},
+	{
+	  "id": "wall_frame_gray",
+	  "category": "wall",
+	  "name": "石灰",
+	  "price": 180,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [
+		  48,
+		  384,
+		  16,
+		  16
+		]
+	  },
+	  "theme": {
+		"wall_body_source_id": 0,
+		"body_top_left_corner_tile": [
+		  1,
 		  23
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			23
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  23
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			24
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			24
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			24
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			24
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  25
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			25
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  25
 		]
 	  }
 	},

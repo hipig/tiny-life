@@ -6,24 +6,24 @@ const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 
 @onready var left_content_root: Control = $LeftContent
 @onready var left_room: Room = $LeftContent/LeftRoom
+@onready var left_build_slot: BuildSlot = $LeftContent/LeftBuildSlot
 @onready var left_public_area: PublicAreaShell = $LeftContent/LeftPublicArea
 @onready var service_core: FloorServiceCore = $FloorServiceCore
 @onready var right_content_root: Control = $RightContent
 @onready var right_room: Room = $RightContent/RightRoom
+@onready var right_build_slot: BuildSlot = $RightContent/RightBuildSlot
 @onready var right_public_area: PublicAreaShell = $RightContent/RightPublicArea
 
 var service_width := 0.0
 var default_frame_tiles := Vector2i.ZERO
 var floor_index := 0
-var show_roof_on_top_room := true
 
 func _ready() -> void:
 	_bind_scene_config()
 
-func setup(index: int, show_roof := true) -> void:
+func setup(index: int) -> void:
 	floor_index = index
 	name = "Floor_%d" % floor_index
-	show_roof_on_top_room = show_roof
 	_bind_scene_config()
 	var floor_size := _floor_size()
 	custom_minimum_size = floor_size
@@ -52,13 +52,16 @@ func get_active_public_areas() -> Array[PublicAreaShell]:
 func _apply_side(side: String, floor_data: Dictionary) -> void:
 	var root := left_content_root if side == "left" else right_content_root
 	var room_node := left_room if side == "left" else right_room
+	var build_slot_node := left_build_slot if side == "left" else right_build_slot
 	var public_area_node := left_public_area if side == "left" else right_public_area
+	room_node.visible = false
+	build_slot_node.visible = false
+	public_area_node.visible = false
 	var public_area := _public_area_for_side(side, floor_data)
 	if not public_area.is_empty():
 		var area_size := _content_pixel_size(public_area, false)
 		root.custom_minimum_size = area_size
 		root.size = area_size
-		room_node.visible = false
 		public_area_node.visible = true
 		public_area_node.name = "PublicArea_%s" % str(public_area["id"])
 		public_area_node.custom_minimum_size = area_size
@@ -76,21 +79,27 @@ func _apply_side(side: String, floor_data: Dictionary) -> void:
 		)
 		return
 	var room_data := _room_config_for_side(side)
-	if room_data.is_empty() or not _room_is_visible(room_data):
+	if room_data.is_empty() or not _room_or_slot_is_visible(room_data):
 		root.custom_minimum_size = _room_pixel_size_from_frame_tiles(default_frame_tiles)
 		root.size = root.custom_minimum_size
-		room_node.visible = false
-		public_area_node.visible = false
 		return
-	var room_size := _content_pixel_size(room_data, true)
+	var built_room := _room_is_visible(room_data)
+	var room_size := _content_pixel_size(room_data, built_room)
 	root.custom_minimum_size = room_size
 	root.size = room_size
-	public_area_node.visible = false
-	room_node.visible = true
-	room_node.name = "Room_%s" % str(room_data["id"])
-	room_node.custom_minimum_size = room_size
-	room_node.size = room_size
-	room_node.setup(str(room_data["id"]), show_roof_on_top_room, _room_edge_sides(str(room_data["layout_side"]).strip_edges().to_lower()))
+	var edge_sides := _room_edge_sides(str(room_data["layout_side"]).strip_edges().to_lower())
+	if built_room:
+		room_node.visible = true
+		room_node.name = "Room_%s" % str(room_data["id"])
+		room_node.custom_minimum_size = room_size
+		room_node.size = room_size
+		room_node.setup(str(room_data["id"]), edge_sides)
+	else:
+		build_slot_node.visible = true
+		build_slot_node.name = "BuildSlot_%s" % str(room_data["id"])
+		build_slot_node.custom_minimum_size = room_size
+		build_slot_node.size = room_size
+		build_slot_node.setup(str(room_data["id"]), edge_sides)
 
 func _apply_service_core(floor_data: Dictionary) -> void:
 	var floor_height := _floor_height()
@@ -139,7 +148,7 @@ func _all_content_configs(floor_data: Dictionary) -> Array:
 	var result: Array = []
 	for room_data in ConfigManager.get_room_configs_for_floor(floor_index):
 		var room: Dictionary = room_data
-		if _room_is_visible(room):
+		if _room_or_slot_is_visible(room):
 			result.append(room)
 	return result
 
@@ -183,6 +192,9 @@ func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
 func _room_is_visible(room_data: Dictionary) -> bool:
 	var room := GameState.get_room(str(room_data["id"]))
 	return not room.is_empty() and bool(room["unlocked"])
+
+func _room_or_slot_is_visible(room_data: Dictionary) -> bool:
+	return _room_is_visible(room_data) or GameState.is_room_buildable(str(room_data["id"]))
 
 func _service_edge_sides() -> Dictionary:
 	return {

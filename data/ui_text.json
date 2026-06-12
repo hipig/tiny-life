@@ -12,7 +12,7 @@
   "toast_furniture_recycled":"回收成功，返还 %d 金币",
   "toast_room_decor_applied":"已应用 %s",
   "toast_tenant_recruited":"租客已入住",
-  "toast_floor_built":"第 %d 层已建成",
+  "toast_room_built":"%s 已建成",
   "toast_offline_double_claim":"双倍领取 %d 金币",
   "toast_offline_claim":"领取 %d 金币",
   "toast_tenant_applications_refreshed":"租客申请已刷新",

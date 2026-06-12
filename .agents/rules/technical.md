@@ -78,7 +78,7 @@ MVP 可以先使用 Mock Provider，但 Provider 接口应保持稳定。
 - 家具移动后。
 - 家具回收后。
 - 招募租客后。
-- 建造楼层后。
+- 建造房间后。
 - 完成任务后。
 - 应用暂停/退出时。
 
@@ -91,10 +91,10 @@ coins
 total_rent_per_minute
 apartment_level
 apartment_exp
-highest_built_floor
 rooms
 tenants
 tasks
+stats
 last_save_timestamp
 ```
 
@@ -116,7 +116,7 @@ furniture_recycled(room_id, furniture_id)
 tenant_recruited(tenant_id, room_id)
 tenant_satisfaction_changed(tenant_id, value)
 tenant_behavior_observed(tenant_id, behavior)
-floor_built(floor_index)
+room_built(room_id, floor_index)
 task_updated(task_id)
 task_completed(task_id)
 ```
@@ -172,8 +172,11 @@ GDScript 在 UI 中只负责：
 - 1F 入口门属于左侧大厅公共区的左外墙，不属于中央电梯厅或前台服务核心；一楼不配置出租房间。
 - 所有门所在墙体必须按“对应上角 + 竖向长边 + 门洞短边 + 独立门场景 + 下边”的结构组织。左墙门使用左上角，右墙门使用右上角。
 - 01 房在右墙开门且不镜像；02 房在左墙开门且镜像。门已外开，家具摆放和租客站位不得再剔除门口格。
-- 施工槽必须与建成楼层同宽同高，并保持左房 / 电梯厅 / 右房的横向结构，避免建造前后宽度跳变。
-- `ApartmentBuilding.tscn` 必须预摆所有当前配置楼层的 `Floor_X` 节点，以及 2F 以上对应的 `BuildSlot_X` 节点；`Floor.tscn` 必须预摆 `LeftRoom`、`RightRoom`、`LeftPublicArea`、`RightPublicArea` 和 `FloorServiceCore`。
+- 房间是建造状态权威：`rooms[id].unlocked` 表示该房间已建成；`floors.json` 不保存房间建造价格或等级门槛。
+- 待建房间槽必须与同侧建成房间同宽同高，且放在 `Floor.tscn` 的左/右房间位中；待建房间所在楼层仍必须显示中央电梯厅和电梯门。
+- 整栋公寓只允许一个独立屋顶，由 `ApartmentBuilding.tscn` 的 `ApartmentRoof` 节点渲染；房间、待建槽和电梯厅不得各自绘制屋顶。
+- 公寓屋顶配置来自 `apartment_visuals.json`，必须支持主题、`total_width_tiles` 和 `offset_pixels`；屋顶锚定最高可见楼层上方，可按配置比公寓主体左右各宽一个格子并调整 Y 方向位置。
+- `ApartmentBuilding.tscn` 必须预摆所有当前配置楼层的 `Floor_X` 节点；`Floor.tscn` 必须预摆 `LeftRoom`、`RightRoom`、`LeftBuildSlot`、`RightBuildSlot`、`LeftPublicArea`、`RightPublicArea` 和 `FloorServiceCore`。
 
 ## 像素视口基线
 

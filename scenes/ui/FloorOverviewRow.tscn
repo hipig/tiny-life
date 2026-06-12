@@ -60,16 +60,28 @@ layout_mode = 2
 
 [node name="DetailTemplate" type="Label" parent="TemplateText"]
 layout_mode = 1
-text = "%s  建造费 %d\n房间 %d 间，入住 %d 人，本层租金 %.1f / 分钟"
+text = "%s  已建 %d/%d 间  待建费 %d\n入住 %d 人，本层租金 %.1f / 分钟"
 
 [node name="BuiltStateText" type="Label" parent="TemplateText"]
 layout_mode = 1
 text = "已建成"
 
-[node name="BuildableStateText" type="Label" parent="TemplateText"]
+[node name="BuildableStateTemplate" type="Label" parent="TemplateText"]
 layout_mode = 1
-text = "可建造"
+text = "可建造 %d 间"
+
+[node name="PartialStateText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "建设中"
 
 [node name="LockedStateTemplate" type="Label" parent="TemplateText"]
 layout_mode = 1
 text = "Lv.%d 解锁"
+
+[node name="BlockedStateText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "需先完成下层"
+
+[node name="PublicStateText" type="Label" parent="TemplateText"]
+layout_mode = 1
+text = "公共区域"

@@ -6,6 +6,7 @@
   "autosave_seconds": 60.0,
   "coin_popup_interval": 6.0,
   "recruit_application_count": 3,
+  "room_build_exp": 50,
   "tenant_ai": {
     "away_chance": 0.12,
     "away_seconds": 18,

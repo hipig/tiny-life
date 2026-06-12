@@ -1,6 +1,6 @@
 extends Node
 
-const SAVE_SCHEMA_VERSION := 3
+const SAVE_SCHEMA_VERSION := 4
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
 const IDLE_TENANT_BEHAVIOR := "idle"
@@ -88,6 +88,7 @@ const FURNITURE_INSTANCE_KEYS := [
 const STATS_KEYS := [
 	"furniture_placed_count",
 	"tenant_recruited_count",
+	"room_built_count",
 	"offline_claimed_count"
 ]
 
@@ -97,7 +98,6 @@ const SAVE_KEYS := [
 	"total_rent_per_minute",
 	"apartment_level",
 	"apartment_exp",
-	"highest_built_floor",
 	"rooms",
 	"tenants",
 	"tasks",
@@ -109,7 +109,6 @@ var coins: int = 0
 var total_rent_per_minute: float = 0.0
 var apartment_level: int = 1
 var apartment_exp: int = 0
-var highest_built_floor: int = 1
 var last_save_timestamp: int = 0
 
 var rooms: Dictionary = {}
@@ -125,7 +124,6 @@ func reset_new_game() -> void:
 	total_rent_per_minute = 0.0
 	apartment_level = 1
 	apartment_exp = 0
-	highest_built_floor = _initial_highest_built_floor()
 	last_save_timestamp = TimeManager.now_unix()
 	rooms = _new_room_states()
 	tenants = _new_tenant_states()
@@ -133,6 +131,7 @@ func reset_new_game() -> void:
 	stats = {
 		"furniture_placed_count": 0,
 		"tenant_recruited_count": 0,
+		"room_built_count": 0,
 		"offline_claimed_count": 0
 	}
 
@@ -192,6 +191,70 @@ func get_unlocked_rooms_on_floor(floor_index: int) -> Array:
 		var room_data: Dictionary = room
 		if int(room_data["floor_index"]) == floor_index and bool(room_data["unlocked"]):
 			result.append(room_data)
+	return result
+
+func get_rooms_on_floor(floor_index: int) -> Array:
+	var result: Array = []
+	for room in rooms.values():
+		var room_data: Dictionary = room
+		if int(room_data["floor_index"]) == floor_index:
+			result.append(room_data)
+	return result
+
+func get_unlocked_room_count_on_floor(floor_index: int) -> int:
+	return get_unlocked_rooms_on_floor(floor_index).size()
+
+func get_buildable_rooms_on_floor(floor_index: int) -> Array:
+	var result: Array = []
+	for room_config in ConfigManager.get_room_configs_for_floor(floor_index):
+		var room_data: Dictionary = room_config
+		if is_room_buildable(str(room_data["id"])):
+			result.append(room_data)
+	return result
+
+func is_room_buildable(room_id: String) -> bool:
+	if not rooms.has(room_id) or not ConfigManager.room_by_id.has(room_id):
+		return false
+	var room: Dictionary = rooms[room_id]
+	if bool(room["unlocked"]):
+		return false
+	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
+	if apartment_level < int(room_config["required_apartment_level"]):
+		return false
+	return _lower_room_floors_complete(int(room_config["floor_index"]))
+
+func is_floor_complete(floor_index: int) -> bool:
+	var room_configs := ConfigManager.get_room_configs_for_floor(floor_index)
+	if room_configs.is_empty():
+		return bool(ConfigManager.get_floor_data(floor_index)["initial_built"])
+	for room_config in room_configs:
+		var data: Dictionary = room_config
+		var room_id := str(data["id"])
+		if not rooms.has(room_id) or not bool((rooms[room_id] as Dictionary)["unlocked"]):
+			return false
+	return true
+
+func is_floor_visible(floor_index: int) -> bool:
+	var floor_data := ConfigManager.get_floor_data(floor_index)
+	var public_areas: Array = floor_data["public_areas"]
+	if bool(floor_data["initial_built"]) or not public_areas.is_empty():
+		return true
+	for room_config in ConfigManager.get_room_configs_for_floor(floor_index):
+		var data: Dictionary = room_config
+		var room_id := str(data["id"])
+		if rooms.has(room_id) and bool((rooms[room_id] as Dictionary)["unlocked"]):
+			return true
+		if is_room_buildable(room_id):
+			return true
+	return false
+
+func get_highest_visible_floor() -> int:
+	var result := 1
+	for floor in ConfigManager.floors:
+		var floor_data: Dictionary = floor
+		var floor_index := int(floor_data["floor_index"])
+		if is_floor_visible(floor_index):
+			result = max(result, floor_index)
 	return result
 
 func unlock_room(room_id: String) -> bool:
@@ -404,25 +467,23 @@ func set_tenant_presence(tenant_id: String, presence_state: String, away_until_t
 	if not behavior.is_empty():
 		GameEvents.tenant_behavior_changed.emit(tenant_id, behavior)
 
-func build_floor(floor_index: int) -> bool:
-	var floor: Dictionary = ConfigManager.get_floor_data(floor_index)
-	if floor_index != highest_built_floor + 1:
+func build_room(room_id: String) -> bool:
+	if not is_room_buildable(room_id):
 		return false
-	if apartment_level < int(floor["required_apartment_level"]):
-		return false
-	var cost: int = int(floor["build_cost"])
+	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
+	var cost: int = int(room_config["build_cost"])
 	if not spend_coins(cost):
 		return false
-	highest_built_floor = floor_index
-	for room_id in rooms.keys():
-		var room: Dictionary = rooms[room_id]
-		var room_config: Dictionary = ConfigManager.get_room_config(str(room_id))
-		if int(room["floor_index"]) <= highest_built_floor and bool(room_config["initial_unlocked"]):
-			room["unlocked"] = true
-			rooms[room_id] = room
-	GameEvents.floor_built.emit(floor_index)
-	TaskManager.notify_event("floor_built", {"floor_index": floor_index})
-	add_apartment_exp(50)
+	var room: Dictionary = rooms[room_id]
+	room["unlocked"] = true
+	rooms[room_id] = room
+	stats["room_built_count"] = int(stats["room_built_count"]) + 1
+	var floor_index := int(room_config["floor_index"])
+	GameEvents.room_built.emit(room_id, floor_index)
+	GameEvents.room_unlocked.emit(room_id)
+	GameEvents.room_updated.emit(room_id)
+	TaskManager.notify_event("room_built", {"room_id": room_id, "floor_index": floor_index})
+	add_apartment_exp(int(ConfigManager.get_economy_value("room_build_exp")))
 	return true
 
 func observe_tenant_behavior(tenant_id: String, need: String) -> void:
@@ -448,7 +509,6 @@ func to_save_data() -> Dictionary:
 		"total_rent_per_minute": total_rent_per_minute,
 		"apartment_level": apartment_level,
 		"apartment_exp": apartment_exp,
-		"highest_built_floor": highest_built_floor,
 		"rooms": rooms,
 		"tenants": tenants,
 		"tasks": tasks,
@@ -470,7 +530,6 @@ func from_save_data(data: Dictionary) -> void:
 	total_rent_per_minute = float(data["total_rent_per_minute"])
 	apartment_level = int(data["apartment_level"])
 	apartment_exp = int(data["apartment_exp"])
-	highest_built_floor = int(data["highest_built_floor"])
 	last_save_timestamp = int(data["last_save_timestamp"])
 	rooms = (data["rooms"] as Dictionary).duplicate(true)
 	tenants = (data["tenants"] as Dictionary).duplicate(true)
@@ -483,13 +542,17 @@ func from_save_data(data: Dictionary) -> void:
 	GameEvents.apartment_level_changed.emit(apartment_level)
 	GameEvents.state_loaded.emit()
 
-func _initial_highest_built_floor() -> int:
-	var result := 1
+func _lower_room_floors_complete(floor_index: int) -> bool:
 	for floor in ConfigManager.floors:
 		var floor_data: Dictionary = floor
-		if bool(floor_data["initial_built"]):
-			result = max(result, int(floor_data["floor_index"]))
-	return result
+		var lower_floor_index := int(floor_data["floor_index"])
+		if lower_floor_index >= floor_index:
+			continue
+		if ConfigManager.get_room_configs_for_floor(lower_floor_index).is_empty():
+			continue
+		if not is_floor_complete(lower_floor_index):
+			return false
+	return true
 
 func _new_room_states() -> Dictionary:
 	var result := {}
@@ -511,7 +574,7 @@ func _new_room_states() -> Dictionary:
 			"wallpaper_id": str(room_data["default_wallpaper_id"]),
 			"wall_style_id": str(room_data["default_wall_style_id"]),
 			"door_style_id": str(room_data["default_door_style_id"]),
-			"unlocked": bool(room_data["initial_unlocked"]) and floor_index <= highest_built_floor,
+			"unlocked": bool(room_data["initial_unlocked"]),
 			"tenant_id": "",
 			"furniture_instances": [],
 			"score": 0,
@@ -609,7 +672,7 @@ func _save_validation_error(data: Dictionary) -> String:
 		return key_error
 	if not _is_number(data["save_schema_version"]) or int(data["save_schema_version"]) != SAVE_SCHEMA_VERSION:
 		return "schema version must be %d" % SAVE_SCHEMA_VERSION
-	for numeric_key in ["coins", "total_rent_per_minute", "apartment_level", "apartment_exp", "highest_built_floor", "last_save_timestamp"]:
+	for numeric_key in ["coins", "total_rent_per_minute", "apartment_level", "apartment_exp", "last_save_timestamp"]:
 		if not _is_number(data[numeric_key]):
 			return "save field '%s' must be numeric" % numeric_key
 	if not (data["rooms"] is Dictionary):

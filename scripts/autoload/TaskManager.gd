@@ -42,9 +42,9 @@ func _apply_event(task_config: Dictionary, task_state: Dictionary, event_name: S
 			if event_name == "apartment_level_reached":
 				task_state["progress"] = int(params.get("level", GameState.apartment_level))
 				return true
-		"floor_built":
-			if event_name == "floor_built" and int(params.get("floor_index", 0)) == int(task_config.get("floor_index", 0)):
-				task_state["progress"] = 1
+		"room_built_count":
+			if event_name == "room_built":
+				task_state["progress"] = int(GameState.stats.get("room_built_count", 0))
 				return true
 		"tenant_behavior_observed":
 			if event_name == "tenant_behavior_observed" and str(params.get("behavior", "")) == str(task_config.get("behavior", "")):

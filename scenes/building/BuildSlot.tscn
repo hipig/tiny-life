@@ -1,7 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://cxlvg6wbp65ji"]
 
-[ext_resource type="Script" path="res://scripts/building/BuildSlot.gd" id="1_slot"]
-[ext_resource type="PackedScene" path="res://scenes/building/BuildSlotShell.tscn" id="2_slot_shell"]
+[ext_resource type="Script" uid="uid://b24si0etltvfp" path="res://scripts/building/BuildSlot.gd" id="1_slot"]
+[ext_resource type="PackedScene" uid="uid://b1pm6ioj0rxdr" path="res://scenes/building/BuildSlotShell.tscn" id="2_slot_shell"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot_normal"]
 bg_color = Color(0, 0, 0, 0)
@@ -9,39 +9,42 @@ border_color = Color(0, 0, 0, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot_hover"]
 bg_color = Color(1, 0.91, 0.58, 0.1)
-border_color = Color(0.945098, 0.827451, 0.478431, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.945098, 0.827451, 0.478431, 1)
 
-[node name="BuildSlot" type="Button"]
-custom_minimum_size = Vector2(240, 64)
+[node name="BuildSlot" type="Button" unique_id=1317966287]
+custom_minimum_size = Vector2(96, 64)
 theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_styles/normal = SubResource("StyleBoxFlat_slot_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_slot_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_slot_hover")
-theme_override_styles/focus = SubResource("StyleBoxFlat_slot_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_slot_hover")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_slot_normal")
+theme_override_styles/focus = SubResource("StyleBoxFlat_slot_hover")
 script = ExtResource("1_slot")
 
-[node name="SceneConfig" type="Node" parent="."]
-metadata/service_width = 48.0
+[node name="SceneConfig" type="Node" parent="." unique_id=1935951529]
 metadata/default_frame_tiles = Vector2i(6, 4)
 metadata/wall_inset = 9.0
 metadata/floor_height = 22.0
 metadata/roof_height = 13.0
 
-[node name="TemplateText" type="Control" parent="."]
+[node name="TemplateText" type="Control" parent="." unique_id=108201977]
 visible = false
+anchors_preset = 0
 mouse_filter = 2
 
-[node name="LockedLabelTemplate" type="Label" parent="TemplateText"]
-text = "%s  Lv.%d 解锁"
+[node name="LockedLabelTemplate" type="Label" parent="TemplateText" unique_id=1196747653]
+layout_mode = 0
+text = "Lv.%d"
 
-[node name="BuildableLabelTemplate" type="Label" parent="TemplateText"]
-text = "%s  待修建  金币 %d"
+[node name="BuildableLabelTemplate" type="Label" parent="TemplateText" unique_id=1026892264]
+layout_mode = 0
+text = "%d"
 
-[node name="BuildSlotShell" parent="." instance=ExtResource("2_slot_shell")]
+[node name="BuildSlotShell" parent="." unique_id=608711534 instance=ExtResource("2_slot_shell")]
+anchors_preset = 0

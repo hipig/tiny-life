@@ -96,7 +96,7 @@ func _build_summary_tab() -> void:
 	level_card.set_value("Lv.%d" % GameState.apartment_level)
 	exp_card.set_value("%d" % GameState.apartment_exp)
 	rent_card.set_value(rent_value_template % GameState.total_rent_per_minute)
-	floor_card.set_value(floor_value_template % GameState.highest_built_floor)
+	floor_card.set_value(floor_value_template % GameState.get_highest_visible_floor())
 	room_card.set_value(room_count_template % GameState.get_unlocked_rooms().size())
 	tenant_card.set_value(tenant_count_template % _tenant_count())
 	satisfaction_card.set_value(_average_satisfaction_text())

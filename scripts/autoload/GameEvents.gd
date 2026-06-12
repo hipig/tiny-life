@@ -17,7 +17,7 @@ signal tenant_satisfaction_changed(tenant_id: String, value: int)
 signal tenant_behavior_changed(tenant_id: String, behavior: String)
 signal tenant_behavior_observed(tenant_id: String, behavior: String)
 signal tenant_presence_changed(tenant_id: String, presence_state: String)
-signal floor_built(floor_index: int)
+signal room_built(room_id: String, floor_index: int)
 signal task_updated(task_id: String)
 signal task_completed(task_id: String)
 signal state_loaded

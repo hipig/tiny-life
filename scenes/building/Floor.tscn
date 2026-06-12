@@ -1,36 +1,50 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://cui2cyylydsmp"]
 
-[ext_resource type="Script" path="res://scripts/building/Floor.gd" id="1_floor"]
+[ext_resource type="Script" uid="uid://f3lhlu8jy6f" path="res://scripts/building/Floor.gd" id="1_floor"]
 [ext_resource type="PackedScene" path="res://scenes/building/FloorServiceCore.tscn" id="2_service_core"]
 [ext_resource type="PackedScene" path="res://scenes/building/Room.tscn" id="3_room"]
 [ext_resource type="PackedScene" path="res://scenes/building/PublicAreaShell.tscn" id="4_public_area"]
+[ext_resource type="PackedScene" uid="uid://cxlvg6wbp65ji" path="res://scenes/building/BuildSlot.tscn" id="5_build_slot"]
 
-[node name="Floor" type="HBoxContainer"]
+[node name="Floor" type="HBoxContainer" unique_id=701569882]
 theme_override_constants/separation = 0
 script = ExtResource("1_floor")
 
-[node name="SceneConfig" type="Node" parent="."]
+[node name="SceneConfig" type="Node" parent="." unique_id=746361471]
 metadata/service_width = 48.0
 metadata/default_frame_tiles = Vector2i(6, 4)
 
-[node name="LeftContent" type="Control" parent="."]
+[node name="LeftContent" type="Control" parent="." unique_id=1741415530]
 custom_minimum_size = Vector2(96, 64)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LeftRoom" parent="LeftContent" instance=ExtResource("3_room")]
+[node name="LeftRoom" parent="LeftContent" unique_id=1379029457 instance=ExtResource("3_room")]
+layout_mode = 0
 
-[node name="LeftPublicArea" parent="LeftContent" instance=ExtResource("4_public_area")]
+[node name="LeftBuildSlot" parent="LeftContent" unique_id=476938184 instance=ExtResource("5_build_slot")]
 visible = false
+layout_mode = 0
 
-[node name="FloorServiceCore" parent="." instance=ExtResource("2_service_core")]
+[node name="LeftPublicArea" parent="LeftContent" unique_id=1751768244 instance=ExtResource("4_public_area")]
+visible = false
+anchors_preset = 0
 
-[node name="RightContent" type="Control" parent="."]
+[node name="FloorServiceCore" parent="." unique_id=382105383 instance=ExtResource("2_service_core")]
+layout_mode = 2
+
+[node name="RightContent" type="Control" parent="." unique_id=212743287]
 custom_minimum_size = Vector2(96, 64)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="RightRoom" parent="RightContent" instance=ExtResource("3_room")]
+[node name="RightRoom" parent="RightContent" unique_id=381947525 instance=ExtResource("3_room")]
+layout_mode = 0
 
-[node name="RightPublicArea" parent="RightContent" instance=ExtResource("4_public_area")]
+[node name="RightBuildSlot" parent="RightContent" unique_id=1777936518 instance=ExtResource("5_build_slot")]
 visible = false
+layout_mode = 0
+
+[node name="RightPublicArea" parent="RightContent" unique_id=901466764 instance=ExtResource("4_public_area")]
+visible = false
+anchors_preset = 0

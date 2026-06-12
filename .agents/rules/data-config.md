@@ -10,7 +10,7 @@
 - 家具属性。
 - 家具回收比例。
 - 家具标签和互动数据。
-- 楼层价格和等级要求。
+- 房间建造价格和等级要求。
 - 租客支付倍率。
 - 租客偏好。
 - 任务奖励和目标。
@@ -26,6 +26,7 @@ data/furniture.json
 data/tenants.json
 data/rooms.json
 data/floors.json
+data/apartment_visuals.json
 data/tasks.json
 data/economy.json
 data/apartment_levels.json
@@ -87,6 +88,8 @@ layout_side
 door_side
 door_mirrored
 door_visual_offset
+required_apartment_level
+build_cost
 unlocked
 level
 frame_tiles
@@ -120,15 +123,24 @@ floor_index
 display_name
 visual_role
 initial_built
-required_apartment_level
-build_cost
 service_label
 public_areas
 floor_icon_asset
 build_icon_asset
 ```
 
-核心公寓结构采用 scene-first：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell` 由 `.tscn` 预摆节点定义结构，配置只绑定 ID、尺寸、门朝向、解锁和装饰数据。`rooms.json`、`floors.json` 和 `public_areas` 不允许使用 `*_scene_path` 字段选择运行时模板。
+公寓视觉配置必须包含：
+
+```text
+roof_theme.wall_edge_source_id
+roof_theme.roof_left_tile
+roof_theme.roof_tiles
+roof_theme.roof_right_tile
+roof_theme.total_width_tiles
+roof_theme.offset_pixels
+```
+
+核心公寓结构采用 scene-first：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell` 由 `.tscn` 预摆节点定义结构，配置只绑定 ID、尺寸、门朝向、解锁、建造成本、建造等级和装饰数据。`rooms.json`、`floors.json` 和 `public_areas` 不允许使用 `*_scene_path` 字段选择运行时模板。楼层配置只负责整层结构、服务核心、电梯厅和公区，不得配置房间建造价格、房间建造等级要求或屋顶资源；整栋公寓的唯一屋顶来自 `apartment_visuals.json`。
 
 ## 房间装饰数据
 
@@ -240,7 +252,7 @@ MVP 离线收益上限：
 - 招募租客任务。
 - 租金目标任务。
 - 公寓等级任务。
-- 建造楼层任务。
+- 建造房间任务。
 - 观察租客行为任务。
 
 任务完成后应发放配置中的金币和公寓经验奖励。

@@ -72,7 +72,7 @@ grow_vertical = 0
 script = ExtResource("2_build")
 
 [node name="TitleLabel" parent="PanelBox/Header" index="0"]
-text = "建造楼层"
+text = "建造房间"
 
 [node name="StatsGrid" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
 layout_mode = 2
@@ -149,7 +149,7 @@ layout_mode = 2
 
 [node name="TitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
 layout_mode = 1
-text = "建造第 %d 层"
+text = "建造 %s"
 
 [node name="CanBuildTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
 layout_mode = 1
@@ -157,7 +157,7 @@ text = "可以建造"
 
 [node name="CanBuildDetail" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
 layout_mode = 1
-text = "建成后会开放这一层的房间。"
+text = "建成后会开放这个房间。"
 
 [node name="CanBuildIconFile" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
 layout_mode = 1

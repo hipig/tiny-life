@@ -145,6 +145,16 @@ func render_room_skeleton(frame_tiles := DEFAULT_FRAME_TILES, theme: Dictionary 
 	set_roof_visible(show_roof)
 	set_construction_visible(show_construction)
 
+func render_roof(total_width_tiles: int, theme: Dictionary = {}) -> void:
+	current_frame_tiles = Vector2i(maxi(1, total_width_tiles), 1)
+	current_roof_visible = true
+	current_construction_visible = false
+	_apply_theme(theme)
+	_clear_layers()
+	_paint_roof(0)
+	set_roof_visible(true)
+	set_construction_visible(false)
+
 func set_roof_visible(value: bool) -> void:
 	current_roof_visible = value
 	roof_layer.visible = value
@@ -290,7 +300,7 @@ func _paint_room_window() -> void:
 	)
 	infrastructure_layer.set_cell(cell, current_wall_edge_source_id, current_window_tile)
 
-func _paint_roof() -> void:
+func _paint_roof(row := -1) -> void:
 	for x in range(current_frame_tiles.x):
 		var atlas := current_roof_left_tile
 		if x == 0:
@@ -299,7 +309,7 @@ func _paint_roof() -> void:
 			atlas = current_roof_right_tile
 		else:
 			atlas = _cycled_tile(current_roof_tiles, x - 1, current_roof_left_tile)
-		roof_layer.set_cell(Vector2i(x, -1), current_wall_edge_source_id, atlas)
+		roof_layer.set_cell(Vector2i(x, row), current_wall_edge_source_id, atlas)
 
 func _paint_construction() -> void:
 	var left_cell := Vector2i(

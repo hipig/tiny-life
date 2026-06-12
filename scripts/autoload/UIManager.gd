@@ -21,7 +21,7 @@ signal state_changed(state: int)
 signal room_panel_requested(room_id: String)
 signal furniture_shop_requested(room_id: String)
 signal tenant_panel_requested(room_id: String, mode: String)
-signal build_confirm_requested(floor_index: int)
+signal build_confirm_requested(room_id: String)
 signal panel_requested(panel_name: String)
 signal placement_requested(furniture_id: String, room_id: String)
 signal move_existing_requested(room_id: String, instance_id: String)
@@ -71,9 +71,9 @@ func open_tenant_panel(room_id: String) -> void:
 	set_state(UIState.TENANT_PANEL)
 	tenant_panel_requested.emit(room_id, "view")
 
-func open_build_confirm(floor_index: int) -> void:
+func open_build_confirm(room_id: String) -> void:
 	set_state(UIState.BUILD_CONFIRM)
-	build_confirm_requested.emit(floor_index)
+	build_confirm_requested.emit(room_id)
 
 func open_apartment_overview() -> void:
 	set_state(UIState.APARTMENT_OVERVIEW)

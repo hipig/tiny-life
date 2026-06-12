@@ -17,7 +17,6 @@ var roof_height := 0.0
 var rent_badge_template := ""
 
 var room_id := ""
-var show_roof_eaves := false
 var room_edge_sides: Dictionary = {}
 var room_shell: RoomShell
 var visual_layer: Control
@@ -39,9 +38,8 @@ func _ready() -> void:
 	if not room_id.is_empty():
 		_rebuild()
 
-func setup(id: String, has_roof_eaves := false, edge_sides: Dictionary = {}) -> void:
+func setup(id: String, edge_sides: Dictionary = {}) -> void:
 	room_id = id
-	show_roof_eaves = has_roof_eaves
 	room_edge_sides = edge_sides.duplicate()
 	if is_inside_tree():
 		_rebuild()
@@ -52,14 +50,15 @@ func _rebuild() -> void:
 	custom_minimum_size = _room_pixel_size()
 	size = custom_minimum_size
 	var room := GameState.get_room(room_id)
-	room_shell.roof_visible = show_roof_eaves
+	var tile_theme := ConfigManager.tile_theme_for_room(room)
+	room_shell.roof_visible = false
 	room_shell.apply_layout(
 		size,
 		wall_inset,
 		floor_height,
 		roof_height,
 		_frame_tiles(),
-		ConfigManager.tile_theme_for_room(room),
+		tile_theme,
 		room_edge_sides,
 		{},
 		_room_door_side(room),
@@ -68,7 +67,7 @@ func _rebuild() -> void:
 		_room_door_visual_offset(room)
 	)
 	room_shell.clear_dynamic_views()
-	room_shell.set_roof_visible(show_roof_eaves)
+	room_shell.set_roof_visible(false)
 	_apply_room_badges(room)
 	_bind_visual_layer(room)
 	_bind_placement_grid_layer()

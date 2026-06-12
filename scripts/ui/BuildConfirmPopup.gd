@@ -1,9 +1,9 @@
 class_name BuildConfirmPopup
 extends "res://scripts/ui/AppPanel.gd"
 
-signal build_confirmed(floor_index: int)
+signal build_confirmed(room_id: String)
 
-var floor_index := 0
+var room_id := ""
 var stats_grid: GridContainer
 var message_root: VBoxContainer
 var cost_card: StatCard
@@ -19,14 +19,15 @@ var insufficient_title := ""
 var insufficient_detail_template := ""
 var insufficient_icon_file := ""
 
-func open(target_floor_index: int) -> void:
-	floor_index = target_floor_index
-	var floor: Dictionary = ConfigManager.get_floor_data(floor_index)
-	var cost := int(floor.get("build_cost", 0))
+func open(target_room_id: String) -> void:
+	room_id = target_room_id
+	var room_config: Dictionary = ConfigManager.get_room_config(room_id)
+	var cost := int(room_config.get("build_cost", 0))
+	var room_name := str(room_config.get("room_name", room_id))
 	setup_panel("", false)
 	_bind_scene_nodes()
 	_bind_scene_text()
-	title_label.text = title_template % floor_index
+	title_label.text = title_template % room_name
 	cost_card.set_value("%d" % cost)
 	coin_card.set_value("%d" % GameState.coins)
 	if GameState.coins < cost:
@@ -37,7 +38,7 @@ func open(target_floor_index: int) -> void:
 		status_row.set_icon(can_build_icon_file)
 		status_row.set_title(can_build_title)
 		status_row.set_detail(can_build_detail)
-	confirm_button.disabled = GameState.coins < cost
+	confirm_button.disabled = GameState.coins < cost or not GameState.is_room_buildable(room_id)
 	if not confirm_button.pressed.is_connected(_on_confirm_pressed):
 		confirm_button.pressed.connect(_on_confirm_pressed)
 
@@ -66,4 +67,4 @@ func _template_text(node_name: String) -> String:
 	return template_label.text
 
 func _on_confirm_pressed() -> void:
-	build_confirmed.emit(floor_index)
+	build_confirmed.emit(room_id)

@@ -24,6 +24,7 @@ var furniture: Array = []
 var tenants: Array = []
 var tenant_regions: Array = []
 var room_decor: Dictionary = {}
+var apartment_visuals: Dictionary = {}
 var room_decor_items: Array = []
 var rooms: Array = []
 var floors: Array = []
@@ -52,6 +53,7 @@ func load_all() -> void:
 	tenants = _load_required_array("res://data/tenants.json")
 	tenant_regions = _load_required_array("res://data/tenant_regions.json")
 	room_decor = _load_required_dict("res://data/room_decor.json")
+	apartment_visuals = _load_required_dict("res://data/apartment_visuals.json")
 	rooms = _load_required_array("res://data/rooms.json")
 	floors = _load_required_array("res://data/floors.json")
 	tasks = _load_required_array("res://data/tasks.json")
@@ -145,6 +147,9 @@ func get_floor_data(index: int) -> Dictionary:
 	_expect(floor_by_index.has(index), "Unknown floor index: %d" % index)
 	return floor_by_index[index]
 
+func apartment_roof_theme() -> Dictionary:
+	return _require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json").duplicate(true)
+
 func get_room_config(id: String) -> Dictionary:
 	return _required_dict_from_index(room_by_id, id, "Room")
 
@@ -218,6 +223,7 @@ func _validate_all() -> void:
 	_validate_furniture()
 	_validate_tenants()
 	_validate_room_decor()
+	_validate_apartment_visuals()
 	_validate_floors()
 	_validate_rooms()
 	_validate_tenant_regions()
@@ -244,7 +250,8 @@ func _validate_economy() -> void:
 		"max_offline_seconds",
 		"autosave_seconds",
 		"coin_popup_interval",
-		"recruit_application_count"
+		"recruit_application_count",
+		"room_build_exp"
 	]:
 		_expect(economy.has(key), "economy.json is missing key '%s'." % key)
 	var tenant_ai: Dictionary = _require_dict(economy, "tenant_ai", "economy.json")
@@ -351,8 +358,10 @@ func _validate_floors() -> void:
 		_require_string(data, "display_name", "floor %d" % floor_index)
 		_require_string(data, "visual_role", "floor %d" % floor_index)
 		_require_bool(data, "initial_built", "floor %d" % floor_index)
-		_require_number(data, "required_apartment_level", "floor %d" % floor_index)
-		_require_number(data, "build_cost", "floor %d" % floor_index)
+		_expect(not data.has("required_apartment_level"), "floor %d must not configure required_apartment_level; room config owns build gating." % floor_index)
+		_expect(not data.has("build_cost"), "floor %d must not configure build_cost; room config owns build cost." % floor_index)
+		_expect(not data.has("roof_asset"), "floor %d must not configure roof_asset; apartment_visuals.json owns the building roof." % floor_index)
+		_expect(not data.has("roof_theme"), "floor %d must not configure roof_theme; apartment_visuals.json owns the building roof." % floor_index)
 		_require_string(data, "service_label", "floor %d" % floor_index)
 		_validate_asset_config(_require_dict(data, "floor_icon_asset", "floor %d" % floor_index), "floor %d floor_icon_asset" % floor_index)
 		_validate_asset_config(_require_dict(data, "build_icon_asset", "floor %d build_icon_asset" % floor_index), "floor %d build_icon_asset" % floor_index)
@@ -392,6 +401,8 @@ func _validate_rooms() -> void:
 		_require_bool(data, "door_mirrored", "room '%s'" % room_id)
 		_require_vector_array(data, "door_visual_offset", 2, "room '%s'" % room_id)
 		_require_bool(data, "initial_unlocked", "room '%s'" % room_id)
+		_require_number(data, "required_apartment_level", "room '%s'" % room_id)
+		_require_number(data, "build_cost", "room '%s'" % room_id)
 		_expect(not data.has("room_scene_path"), "room '%s' must not configure runtime room_scene_path." % room_id)
 		_require_vector_array(data, "frame_tiles", 2, "room '%s'" % room_id)
 		_require_vector_array(data, "grid_size", 2, "room '%s'" % room_id)
@@ -409,6 +420,9 @@ func _validate_rooms() -> void:
 			_require_number(layout_upgrade, "level", "room '%s' layout upgrade" % room_id)
 			_require_vector_array(layout_upgrade, "frame_tiles", 2, "room '%s' layout upgrade" % room_id)
 			_require_vector_array(layout_upgrade, "grid_size", 2, "room '%s' layout upgrade" % room_id)
+
+func _validate_apartment_visuals() -> void:
+	_validate_roof_theme(_require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json"), "apartment roof_theme")
 
 func _validate_tenant_regions() -> void:
 	var seen_ids := {}
@@ -533,6 +547,14 @@ func _validate_wall_theme(theme: Dictionary, decor_id: String) -> void:
 		"body_bottom_edge_tiles"
 	]:
 		_require_vector_array(theme, key, 2, "wall theme '%s'" % decor_id, true)
+
+func _validate_roof_theme(theme: Dictionary, context: String) -> void:
+	_require_number(theme, "wall_edge_source_id", context)
+	_require_vector_array(theme, "roof_left_tile", 2, context)
+	_require_vector_array(theme, "roof_tiles", 2, context, true)
+	_require_vector_array(theme, "roof_right_tile", 2, context)
+	_expect(int(_require_number(theme, "total_width_tiles", context)) > 0, "%s total_width_tiles must be greater than 0." % context)
+	_require_vector_array(theme, "offset_pixels", 2, context)
 
 func _validate_door_theme(data: Dictionary, decor_id: String) -> void:
 	var door_asset := _require_dict(data, "door_asset", "door decor '%s'" % decor_id)

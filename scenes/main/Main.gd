@@ -217,15 +217,16 @@ func _on_recruit_tenant_pressed(tenant_id: String, room_id: String) -> void:
 		_toast("toast_tenant_recruited")
 	UIManager.open_room_panel(room_id)
 
-func _show_build_confirm(floor_index: int) -> void:
+func _show_build_confirm(room_id: String) -> void:
 	var panel := _open_panel(BUILD_CONFIRM_POPUP_SCENE) as BuildConfirmPopup
 	panel.build_confirmed.connect(_on_build_confirmed)
-	panel.open(floor_index)
+	panel.open(room_id)
 
-func _on_build_confirmed(floor_index: int) -> void:
-	if GameState.build_floor(floor_index):
+func _on_build_confirmed(room_id: String) -> void:
+	if GameState.build_room(room_id):
 		SaveManager.save_game()
-		_toast("toast_floor_built", [floor_index])
+		var room_config := ConfigManager.get_room_config(room_id)
+		_toast("toast_room_built", [room_config.get("room_name", room_id)])
 		UIManager.return_to_normal()
 		_clear_panel_layer_panels()
 		_refresh_building()

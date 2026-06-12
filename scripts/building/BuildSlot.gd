@@ -1,13 +1,11 @@
 class_name BuildSlot
 extends Button
 
-const META_SERVICE_WIDTH := &"service_width"
 const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 const META_WALL_INSET := &"wall_inset"
 const META_FLOOR_HEIGHT := &"floor_height"
 const META_ROOF_HEIGHT := &"roof_height"
 
-var service_width := 0.0
 var default_frame_tiles := Vector2i.ZERO
 var wall_inset := 0.0
 var floor_height := 0.0
@@ -15,91 +13,63 @@ var roof_height := 0.0
 var locked_label_template := ""
 var buildable_label_template := ""
 
-var floor_index := 0
+var room_id := ""
+var room_edge_sides: Dictionary = {}
 var shell: BuildSlotShell
 
 func _ready() -> void:
 	_bind_scene_config()
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	clip_contents = true
+	clip_contents = false
 	clip_text = true
 	text = ""
 	if not pressed.is_connected(_on_pressed):
 		pressed.connect(_on_pressed)
 	shell = $BuildSlotShell
 
-func setup(index: int) -> void:
-	floor_index = index
+func setup(target_room_id: String, edge_sides: Dictionary = {}) -> void:
+	room_id = target_room_id
+	room_edge_sides = edge_sides.duplicate()
 	if is_inside_tree():
 		_refresh()
 
 func _refresh() -> void:
 	_bind_scene_config()
 	text = ""
-	custom_minimum_size = _slot_size()
+	var room_config := ConfigManager.get_room_config(room_id)
+	custom_minimum_size = _slot_size(room_config)
 	size = custom_minimum_size
-	var floor := ConfigManager.get_floor_data(floor_index)
-	var required_level := int(floor["required_apartment_level"])
-	var display_name := str(floor["display_name"])
-	if GameState.apartment_level < required_level:
-		disabled = true
-		_add_build_visual(locked_label_template % [display_name, required_level], true)
+	var required_level := int(room_config["required_apartment_level"])
+	var locked := not GameState.is_room_buildable(room_id)
+	disabled = locked
+	if locked and GameState.apartment_level < required_level:
+		_add_build_visual(locked_label_template % required_level, true, room_config)
 		return
-	disabled = false
-	_add_build_visual(buildable_label_template % [display_name, int(floor["build_cost"])], false)
+	_add_build_visual(buildable_label_template % int(room_config["build_cost"]), locked, room_config)
 
-func _add_build_visual(label_text: String, locked: bool) -> void:
-	var frames := _side_frame_tiles()
-	var left_frame_tiles: Vector2i = frames["left"]
-	var right_frame_tiles: Vector2i = frames["right"]
+func _add_build_visual(label_text: String, locked: bool, room_config: Dictionary) -> void:
+	var tile_theme := ConfigManager.tile_theme_for_room(GameState.get_room(room_id))
 	shell.apply_layout(
-		_slot_size(),
-		service_width,
+		_slot_size(room_config),
 		wall_inset,
 		floor_height,
 		roof_height,
-		left_frame_tiles,
-		right_frame_tiles,
-		{}
+		_frame_tiles(room_config),
+		tile_theme,
+		room_edge_sides
 	)
 	shell.set_locked_visuals(locked)
 	shell.label.text = label_text
 
 func _on_pressed() -> void:
-	if floor_index > 0 and not disabled:
-		UIManager.open_build_confirm(floor_index)
+	if not room_id.is_empty() and not disabled:
+		UIManager.open_build_confirm(room_id)
 
-func _slot_size() -> Vector2:
-	var frames := _side_frame_tiles()
-	var left_size := _room_pixel_size_from_frame_tiles(frames["left"])
-	var right_size := _room_pixel_size_from_frame_tiles(frames["right"])
-	return Vector2(left_size.x + service_width + right_size.x, maxf(left_size.y, right_size.y))
+func _slot_size(room_config: Dictionary) -> Vector2:
+	return _room_pixel_size_from_frame_tiles(_frame_tiles(room_config))
 
-func _side_frame_tiles() -> Dictionary:
-	var result := {
-		"left": default_frame_tiles,
-		"right": default_frame_tiles
-	}
-	var floor_data := ConfigManager.get_floor_data(floor_index)
-	var public_areas: Array = floor_data["public_areas"]
-	if not public_areas.is_empty():
-		for item in public_areas:
-			var area: Dictionary = item
-			var side := str(area["layout_side"]).strip_edges().to_lower()
-			if side == "left" or side == "right":
-				result[side] = _frame_tiles(area)
-		return result
-	for room_data in ConfigManager.get_room_configs_for_floor(floor_index):
-		var room: Dictionary = room_data
-		var side := str(room["layout_side"]).strip_edges().to_lower()
-		if side == "suite":
-			result["left"] = _frame_tiles(room)
-		elif side == "left" or side == "right":
-			result[side] = _frame_tiles(room)
-	return result
-
-func _frame_tiles(content: Dictionary) -> Vector2i:
-	return _fixed_height_frame_tiles(Vector2i(int(content["frame_tiles"][0]), int(content["frame_tiles"][1])))
+func _frame_tiles(room_config: Dictionary) -> Vector2i:
+	return _fixed_height_frame_tiles(Vector2i(int(room_config["frame_tiles"][0]), int(room_config["frame_tiles"][1])))
 
 func _room_pixel_size_from_frame_tiles(value: Vector2i) -> Vector2:
 	return Vector2(value.x * ApartmentTileMap.TILE_SIZE, value.y * ApartmentTileMap.TILE_SIZE)
@@ -109,7 +79,6 @@ func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
 
 func _bind_scene_config() -> void:
 	var config := $SceneConfig
-	service_width = _required_scene_meta_float(config, META_SERVICE_WIDTH)
 	default_frame_tiles = _required_scene_meta_vector2i(config, META_DEFAULT_FRAME_TILES)
 	wall_inset = _required_scene_meta_float(config, META_WALL_INSET)
 	floor_height = _required_scene_meta_float(config, META_FLOOR_HEIGHT)

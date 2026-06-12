@@ -4,10 +4,11 @@ extends VBoxContainer
 const META_SERVICE_CORE_WIDTH := &"service_core_width"
 const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 
+@onready var apartment_roof: ApartmentRoof = $ApartmentRoof
+
 var service_core_width := 0.0
 var default_frame_tiles := Vector2i.ZERO
 var floor_nodes_by_index := {}
-var build_slot_nodes_by_index := {}
 
 func _ready() -> void:
 	_bind_scene_config()
@@ -16,28 +17,19 @@ func _ready() -> void:
 func refresh() -> void:
 	_bind_scene_config()
 	_bind_floor_nodes()
-	var highest_built_floor := GameState.highest_built_floor
-	var next_floor_index := highest_built_floor + 1
-	var show_next_build_slot := _has_next_build_slot()
+	var highest_visible_floor := GameState.get_highest_visible_floor()
 	for floor_data in ConfigManager.floors:
 		var data: Dictionary = floor_data
 		var floor_index := int(data["floor_index"])
 		var floor_node := floor_nodes_by_index.get(floor_index) as Floor
 		if floor_node == null:
 			continue
-		if floor_index <= highest_built_floor:
+		if GameState.is_floor_visible(floor_index):
 			floor_node.visible = true
-			floor_node.setup(floor_index, floor_index == highest_built_floor and not show_next_build_slot)
+			floor_node.setup(floor_index)
 		else:
 			floor_node.visible = false
-		var build_slot := build_slot_nodes_by_index.get(floor_index) as BuildSlot
-		if build_slot == null:
-			continue
-		if floor_index == next_floor_index and show_next_build_slot:
-			build_slot.visible = true
-			build_slot.setup(floor_index)
-		else:
-			build_slot.visible = false
+	_apply_roof(highest_visible_floor)
 	var building_size := get_building_size()
 	custom_minimum_size = building_size
 	size = building_size
@@ -50,14 +42,11 @@ func get_building_size() -> Vector2:
 	for floor_data in ConfigManager.floors:
 		var data: Dictionary = floor_data
 		var floor_index := int(data["floor_index"])
-		if floor_index <= GameState.highest_built_floor:
-			var floor_size := _floor_size(floor_index, true)
-			width = maxf(width, floor_size.x)
-			height += floor_size.y
-		elif floor_index == GameState.highest_built_floor + 1 and _has_next_build_slot():
-			var build_slot_size := _floor_size(floor_index, false)
-			width = maxf(width, build_slot_size.x)
-			height += build_slot_size.y
+		if not GameState.is_floor_visible(floor_index):
+			continue
+		var floor_size := _floor_size(floor_index)
+		width = maxf(width, floor_size.x)
+		height += floor_size.y
 	return Vector2(width, maxf(height, default_room_pixel_size.y))
 
 func find_room_node(room_id: String) -> Control:
@@ -76,62 +65,62 @@ func find_floor_service_core(floor_index: int) -> FloorServiceCore:
 func get_floor_node(floor_index: int) -> Floor:
 	return floor_nodes_by_index.get(floor_index) as Floor
 
-func _has_next_build_slot() -> bool:
-	var next_floor_index := GameState.highest_built_floor + 1
-	for floor_data in ConfigManager.floors:
-		if int((floor_data as Dictionary)["floor_index"]) == next_floor_index:
-			return true
-	return false
+func _apply_roof(highest_visible_floor: int) -> void:
+	if apartment_roof == null:
+		return
+	if highest_visible_floor <= 0:
+		apartment_roof.hide_roof()
+		return
+	apartment_roof.apply_layout(ConfigManager.apartment_roof_theme())
 
-func _floor_size(floor_index: int, built_floor: bool) -> Vector2:
+func _floor_size(floor_index: int) -> Vector2:
 	var floor_data := ConfigManager.get_floor_data(floor_index)
-	var left_width := _side_width(floor_index, floor_data, "left", built_floor)
-	var right_width := _side_width(floor_index, floor_data, "right", built_floor)
-	var height := _floor_height(floor_index, floor_data, built_floor)
+	var left_width := _side_width(floor_index, floor_data, "left")
+	var right_width := _side_width(floor_index, floor_data, "right")
+	var height := _floor_height(floor_index, floor_data)
 	return Vector2(left_width + service_core_width + right_width, height)
 
-func _floor_height(floor_index: int, floor_data: Dictionary, built_floor: bool) -> float:
+func _floor_height(floor_index: int, floor_data: Dictionary) -> float:
 	var height := _room_pixel_size_from_frame_tiles(default_frame_tiles).y
-	for item in _content_configs_for_floor(floor_index, floor_data, built_floor):
+	for item in _content_configs_for_floor(floor_index, floor_data):
 		var content: Dictionary = item
-		height = maxf(height, _content_pixel_size(content, built_floor).y)
+		height = maxf(height, _content_pixel_size(content).y)
 	return height
 
-func _side_width(floor_index: int, floor_data: Dictionary, side: String, built_floor: bool) -> float:
+func _side_width(floor_index: int, floor_data: Dictionary, side: String) -> float:
 	var width := 0.0
-	for item in _content_configs_for_floor(floor_index, floor_data, built_floor):
+	for item in _content_configs_for_floor(floor_index, floor_data):
 		var content: Dictionary = item
 		var layout_side := str(content["layout_side"]).strip_edges().to_lower()
 		if layout_side == side:
-			width += _content_pixel_size(content, built_floor).x
+			width += _content_pixel_size(content).x
 		elif layout_side == "suite" and side == "left":
-			width += _content_pixel_size(content, built_floor).x
+			width += _content_pixel_size(content).x
 	if width <= 0.0:
 		width = _room_pixel_size_from_frame_tiles(default_frame_tiles).x
 	return width
 
-func _content_configs_for_floor(floor_index: int, floor_data: Dictionary, built_floor: bool) -> Array:
+func _content_configs_for_floor(floor_index: int, floor_data: Dictionary) -> Array:
 	var public_areas: Array = floor_data["public_areas"]
 	if not public_areas.is_empty():
 		return public_areas
 	var result: Array = []
 	for room_data in ConfigManager.get_room_configs_for_floor(floor_index):
 		var room: Dictionary = room_data
-		if built_floor and not _room_is_visible(room):
-			continue
-		result.append(room)
+		if _room_or_slot_is_visible(room):
+			result.append(room)
 	return result
 
-func _content_pixel_size(content: Dictionary, built_floor: bool) -> Vector2:
-	return _room_pixel_size_from_frame_tiles(_frame_tiles_for_content(content, built_floor))
+func _content_pixel_size(content: Dictionary) -> Vector2:
+	return _room_pixel_size_from_frame_tiles(_frame_tiles_for_content(content))
 
-func _frame_tiles_for_content(content: Dictionary, built_floor: bool) -> Vector2i:
+func _frame_tiles_for_content(content: Dictionary) -> Vector2i:
 	var content_type := "room"
 	if content.has("id") and str(content["id"]).begins_with("room_"):
 		content_type = "room"
 	elif content.has("label"):
 		content_type = "public"
-	if content_type == "room" and built_floor:
+	if content_type == "room" and _room_is_visible(content):
 		var runtime_room := GameState.get_room(str(content["id"]))
 		return _vector2i_from_array(runtime_room["frame_tiles"])
 	return _vector2i_from_array(content["frame_tiles"])
@@ -149,6 +138,9 @@ func _room_is_visible(room_data: Dictionary) -> bool:
 	var runtime_room := GameState.get_room(str(room_data["id"]))
 	return not runtime_room.is_empty() and bool(runtime_room["unlocked"])
 
+func _room_or_slot_is_visible(room_data: Dictionary) -> bool:
+	return _room_is_visible(room_data) or GameState.is_room_buildable(str(room_data["id"]))
+
 func _bind_scene_config() -> void:
 	var config := $SceneConfig
 	service_core_width = _required_scene_meta_float(config, META_SERVICE_CORE_WIDTH)
@@ -156,14 +148,10 @@ func _bind_scene_config() -> void:
 
 func _bind_floor_nodes() -> void:
 	floor_nodes_by_index.clear()
-	build_slot_nodes_by_index.clear()
 	for floor_data in ConfigManager.floors:
 		var floor_index := int((floor_data as Dictionary)["floor_index"])
 		var floor_node := get_node("Floor_%d" % floor_index) as Floor
 		floor_nodes_by_index[floor_index] = floor_node
-		if floor_index > 1:
-			var slot_node := get_node("BuildSlot_%d" % floor_index) as BuildSlot
-			build_slot_nodes_by_index[floor_index] = slot_node
 
 func _required_scene_meta_float(node: Node, meta_key: StringName) -> float:
 	if node == null or not node.has_meta(meta_key):

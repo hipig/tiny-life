@@ -1,253 +1,211 @@
 [
   {
-    "floor_index": 1,
-    "display_name": "1F",
-    "visual_role": "public_entry",
-    "initial_built": true,
-    "required_apartment_level": 1,
-    "build_cost": 0,
-    "service_label": "前台",
-    "public_areas": [
-      {
-        "id": "lobby",
-        "label": "大厅",
-        "layout_side": "left",
-        "has_entrance_door": true,
-        "door_side": "left",
-        "door_mirrored": false,
-        "frame_tiles": [6, 4]
-      },
-      {
-        "id": "lounge",
-        "label": "公共休息区",
-        "layout_side": "right",
-        "has_entrance_door": false,
-        "frame_tiles": [6, 4]
-      }
-    ],
-    "roof_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [116, 8, 72, 22]
-    },
-    "construction_cloth_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [112, 304, 100, 52]
-    },
-    "traffic_cone_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [120, 364, 16, 16]
-    },
-    "service_core_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [16, 16, 80, 48]
-    },
-    "floor_icon_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
-      "region": [0, 0, 16, 32]
-    },
-    "build_icon_asset": {
-      "type": "single_sprite",
-      "texture": "res://assets/pixel_spaces/icons/Hammer.png"
-    }
+	"floor_index": 1,
+	"display_name": "1F",
+	"visual_role": "public_entry",
+	"initial_built": true,
+	"service_label": "前台",
+	"public_areas": [
+	  {
+		"id": "lobby",
+		"label": "大厅",
+		"layout_side": "left",
+		"has_entrance_door": true,
+		"door_side": "left",
+		"door_mirrored": false,
+		"frame_tiles": [6, 4]
+	  },
+	  {
+		"id": "lounge",
+		"label": "公共休息区",
+		"layout_side": "right",
+		"has_entrance_door": false,
+		"frame_tiles": [6, 4]
+	  }
+	],
+	"construction_cloth_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [112, 304, 100, 52]
+	},
+	"traffic_cone_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [120, 364, 16, 16]
+	},
+	"service_core_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 16, 80, 48]
+	},
+	"floor_icon_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
+	  "region": [0, 0, 16, 32]
+	},
+	"build_icon_asset": {
+	  "type": "single_sprite",
+	  "texture": "res://assets/pixel_spaces/icons/Hammer.png"
+	}
   },
   {
-    "floor_index": 2,
-    "display_name": "2F",
-    "visual_role": "room_floor",
-    "initial_built": true,
-    "required_apartment_level": 1,
-    "build_cost": 0,
-    "service_label": "2F",
-    "public_areas": [],
-    "roof_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [116, 40, 72, 22]
-    },
-    "construction_cloth_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [112, 304, 100, 52]
-    },
-    "traffic_cone_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [120, 364, 16, 16]
-    },
-    "service_core_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [16, 80, 80, 48]
-    },
-    "floor_icon_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
-      "region": [0, 0, 32, 32]
-    },
-    "build_icon_asset": {
-      "type": "single_sprite",
-      "texture": "res://assets/pixel_spaces/icons/Hammer.png"
-    }
+	"floor_index": 2,
+	"display_name": "2F",
+	"visual_role": "room_floor",
+	"initial_built": true,
+	"service_label": "2F",
+	"public_areas": [],
+	"construction_cloth_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [112, 304, 100, 52]
+	},
+	"traffic_cone_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [120, 364, 16, 16]
+	},
+	"service_core_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 80, 80, 48]
+	},
+	"floor_icon_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+	  "region": [0, 0, 32, 32]
+	},
+	"build_icon_asset": {
+	  "type": "single_sprite",
+	  "texture": "res://assets/pixel_spaces/icons/Hammer.png"
+	}
   },
   {
-    "floor_index": 3,
-    "display_name": "3F",
-    "visual_role": "room_floor",
-    "initial_built": false,
-    "required_apartment_level": 1,
-    "build_cost": 500,
-    "service_label": "3F",
-    "public_areas": [],
-    "roof_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [116, 72, 72, 22]
-    },
-    "construction_cloth_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [112, 304, 100, 52]
-    },
-    "traffic_cone_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [120, 364, 16, 16]
-    },
-    "service_core_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [16, 144, 80, 48]
-    },
-    "floor_icon_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
-      "region": [32, 0, 32, 32]
-    },
-    "build_icon_asset": {
-      "type": "single_sprite",
-      "texture": "res://assets/pixel_spaces/icons/Hammer.png"
-    }
+	"floor_index": 3,
+	"display_name": "3F",
+	"visual_role": "room_floor",
+	"initial_built": false,
+	"service_label": "3F",
+	"public_areas": [],
+	"construction_cloth_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [112, 304, 100, 52]
+	},
+	"traffic_cone_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [120, 364, 16, 16]
+	},
+	"service_core_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 144, 80, 48]
+	},
+	"floor_icon_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+	  "region": [32, 0, 32, 32]
+	},
+	"build_icon_asset": {
+	  "type": "single_sprite",
+	  "texture": "res://assets/pixel_spaces/icons/Hammer.png"
+	}
   },
   {
-    "floor_index": 4,
-    "display_name": "4F",
-    "visual_role": "room_floor",
-    "initial_built": false,
-    "required_apartment_level": 2,
-    "build_cost": 900,
-    "service_label": "4F",
-    "public_areas": [],
-    "roof_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [196, 8, 72, 22]
-    },
-    "construction_cloth_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [112, 304, 100, 52]
-    },
-    "traffic_cone_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [120, 364, 16, 16]
-    },
-    "service_core_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [16, 208, 80, 48]
-    },
-    "floor_icon_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
-      "region": [0, 0, 32, 32]
-    },
-    "build_icon_asset": {
-      "type": "single_sprite",
-      "texture": "res://assets/pixel_spaces/icons/Hammer.png"
-    }
+	"floor_index": 4,
+	"display_name": "4F",
+	"visual_role": "room_floor",
+	"initial_built": false,
+	"service_label": "4F",
+	"public_areas": [],
+	"construction_cloth_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [112, 304, 100, 52]
+	},
+	"traffic_cone_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [120, 364, 16, 16]
+	},
+	"service_core_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 208, 80, 48]
+	},
+	"floor_icon_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+	  "region": [0, 0, 32, 32]
+	},
+	"build_icon_asset": {
+	  "type": "single_sprite",
+	  "texture": "res://assets/pixel_spaces/icons/Hammer.png"
+	}
   },
   {
-    "floor_index": 5,
-    "display_name": "5F",
-    "visual_role": "room_floor",
-    "initial_built": false,
-    "required_apartment_level": 3,
-    "build_cost": 1600,
-    "service_label": "5F",
-    "public_areas": [],
-    "roof_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [276, 8, 72, 22]
-    },
-    "construction_cloth_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [112, 304, 100, 52]
-    },
-    "traffic_cone_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [120, 364, 16, 16]
-    },
-    "service_core_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [16, 272, 80, 48]
-    },
-    "floor_icon_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
-      "region": [0, 0, 32, 32]
-    },
-    "build_icon_asset": {
-      "type": "single_sprite",
-      "texture": "res://assets/pixel_spaces/icons/Hammer.png"
-    }
+	"floor_index": 5,
+	"display_name": "5F",
+	"visual_role": "room_floor",
+	"initial_built": false,
+	"service_label": "5F",
+	"public_areas": [],
+	"construction_cloth_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [112, 304, 100, 52]
+	},
+	"traffic_cone_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [120, 364, 16, 16]
+	},
+	"service_core_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 272, 80, 48]
+	},
+	"floor_icon_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+	  "region": [0, 0, 32, 32]
+	},
+	"build_icon_asset": {
+	  "type": "single_sprite",
+	  "texture": "res://assets/pixel_spaces/icons/Hammer.png"
+	}
   },
   {
-    "floor_index": 6,
-    "display_name": "6F",
-    "visual_role": "room_floor",
-    "initial_built": false,
-    "required_apartment_level": 4,
-    "build_cost": 2800,
-    "service_label": "6F",
-    "public_areas": [],
-    "roof_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [356, 8, 72, 22]
-    },
-    "construction_cloth_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [112, 304, 100, 52]
-    },
-    "traffic_cone_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [120, 364, 16, 16]
-    },
-    "service_core_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-      "region": [16, 336, 80, 48]
-    },
-    "floor_icon_asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
-      "region": [32, 0, 32, 32]
-    },
-    "build_icon_asset": {
-      "type": "single_sprite",
-      "texture": "res://assets/pixel_spaces/icons/Hammer.png"
-    }
+	"floor_index": 6,
+	"display_name": "6F",
+	"visual_role": "room_floor",
+	"initial_built": false,
+	"service_label": "6F",
+	"public_areas": [],
+	"construction_cloth_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [112, 304, 100, 52]
+	},
+	"traffic_cone_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [120, 364, 16, 16]
+	},
+	"service_core_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+	  "region": [16, 336, 80, 48]
+	},
+	"floor_icon_asset": {
+	  "type": "atlas_region",
+	  "texture": "res://assets/pixel_spaces/building/SpriteSheets/Elevator.png",
+	  "region": [32, 0, 32, 32]
+	},
+	"build_icon_asset": {
+	  "type": "single_sprite",
+	  "texture": "res://assets/pixel_spaces/icons/Hammer.png"
+	}
   }
 ]
