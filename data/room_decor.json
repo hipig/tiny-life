@@ -1,192 +1,2732 @@
 {
   "items": [
 	{
-	  "id": "wallpaper_201",
+	  "id": "wallpaper_berry_red_plain",
 	  "category": "wallpaper",
-	  "name": "暖橙格纹",
+	  "name": "赤莓纯色",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [0, 192, 64, 48]
+		"region": [
+		  0,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[5, 3]],
-		  "middle": [[5, 4]],
-		  "bottom": [[5, 5]]
+		  "top": [
+			[
+			  0,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_202",
+	  "id": "wallpaper_berry_red_speckle",
 	  "category": "wallpaper",
-	  "name": "浅蓝格纹",
+	  "name": "赤莓碎点",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [64, 192, 64, 48]
+		"region": [
+		  80,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[5, 12]],
-		  "middle": [[5, 13]],
-		  "bottom": [[5, 14]]
+		  "top": [
+			[
+			  5,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_301",
+	  "id": "wallpaper_berry_red_stripe",
 	  "category": "wallpaper",
-	  "name": "青绿花墙",
+	  "name": "赤莓竖纹",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [0, 128, 64, 48]
+		"region": [
+		  160,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[25, 9]],
-		  "middle": [[25, 10]],
-		  "bottom": [[25, 11]]
+		  "top": [
+			[
+			  10,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_302",
+	  "id": "wallpaper_berry_red_panel",
 	  "category": "wallpaper",
-	  "name": "蓝白花墙",
+	  "name": "赤莓方格",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [64, 128, 64, 48]
+		"region": [
+		  240,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[25, 12]],
-		  "middle": [[25, 13]],
-		  "bottom": [[25, 14]]
+		  "top": [
+			[
+			  15,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_401",
+	  "id": "wallpaper_berry_red_leaf",
 	  "category": "wallpaper",
-	  "name": "粉色花墙",
+	  "name": "赤莓小叶",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [0, 64, 64, 48]
+		"region": [
+		  320,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[25, 18]],
-		  "middle": [[25, 19]],
-		  "bottom": [[25, 20]]
+		  "top": [
+			[
+			  20,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_402",
+	  "id": "wallpaper_berry_red_star",
 	  "category": "wallpaper",
-	  "name": "湖蓝花墙",
+	  "name": "赤莓星点",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [64, 64, 64, 48]
+		"region": [
+		  400,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[4, 4], [5, 4], [6, 4], [7, 4]],
-		  "middle": [[4, 5], [5, 5], [6, 5], [7, 5]],
-		  "bottom": [[4, 6], [5, 6], [6, 6], [7, 6]]
+		  "top": [
+			[
+			  25,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_501",
+	  "id": "wallpaper_berry_red_wood_plank",
 	  "category": "wallpaper",
-	  "name": "深色木纹",
+	  "name": "赤莓木纹",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [256, 448, 64, 48]
+		"region": [
+		  480,
+		  0,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[16, 28], [17, 28], [18, 28], [19, 28]],
-		  "middle": [[16, 29], [17, 29], [18, 29], [19, 29]],
-		  "bottom": [[16, 30], [17, 30], [18, 30], [19, 30]]
+		  "top": [
+			[
+			  30,
+			  0
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  1
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  2
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_502",
+	  "id": "wallpaper_warm_orange_plain",
 	  "category": "wallpaper",
-	  "name": "褐色木纹",
+	  "name": "暖橙纯色",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [320, 448, 64, 48]
+		"region": [
+		  0,
+		  48,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[20, 28], [21, 28], [22, 28], [23, 28]],
-		  "middle": [[20, 29], [21, 29], [22, 29], [23, 29]],
-		  "bottom": [[20, 30], [21, 30], [22, 30], [23, 30]]
+		  "top": [
+			[
+			  0,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  5
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_601",
+	  "id": "wallpaper_warm_orange_speckle",
 	  "category": "wallpaper",
-	  "name": "紫调墙纸",
+	  "name": "暖橙碎点",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [256, 320, 64, 48]
+		"region": [
+		  80,
+		  48,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[16, 20], [17, 20], [18, 20], [19, 20]],
-		  "middle": [[16, 21], [17, 21], [18, 21], [19, 21]],
-		  "bottom": [[16, 22], [17, 22], [18, 22], [19, 22]]
+		  "top": [
+			[
+			  5,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  5
+			]
+		  ]
 		}
 	  }
 	},
 	{
-	  "id": "wallpaper_602",
+	  "id": "wallpaper_warm_orange_stripe",
 	  "category": "wallpaper",
-	  "name": "海蓝墙纸",
+	  "name": "暖橙竖纹",
 	  "price": 120,
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
-		"region": [320, 320, 64, 48]
+		"region": [
+		  160,
+		  48,
+		  16,
+		  48
+		]
 	  },
 	  "theme": {
 		"wallpaper_source_id": 2,
 		"wallpaper_pattern": {
-		  "top": [[20, 20], [21, 20], [22, 20], [23, 20]],
-		  "middle": [[20, 21], [21, 21], [22, 21], [23, 21]],
-		  "bottom": [[20, 22], [21, 22], [22, 22], [23, 22]]
+		  "top": [
+			[
+			  10,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  5
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_warm_orange_panel",
+	  "category": "wallpaper",
+	  "name": "暖橙方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  48,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  5
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_warm_orange_leaf",
+	  "category": "wallpaper",
+	  "name": "暖橙小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  48,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  5
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_warm_orange_star",
+	  "category": "wallpaper",
+	  "name": "暖橙星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  48,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  5
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_warm_orange_wood_plank",
+	  "category": "wallpaper",
+	  "name": "暖橙木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  48,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  3
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  4
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  5
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_plain",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  67
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_speckle",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  6
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_stripe",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  6
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_panel",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  6
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_leaf",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  6
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_star",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  6
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_honey_yellow_wood_plank",
+	  "category": "wallpaper",
+	  "name": "蜂蜜黄木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  96,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  6
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  7
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  8
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_plain",
+	  "category": "wallpaper",
+	  "name": "青绿纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_speckle",
+	  "category": "wallpaper",
+	  "name": "青绿碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_stripe",
+	  "category": "wallpaper",
+	  "name": "青绿竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_panel",
+	  "category": "wallpaper",
+	  "name": "青绿方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_leaf",
+	  "category": "wallpaper",
+	  "name": "青绿小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_star",
+	  "category": "wallpaper",
+	  "name": "青绿星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_fresh_green_wood_plank",
+	  "category": "wallpaper",
+	  "name": "青绿木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  144,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  9
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  10
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  11
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_plain",
+	  "category": "wallpaper",
+	  "name": "晴空蓝纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_speckle",
+	  "category": "wallpaper",
+	  "name": "晴空蓝碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_stripe",
+	  "category": "wallpaper",
+	  "name": "晴空蓝竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_panel",
+	  "category": "wallpaper",
+	  "name": "晴空蓝方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_leaf",
+	  "category": "wallpaper",
+	  "name": "晴空蓝小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_star",
+	  "category": "wallpaper",
+	  "name": "晴空蓝星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_sky_blue_wood_plank",
+	  "category": "wallpaper",
+	  "name": "晴空蓝木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  192,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  12
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  13
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  14
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_plain",
+	  "category": "wallpaper",
+	  "name": "紫藤纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_speckle",
+	  "category": "wallpaper",
+	  "name": "紫藤碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_stripe",
+	  "category": "wallpaper",
+	  "name": "紫藤竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_panel",
+	  "category": "wallpaper",
+	  "name": "紫藤方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_leaf",
+	  "category": "wallpaper",
+	  "name": "紫藤小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_star",
+	  "category": "wallpaper",
+	  "name": "紫藤星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wisteria_purple_wood_plank",
+	  "category": "wallpaper",
+	  "name": "紫藤木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  240,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  15
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  16
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  17
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_plain",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_speckle",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_stripe",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_panel",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_leaf",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_star",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_coral_pink_wood_plank",
+	  "category": "wallpaper",
+	  "name": "珊瑚粉木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  288,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  18
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  19
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  20
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_plain",
+	  "category": "wallpaper",
+	  "name": "酒莓紫纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_speckle",
+	  "category": "wallpaper",
+	  "name": "酒莓紫碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_stripe",
+	  "category": "wallpaper",
+	  "name": "酒莓紫竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_panel",
+	  "category": "wallpaper",
+	  "name": "酒莓紫方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_leaf",
+	  "category": "wallpaper",
+	  "name": "酒莓紫小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_star",
+	  "category": "wallpaper",
+	  "name": "酒莓紫星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_wine_purple_wood_plank",
+	  "category": "wallpaper",
+	  "name": "酒莓紫木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  336,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  21
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  22
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  23
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_plain",
+	  "category": "wallpaper",
+	  "name": "石墨灰纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_speckle",
+	  "category": "wallpaper",
+	  "name": "石墨灰碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_stripe",
+	  "category": "wallpaper",
+	  "name": "石墨灰竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_panel",
+	  "category": "wallpaper",
+	  "name": "石墨灰方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_leaf",
+	  "category": "wallpaper",
+	  "name": "石墨灰小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_star",
+	  "category": "wallpaper",
+	  "name": "石墨灰星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_slate_gray_wood_plank",
+	  "category": "wallpaper",
+	  "name": "石墨灰木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  382,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  24
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  25
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  26
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_plain",
+	  "category": "wallpaper",
+	  "name": "薄荷白纯色",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  0,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  0,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  0,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  0,
+			  29
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_speckle",
+	  "category": "wallpaper",
+	  "name": "薄荷白碎点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  80,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  5,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  5,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  5,
+			  29
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_stripe",
+	  "category": "wallpaper",
+	  "name": "薄荷白竖纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  160,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  10,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  10,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  10,
+			  29
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_panel",
+	  "category": "wallpaper",
+	  "name": "薄荷白方格",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  240,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  15,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  15,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  15,
+			  29
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_leaf",
+	  "category": "wallpaper",
+	  "name": "薄荷白小叶",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  320,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  20,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  20,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  20,
+			  29
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_star",
+	  "category": "wallpaper",
+	  "name": "薄荷白星点",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  400,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  25,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  25,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  25,
+			  29
+			]
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": "wallpaper_mint_white_wood_plank",
+	  "category": "wallpaper",
+	  "name": "薄荷白木纹",
+	  "price": 120,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Wallpaper Tilesets.png",
+		"region": [
+		  480,
+		  432,
+		  16,
+		  48
+		]
+	  },
+	  "theme": {
+		"wallpaper_source_id": 2,
+		"wallpaper_pattern": {
+		  "top": [
+			[
+			  30,
+			  27
+			]
+		  ],
+		  "middle": [
+			[
+			  30,
+			  28
+			]
+		  ],
+		  "bottom": [
+			[
+			  30,
+			  29
+			]
+		  ]
 		}
 	  }
 	},
@@ -198,20 +2738,67 @@
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-		"region": [48, 96, 16, 16]
+		"region": [
+		  48,
+		  96,
+		  16,
+		  16
+		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
-		"body_top_left_corner_tile": [1, 5],
-		"body_top_edge_tiles": [[3, 5]],
-		"body_top_right_corner_tile": [5, 5],
-		"body_left_edge_tiles": [[1, 6]],
-		"body_left_door_edge_tiles": [[2, 6]],
-		"body_right_door_edge_tiles": [[4, 6]],
-		"body_right_edge_tiles": [[5, 6]],
-		"body_bottom_left_corner_tile": [1, 7],
-		"body_bottom_edge_tiles": [[2, 7]],
-		"body_bottom_right_corner_tile": [5, 7]
+		"body_top_left_corner_tile": [
+		  1,
+		  5
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			5
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  5
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			6
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			6
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			6
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			6
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  7
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			7
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  7
+		]
 	  }
 	},
 	{
@@ -222,20 +2809,67 @@
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-		"region": [48, 144, 16, 16]
+		"region": [
+		  48,
+		  144,
+		  16,
+		  16
+		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
-		"body_top_left_corner_tile": [1, 8],
-		"body_top_edge_tiles": [[3, 9]],
-		"body_top_right_corner_tile": [5, 9],
-		"body_left_edge_tiles": [[1, 10]],
-		"body_left_door_edge_tiles": [[2, 10]],
-		"body_right_door_edge_tiles": [[4, 10]],
-		"body_right_edge_tiles": [[5, 10]],
-		"body_bottom_left_corner_tile": [1, 11],
-		"body_bottom_edge_tiles": [[2, 11]],
-		"body_bottom_right_corner_tile": [5, 11]
+		"body_top_left_corner_tile": [
+		  1,
+		  8
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			9
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  9
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			10
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			10
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			10
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			10
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  11
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			11
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  11
+		]
 	  }
 	},
 	{
@@ -246,20 +2880,67 @@
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-		"region": [16, 208, 80, 48]
+		"region": [
+		  16,
+		  208,
+		  80,
+		  48
+		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
-		"body_top_left_corner_tile": [1, 13],
-		"body_top_edge_tiles": [[3, 13]],
-		"body_top_right_corner_tile": [5, 13],
-		"body_left_edge_tiles": [[1, 14]],
-		"body_left_door_edge_tiles": [[2, 14]],
-		"body_right_door_edge_tiles": [[4, 14]],
-		"body_right_edge_tiles": [[5, 14]],
-		"body_bottom_left_corner_tile": [1, 15],
-		"body_bottom_edge_tiles": [[2, 15]],
-		"body_bottom_right_corner_tile": [5, 15]
+		"body_top_left_corner_tile": [
+		  1,
+		  13
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			13
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  13
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			14
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			14
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			14
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			14
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  15
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			15
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  15
+		]
 	  }
 	},
 	{
@@ -270,20 +2951,67 @@
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-		"region": [16, 272, 80, 48]
+		"region": [
+		  16,
+		  272,
+		  80,
+		  48
+		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
-		"body_top_left_corner_tile": [1, 17],
-		"body_top_edge_tiles": [[3, 17]],
-		"body_top_right_corner_tile": [5, 17],
-		"body_left_edge_tiles": [[1, 18]],
-		"body_left_door_edge_tiles": [[2, 18]],
-		"body_right_door_edge_tiles": [[4, 18]],
-		"body_right_edge_tiles": [[5, 18]],
-		"body_bottom_left_corner_tile": [1, 19],
-		"body_bottom_edge_tiles": [[2, 19]],
-		"body_bottom_right_corner_tile": [5, 19]
+		"body_top_left_corner_tile": [
+		  1,
+		  17
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			17
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  17
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			18
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			18
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			18
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			18
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  19
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			19
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  19
+		]
 	  }
 	},
 	{
@@ -294,20 +3022,67 @@
 	  "preview_asset": {
 		"type": "atlas_region",
 		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
-		"region": [16, 336, 80, 48]
+		"region": [
+		  16,
+		  336,
+		  80,
+		  48
+		]
 	  },
 	  "theme": {
 		"wall_body_source_id": 0,
-		"body_top_left_corner_tile": [1, 21],
-		"body_top_edge_tiles": [[3, 21]],
-		"body_top_right_corner_tile": [5, 21],
-		"body_left_edge_tiles": [[1, 22]],
-		"body_left_door_edge_tiles": [[2, 22]],
-		"body_right_door_edge_tiles": [[4, 22]],
-		"body_right_edge_tiles": [[5, 22]],
-		"body_bottom_left_corner_tile": [1, 23],
-		"body_bottom_edge_tiles": [[2, 23]],
-		"body_bottom_right_corner_tile": [5, 23]
+		"body_top_left_corner_tile": [
+		  1,
+		  21
+		],
+		"body_top_edge_tiles": [
+		  [
+			3,
+			21
+		  ]
+		],
+		"body_top_right_corner_tile": [
+		  5,
+		  21
+		],
+		"body_left_edge_tiles": [
+		  [
+			1,
+			22
+		  ]
+		],
+		"body_left_door_edge_tiles": [
+		  [
+			2,
+			22
+		  ]
+		],
+		"body_right_door_edge_tiles": [
+		  [
+			4,
+			22
+		  ]
+		],
+		"body_right_edge_tiles": [
+		  [
+			5,
+			22
+		  ]
+		],
+		"body_bottom_left_corner_tile": [
+		  1,
+		  23
+		],
+		"body_bottom_edge_tiles": [
+		  [
+			2,
+			23
+		  ]
+		],
+		"body_bottom_right_corner_tile": [
+		  5,
+		  23
+		]
 	  }
 	},
 	{
@@ -318,23 +3093,86 @@
 	  "preview_asset": {
 		"type": "spritesheet_frame",
 		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
-		"frame_size": [16, 32],
-		"frame": [0, 0]
+		"frame_size": [
+		  16,
+		  32
+		],
+		"frame": [
+		  0,
+		  0
+		]
 	  },
 	  "door_asset": {
 		"type": "spritesheet_animation",
 		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door.png",
-		"frame_size": [16, 32],
+		"frame_size": [
+		  16,
+		  32
+		],
 		"default_animation": "default",
 		"fps": 12.0,
 		"loop": false,
 		"animations": {
-		  "default": [[0, 0], [1, 0], [2, 0], [3, 0]],
-		  "open": [[0, 0], [1, 0], [2, 0], [3, 0]],
-		  "close": [[3, 0], [2, 0], [1, 0], [0, 0]]
+		  "default": [
+			[
+			  0,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  3,
+			  0
+			]
+		  ],
+		  "open": [
+			[
+			  0,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  3,
+			  0
+			]
+		  ],
+		  "close": [
+			[
+			  3,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  0,
+			  0
+			]
+		  ]
 		}
 	  },
-	  "sprite_offset": [0, -16],
+	  "sprite_offset": [
+		0,
+		-16
+	  ],
 	  "closed_frame": 0,
 	  "open_frame": 3
 	},
@@ -346,23 +3184,86 @@
 	  "preview_asset": {
 		"type": "spritesheet_frame",
 		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
-		"frame_size": [16, 32],
-		"frame": [0, 0]
+		"frame_size": [
+		  16,
+		  32
+		],
+		"frame": [
+		  0,
+		  0
+		]
 	  },
 	  "door_asset": {
 		"type": "spritesheet_animation",
 		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_2.png",
-		"frame_size": [16, 32],
+		"frame_size": [
+		  16,
+		  32
+		],
 		"default_animation": "default",
 		"fps": 12.0,
 		"loop": false,
 		"animations": {
-		  "default": [[0, 0], [1, 0], [2, 0], [3, 0]],
-		  "open": [[0, 0], [1, 0], [2, 0], [3, 0]],
-		  "close": [[3, 0], [2, 0], [1, 0], [0, 0]]
+		  "default": [
+			[
+			  0,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  3,
+			  0
+			]
+		  ],
+		  "open": [
+			[
+			  0,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  3,
+			  0
+			]
+		  ],
+		  "close": [
+			[
+			  3,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  0,
+			  0
+			]
+		  ]
 		}
 	  },
-	  "sprite_offset": [0, -16],
+	  "sprite_offset": [
+		0,
+		-16
+	  ],
 	  "closed_frame": 0,
 	  "open_frame": 3
 	},
@@ -374,23 +3275,86 @@
 	  "preview_asset": {
 		"type": "spritesheet_frame",
 		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
-		"frame_size": [16, 32],
-		"frame": [0, 0]
+		"frame_size": [
+		  16,
+		  32
+		],
+		"frame": [
+		  0,
+		  0
+		]
 	  },
 	  "door_asset": {
 		"type": "spritesheet_animation",
 		"texture": "res://assets/pixel_spaces/building/SpriteSheets/Door_glass.png",
-		"frame_size": [16, 32],
+		"frame_size": [
+		  16,
+		  32
+		],
 		"default_animation": "default",
 		"fps": 12.0,
 		"loop": false,
 		"animations": {
-		  "default": [[0, 0], [1, 0], [2, 0], [3, 0]],
-		  "open": [[0, 0], [1, 0], [2, 0], [3, 0]],
-		  "close": [[3, 0], [2, 0], [1, 0], [0, 0]]
+		  "default": [
+			[
+			  0,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  3,
+			  0
+			]
+		  ],
+		  "open": [
+			[
+			  0,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  3,
+			  0
+			]
+		  ],
+		  "close": [
+			[
+			  3,
+			  0
+			],
+			[
+			  2,
+			  0
+			],
+			[
+			  1,
+			  0
+			],
+			[
+			  0,
+			  0
+			]
+		  ]
 		}
 	  },
-	  "sprite_offset": [0, -16],
+	  "sprite_offset": [
+		0,
+		-16
+	  ],
 	  "closed_frame": 0,
 	  "open_frame": 3
 	}

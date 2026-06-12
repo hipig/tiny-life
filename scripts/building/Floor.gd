@@ -1,3 +1,4 @@
+class_name Floor
 extends HBoxContainer
 
 const META_SERVICE_WIDTH := &"service_width"

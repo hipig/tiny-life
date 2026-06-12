@@ -10,7 +10,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_201",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_2",
 	"default_door_style_id": "door_wood",
 	"layout_upgrades": [
@@ -32,7 +32,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_202",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_2",
 	"default_door_style_id": "door_panel",
 	"layout_upgrades": [
@@ -54,7 +54,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_301",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_3",
 	"default_door_style_id": "door_wood",
 	"layout_upgrades": [
@@ -76,7 +76,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_302",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_3",
 	"default_door_style_id": "door_panel",
 	"layout_upgrades": [
@@ -98,7 +98,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_401",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_4",
 	"default_door_style_id": "door_wood",
 	"layout_upgrades": [
@@ -120,7 +120,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_402",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_4",
 	"default_door_style_id": "door_panel",
 	"layout_upgrades": [
@@ -142,7 +142,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_501",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_5",
 	"default_door_style_id": "door_glass",
 	"layout_upgrades": [
@@ -164,7 +164,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_502",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_5",
 	"default_door_style_id": "door_panel",
 	"layout_upgrades": [
@@ -186,7 +186,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_601",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_6",
 	"default_door_style_id": "door_wood",
 	"layout_upgrades": [
@@ -208,7 +208,7 @@
 	"initial_unlocked": true,
 	"frame_tiles": [6, 4],
 	"grid_size": [6, 4],
-	"default_wallpaper_id": "wallpaper_602",
+	"default_wallpaper_id": "wallpaper_berry_red_plain",
 	"default_wall_style_id": "wall_floor_6",
 	"default_door_style_id": "door_panel",
 	"layout_upgrades": [

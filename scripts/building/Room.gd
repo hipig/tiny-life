@@ -1,3 +1,4 @@
+class_name Room
 extends Button
 
 const META_TENANT_SCENE_PATH := &"tenant_scene_path"

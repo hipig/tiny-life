@@ -50,23 +50,23 @@ PRD/TRD 是项目源头约束。如果实现压力与文档意图冲突，优先
 ```text
 res://
   scenes/
-    main/
-    ui/
-    building/
-    furniture/
-    tenant/
-    effects/
+	main/
+	ui/
+	building/
+	furniture/
+	tenant/
+	effects/
   scripts/
-    autoload/
-    platform/
-    camera/
-    building/
-    furniture/
-    tenant/
-    ui/
+	autoload/
+	platform/
+	camera/
+	building/
+	furniture/
+	tenant/
+	ui/
   data/
   assets/
-    pixel_spaces/
+	pixel_spaces/
 ```
 
 新增文件时优先放入对应目录。只有存在明确技术理由时，才扩展新的目录边界。

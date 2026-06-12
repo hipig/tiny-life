@@ -1,3 +1,4 @@
+class_name BuildSlot
 extends Button
 
 const META_SERVICE_WIDTH := &"service_width"

@@ -94,7 +94,7 @@ func _floor_height(floor_index: int, floor_data: Dictionary, built_floor: bool) 
 	var height := _room_pixel_size_from_frame_tiles(default_frame_tiles).y
 	for item in _content_configs_for_floor(floor_index, floor_data, built_floor):
 		var content: Dictionary = item
-		height = maxf(height, _content_pixel_size(content, built_floor))
+		height = maxf(height, _content_pixel_size(content, built_floor).y)
 	return height
 
 func _side_width(floor_index: int, floor_data: Dictionary, side: String, built_floor: bool) -> float:

@@ -47,7 +47,6 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
 [gui]
 
-common/snap_controls_to_pixels=true
 theme/default_font_antialiasing=0
 theme/default_font_subpixel_positioning=0
 theme/lcd_subpixel_layout=0
