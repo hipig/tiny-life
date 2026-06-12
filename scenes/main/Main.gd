@@ -325,7 +325,7 @@ func _show_toast(message: String) -> void:
 	popup_layer.show_toast(message)
 
 func _toast(key: String, values: Array = []) -> void:
-	var template := ConfigManager.text(key, key)
+	var template := ConfigManager.text(key)
 	if not values.is_empty():
 		_show_toast(template % values)
 		return

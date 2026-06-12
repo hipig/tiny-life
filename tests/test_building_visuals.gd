@@ -48,7 +48,7 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(public_area_source.contains("var door_x := ApartmentTileMap.TILE_SIZE * 0.5"), "1F entrance doors should sit inside the left wall tile")
 	assert_true(public_area_source.contains("area_pixel_size.x - ApartmentTileMap.TILE_SIZE * 0.5"), "Right-side public entrance doors should sit inside the right wall tile")
 	assert_true(public_area_scene.contains("position = Vector2(8, 64)"), "PublicAreaShell preview should show the entrance door on the left wall tile")
-	assert_true(floor_source.contains("area_view.call_deferred(\n\t\t\t\"apply_layout\""), "Public area layout should run after scene onready nodes bind")
+	assert_true(floor_source.contains("public_area_node.apply_layout("), "Public area layout should refresh the preplaced public area node")
 	assert_true(floor_source.contains("_public_body_sides"), "1F public areas should suppress their shared interior walls")
 	assert_true(building_view_source.contains("_public_entry_area"), "Building routes should prefer the 1F public lobby entrance over the service core")
 	assert_true(service_source.contains("size.x * 0.5"), "Elevator route anchor should stay centered in the service core")
@@ -227,7 +227,7 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 		var frame_tiles: Array = room_data.get("frame_tiles", [])
 		var grid_size: Array = room_data.get("grid_size", [])
 		floor_counts[floor_index] = int(floor_counts.get(floor_index, 0)) + 1
-		assert_true(ResourceLoader.exists(str(room_data.get("room_scene_path", ""))), "%s should configure a loadable room scene template" % room_data.get("id", ""))
+		assert_false(room_data.has("room_scene_path"), "%s should not select room scenes from config" % room_data.get("id", ""))
 		for pair in [
 			["default_wallpaper_id", "wallpaper"],
 			["default_wall_style_id", "wall"],
@@ -282,7 +282,11 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(floor_scene.contains("FloorServiceCore.tscn"), "Each floor should expose a central elevator service core scene")
 	assert_true(floor_scene.contains("PublicAreaShell.tscn"), "1F should configure visual-only public area shells")
 	assert_true(floor_scene.contains("[node name=\"SceneConfig\" type=\"Node\""), "Floor should keep room template config in Floor.tscn")
-	assert_true(floor_scene.contains("metadata/room_scene_path = \"res://scenes/building/Room.tscn\""), "Floor should assign the editable Room template in scene metadata")
+	assert_true(floor_scene.contains("[node name=\"LeftRoom\""), "Floor should preplace the editable left room node")
+	assert_true(floor_scene.contains("[node name=\"RightRoom\""), "Floor should preplace the editable right room node")
+	assert_true(floor_scene.contains("[node name=\"LeftPublicArea\""), "Floor should preplace the editable left public area node")
+	assert_true(floor_scene.contains("[node name=\"RightPublicArea\""), "Floor should preplace the editable right public area node")
+	assert_false(floor_scene.contains("metadata/room_scene_path"), "Floor should not keep runtime room scene selection metadata")
 	assert_true(floor_service_scene.contains("ServiceCoreTileMap.tscn"), "FloorServiceCore should compose an editable TileMap template")
 	assert_true(service_tilemap_scene.contains("res://tilesets/apartment_tileset.tres"), "ServiceCoreTileMap should share the internal apartment TileSet")
 	for layer_name in ["WallpaperTileMap", "WallTileMap", "InfrastructureTileMap", "RoofTileMap", "ConstructionTileMap"]:
@@ -290,9 +294,11 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_false(service_tilemap_scene.contains("name=\"FloorTileMap\""), "ServiceCoreTileMap should not keep a separate floor layer")
 	assert_true(floor_service_scene.contains("FloorLabel"), "FloorServiceCore should expose its floor label in the scene")
 	assert_true(floor_service_scene.contains("theme_override_font_sizes/font_size = 9"), "Floor label style should be editor-authored")
-	assert_true(floor_source.contains("get_node_or_null(\"FloorServiceCore\")"), "Floor should bind the scene-authored service core node")
-	assert_true(floor_source.contains("room_scene_path"), "Floor should allow room config to select an editor-authored room scene template")
-	assert_true(floor_source.contains("_scene_from_path"), "Floor should load configured room templates with scene default fallback")
+	assert_true(floor_source.contains("@onready var service_core: FloorServiceCore = $FloorServiceCore"), "Floor should bind the scene-authored service core node directly")
+	assert_true(floor_source.contains("@onready var left_room: Room = $LeftContent/LeftRoom"), "Floor should bind the preplaced left room node directly")
+	assert_true(floor_source.contains("@onready var right_room: Room = $RightContent/RightRoom"), "Floor should bind the preplaced right room node directly")
+	assert_false(floor_source.contains("room_scene_path"), "Floor should not select room scenes from config")
+	assert_false(floor_source.contains("_scene_from_path"), "Floor should not load fallback scene templates at runtime")
 	assert_false(floor_source.contains("FLOOR_SERVICE_CORE_SCENE"), "Floor should not instantiate the service-core scene as a fallback")
 	assert_false(floor_source.contains("preload(\"res://scenes/building/Room.tscn\")"), "Floor should not hide the room template in script")
 	assert_false(floor_source.contains("@export"), "Floor should read scene-authored config instead of script exports")
@@ -341,7 +347,7 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_true(apartment_tilemap_source.contains("@export var edge_top_left_corner_tile"), "ApartmentTileMap should export fixed wall-edge corner coordinates for editor filling")
 	assert_true(apartment_tilemap_source.contains("@export var wallpaper_tile"), "ApartmentTileMap should export the default wallpaper tile coordinate")
 	assert_true(apartment_tilemap_source.contains("wallpaper_pattern"), "ApartmentTileMap should support top/middle/bottom wallpaper patterns from decor config")
-	assert_true(apartment_tilemap_source.contains("_theme_int(\"wallpaper_source_id\""), "ApartmentTileMap should let decor themes override TileSet source ids")
+	assert_true(apartment_tilemap_source.contains("current_wallpaper_source_id = int(theme.get(\"wallpaper_source_id\", wallpaper_source_id))"), "ApartmentTileMap should let decor themes override TileSet source ids")
 	assert_true(apartment_tilemap_source.contains("@export var body_door_short_wall_cells"), "ApartmentTileMap should export body short-wall cells around doors")
 	assert_true(apartment_tilemap_source.contains("@export var edge_door_short_wall_cells"), "ApartmentTileMap should export edge short-wall cells around doors")
 	assert_false(apartment_tilemap_source.contains("@export var floor_tiles"), "ApartmentTileMap should not expose a separate floor layer for room skeletons")
@@ -381,14 +387,14 @@ func test_floor_and_room_visuals_use_building_atlases() -> void:
 	assert_false(floor_service_scene.contains("ServiceShade"), "Service core should not keep old ColorRect shade fallback")
 	assert_true(room_source.contains("frame_tiles"), "Room rendering should read frame_tiles for grid-sized room upgrades")
 	assert_true(room_source.contains("ApartmentTileMap.TILE_SIZE"), "Room pixel size should be derived from 16px TileMap cells")
-	assert_true(room_source.contains("frame_tiles.y) * ApartmentTileMap.TILE_SIZE"), "Floor placement grid should use the full 4-tile room height")
+	assert_true(room_source.contains("frame_tiles.y * ApartmentTileMap.TILE_SIZE"), "Floor placement grid should use the full 4-tile room height")
 	assert_true(room_source.contains("_wall_grid_rect"), "Room should expose a separate wall placement layer")
 	assert_true(room_source.contains("world_position_to_placement_grid"), "Room should translate scene taps through furniture-aware placement layers")
 	assert_true(room_source.contains("floor_grid_y_for"), "Floor furniture should map pointer input to the bottom floor line")
 	assert_true(room_shell_source.contains("render_room_skeleton"), "RoomShell should delegate room-frame drawing to ApartmentTileMap")
 	assert_true(room_source.contains("ConfigManager.tile_theme_for_room(room)"), "Room should render configured wallpaper and wall themes")
 	assert_true(room_source.contains("ConfigManager.door_theme_for_room(room)"), "Room should pass configured door themes to RoomShell")
-	assert_true(room_source.contains("_room_door_visual_offset()"), "Room should pass configured door visual offsets to RoomShell")
+	assert_true(room_source.contains("_room_door_visual_offset(room)"), "Room should pass configured door visual offsets to RoomShell")
 	assert_true(room_source.contains("tenant_view.setup(tenant_id, room_id)"), "Room should bind tenant scene instances to their room")
 	assert_true(room_source.contains("_furniture_position"), "Furniture should be positioned inside the room instead of listed as thumbnails")
 	var room_shell_packed := ResourceLoader.load("res://scenes/building/RoomShell.tscn", "PackedScene", ResourceLoader.CACHE_MODE_REPLACE) as PackedScene
@@ -559,7 +565,7 @@ func test_room_layout_upgrades_are_config_driven_and_future_rooms_can_stay_hidde
 	var building_source := FileAccess.get_file_as_string("res://scripts/building/ApartmentBuilding.gd")
 	for room in rooms:
 		var room_data: Dictionary = room
-		assert_true(room_data.has("room_scene_path"), "%s should expose room_scene_path for TileMap template selection" % room_data.get("id", ""))
+		assert_false(room_data.has("room_scene_path"), "%s should leave scene structure to Floor.tscn/Room.tscn" % room_data.get("id", ""))
 		assert_true(room_data.has("layout_upgrades"), "%s should expose layout_upgrades for room expansion" % room_data.get("id", ""))
 		assert_true(room_data.get("layout_upgrades", []).size() > 0, "%s should have at least one room layout upgrade template" % room_data.get("id", ""))
 	assert_true(config_source.contains("get_room_layout_upgrade"), "ConfigManager should expose room layout upgrade lookup")
@@ -569,19 +575,20 @@ func test_room_layout_upgrades_are_config_driven_and_future_rooms_can_stay_hidde
 	assert_true(building_source.contains("_room_is_visible"), "Building sizing should hide future configured rooms until unlocked")
 	for floor in floors:
 		var floor_data: Dictionary = floor
-		assert_true(floor_data.has("floor_scene_path"), "%dF should expose floor_scene_path for TileMap template selection" % int(floor_data.get("floor_index", 0)))
-		assert_true(floor_data.has("build_slot_scene_path"), "%dF should expose build_slot_scene_path for construction template selection" % int(floor_data.get("floor_index", 0)))
+		assert_false(floor_data.has("floor_scene_path"), "%dF should leave floor scene structure to ApartmentBuilding.tscn" % int(floor_data.get("floor_index", 0)))
+		assert_false(floor_data.has("build_slot_scene_path"), "%dF should leave build-slot scene structure to ApartmentBuilding.tscn" % int(floor_data.get("floor_index", 0)))
+		assert_true(floor_data.has("public_areas"), "%dF should explicitly declare public_areas, even when empty" % int(floor_data.get("floor_index", 0)))
 
 
 func test_saved_room_layouts_are_normalized_to_current_config() -> void:
 	var state_source := FileAccess.get_file_as_string("res://scripts/autoload/GameState.gd")
 	var save_source := FileAccess.get_file_as_string("res://scripts/autoload/SaveManager.gd")
-	assert_true(state_source.contains("_configured_room_layout_for_level"), "Saved room layout should be rebuilt from current config and room level")
-	assert_true(state_source.contains("_fixed_height_frame_tiles"), "Room frame tile height should be fixed by GameState")
-	assert_true(state_source.contains("_fixed_height_grid_size"), "Placement grid height should be fixed by GameState")
+	assert_true(state_source.contains("_room_layout_for_level"), "Current room layout should be derived from config and room level")
+	assert_true(state_source.contains("_save_validation_error"), "Loaded saves should be validated against the current strict schema")
 	assert_true(state_source.contains("SAVE_SCHEMA_VERSION"), "GameState should version saves before trusting persisted room layout levels")
-	assert_true(state_source.contains("save_needs_writeback = false"), "Development-stage saves should not request legacy migration writeback by default")
-	assert_true(save_source.contains("GameState.save_needs_writeback = false"), "SaveManager should clear writeback state after saving")
+	assert_true(state_source.contains("Resetting to current defaults"), "Invalid development-stage saves should reset instead of migrating")
+	assert_false(state_source.contains("save_needs_writeback"), "GameState should not keep legacy migration writeback flags")
+	assert_false(save_source.contains("save_needs_writeback"), "SaveManager should not keep legacy migration writeback branches")
 	assert_true(state_source.contains("\"frame_tiles\""), "Room saves should use frame_tiles instead of pixel dimensions")
 	assert_true(state_source.contains("\"grid_size\""), "Room saves should use grid_size instead of pixel rectangles")
 	assert_true(state_source.contains("\"layout_side\""), "Room saves should preserve left/right/suite layout side")
@@ -594,9 +601,9 @@ func test_saved_room_layouts_are_normalized_to_current_config() -> void:
 	assert_false(state_source.contains("\"room_size\""), "GameState should not preserve legacy pixel room_size fields")
 	assert_false(state_source.contains("\"grid_rect\""), "GameState should not preserve legacy pixel grid_rect fields")
 	assert_false(state_source.contains("[448, 176]"), "Old 720px-era room-size fallback should not survive in GameState")
-	assert_false(state_source.contains("save_needs_writeback = saved_schema_version < SAVE_SCHEMA_VERSION"), "Development-stage saves should not branch into legacy layout migrations")
-	assert_false(state_source.contains("if saved_schema_version < SAVE_SCHEMA_VERSION:"), "GameState should not keep old-save layout migration branches")
-	assert_true(state_source.contains("configured_layout := _configured_room_layout_for_level"), "Current-version saves should rebuild frame/grid from config and room level")
+	assert_false(state_source.contains("_ensure_runtime_defaults"), "GameState should not normalize old saves field-by-field")
+	assert_false(state_source.contains("saved_schema_version"), "GameState should not keep old-save layout migration branches")
+	assert_true(state_source.contains("layout := _room_layout_for_level"), "Current-version saves should validate frame/grid from config and room level")
 
 
 func test_build_slots_match_apartment_floor_visual_structure() -> void:
@@ -608,8 +615,8 @@ func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	var slot_shell_source := FileAccess.get_file_as_string("res://scripts/building/BuildSlotShell.gd")
 	for floor in floors:
 		var floor_data: Dictionary = floor
-		assert_true(ResourceLoader.exists(str(floor_data.get("floor_scene_path", ""))), "%dF should configure a loadable floor scene template" % int(floor_data.get("floor_index", 0)))
-		assert_true(ResourceLoader.exists(str(floor_data.get("build_slot_scene_path", ""))), "%dF should configure a loadable build-slot scene template" % int(floor_data.get("floor_index", 0)))
+		assert_false(floor_data.has("floor_scene_path"), "%dF should not configure a runtime floor scene template" % int(floor_data.get("floor_index", 0)))
+		assert_false(floor_data.has("build_slot_scene_path"), "%dF should not configure a runtime build-slot scene template" % int(floor_data.get("floor_index", 0)))
 	assert_true(slot_scene.contains("BuildSlotShell.tscn"), "Build slots should compose the editable shell scene")
 	assert_true(slot_scene.contains("StyleBoxFlat_slot_normal"), "Build slot button skin should be editor-authored")
 	assert_true(slot_scene.contains("[node name=\"SceneConfig\" type=\"Node\""), "BuildSlot layout config should be authored in BuildSlot.tscn")
@@ -618,11 +625,16 @@ func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	assert_true(slot_scene.contains("[node name=\"BuildableLabelTemplate\" type=\"Label\""), "Build slot buildable label template should be authored in BuildSlot.tscn")
 	assert_true(building_scene.contains("theme_override_constants/separation = 0"), "ApartmentBuilding spacing should be configured in the scene")
 	assert_true(building_scene.contains("[node name=\"SceneConfig\" type=\"Node\""), "ApartmentBuilding should keep template config in ApartmentBuilding.tscn")
-	assert_true(building_scene.contains("metadata/floor_scene_path = \"res://scenes/building/Floor.tscn\""), "ApartmentBuilding should assign the editable Floor template in scene metadata")
-	assert_true(building_scene.contains("metadata/build_slot_scene_path = \"res://scenes/building/BuildSlot.tscn\""), "ApartmentBuilding should assign the editable BuildSlot template in scene metadata")
-	assert_true(building_source.contains("floor_scene_path"), "ApartmentBuilding should allow floor config to select an editor-authored floor scene template")
-	assert_true(building_source.contains("build_slot_scene_path"), "ApartmentBuilding should allow floor config to select an editor-authored build-slot template")
-	assert_true(building_source.contains("_scene_from_path"), "ApartmentBuilding should load configured templates with scene default fallback")
+	assert_false(building_scene.contains("metadata/floor_scene_path"), "ApartmentBuilding should not keep runtime floor scene selection metadata")
+	assert_false(building_scene.contains("metadata/build_slot_scene_path"), "ApartmentBuilding should not keep runtime build-slot scene selection metadata")
+	for floor in floors:
+		var floor_index := int((floor as Dictionary).get("floor_index", 0))
+		assert_true(building_scene.contains("[node name=\"Floor_%d\"" % floor_index), "ApartmentBuilding should preplace Floor_%d" % floor_index)
+		if floor_index > 1:
+			assert_true(building_scene.contains("[node name=\"BuildSlot_%d\"" % floor_index), "ApartmentBuilding should preplace BuildSlot_%d" % floor_index)
+	assert_false(building_source.contains("floor_scene_path"), "ApartmentBuilding should not select floor scenes from config")
+	assert_false(building_source.contains("build_slot_scene_path"), "ApartmentBuilding should not select build-slot scenes from config")
+	assert_false(building_source.contains("_scene_from_path"), "ApartmentBuilding should not load fallback scene templates at runtime")
 	assert_true(slot_shell_scene.contains("BuildLeftRoomShell"), "Build slots should draw the left-side unbuilt room shell")
 	assert_true(slot_shell_scene.contains("BuildServiceCore"), "Build slots should keep the central elevator service area")
 	assert_true(slot_shell_scene.contains("BuildRightRoomShell"), "Build slots should draw the right-side unbuilt room shell")
@@ -661,5 +673,5 @@ func test_build_slots_match_apartment_floor_visual_structure() -> void:
 	assert_false(building_source.contains("preload(\"res://scenes/building/Floor.tscn\")"), "ApartmentBuilding should not hide floor templates in script")
 	assert_false(building_source.contains("preload(\"res://scenes/building/BuildSlot.tscn\")"), "ApartmentBuilding should not hide build-slot templates in script")
 	assert_false(building_source.contains("@export"), "ApartmentBuilding should read scene-authored config instead of script exports")
-	assert_true(building_source.contains("_has_visible_next_build_slot"), "Top built room should not duplicate roof/eaves below a visible build slot")
+	assert_true(building_source.contains("floor_index == highest_built_floor and not show_next_build_slot"), "Top built room should not duplicate roof/eaves below a visible build slot")
 	assert_true(building_source.contains("_floor_size"), "Build slots should reserve configurable floor heights")

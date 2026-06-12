@@ -13,7 +13,6 @@ var cancel_button: PanelActionButton
 
 var message_template := ""
 var refund_template := ""
-var fallback_furniture_name := ""
 
 func open(target_room_id: String, target_instance_id: String) -> void:
 	room_id = target_room_id
@@ -24,7 +23,7 @@ func open(target_room_id: String, target_instance_id: String) -> void:
 	var furniture_id := _furniture_id()
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var refund: int = int(float(data.get("price", 0)) * float(data.get("refund_rate", 0.5)))
-	message_label.text = message_template % data.get("name", fallback_furniture_name)
+	message_label.text = message_template % str(data["name"])
 	refund_label.text = refund_template % refund
 	if not confirm_button.action_requested.is_connected(_on_confirm_pressed):
 		confirm_button.action_requested.connect(_on_confirm_pressed)
@@ -40,7 +39,6 @@ func _bind_scene_nodes() -> void:
 func _bind_scene_text() -> void:
 	message_template = _template_text("MessageTemplate")
 	refund_template = _template_text("RefundTemplate")
-	fallback_furniture_name = _template_text("FallbackFurnitureName")
 
 func _template_text(node_name: String) -> String:
 	var template_label := get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TemplateText/%s" % node_name) as Label

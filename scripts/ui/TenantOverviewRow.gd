@@ -7,7 +7,6 @@ extends PanelContainer
 
 var title_template := ""
 var detail_template := ""
-var fallback_tenant_name := ""
 
 func setup(tenant_id: String, tenant_state: Dictionary) -> void:
 	_bind_scene_text()
@@ -15,8 +14,8 @@ func setup(tenant_id: String, tenant_state: Dictionary) -> void:
 	var tenant_data: Dictionary = ConfigManager.get_tenant_data(tenant_id)
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	title_label.text = title_template % [
-		tenant_data.get("name", fallback_tenant_name),
-		tenant_data.get("job", "")
+		str(tenant_data["name"]),
+		str(tenant_data["job"])
 	]
 	detail_label.text = detail_template % [
 		room.get("room_name", room_id),
@@ -28,7 +27,6 @@ func setup(tenant_id: String, tenant_state: Dictionary) -> void:
 func _bind_scene_text() -> void:
 	title_template = _template_text("TitleTemplate")
 	detail_template = _template_text("DetailTemplate")
-	fallback_tenant_name = _template_text("FallbackTenantName")
 
 func _template_text(node_name: String) -> String:
 	var template_label := get_node_or_null("TemplateText/%s" % node_name) as Label

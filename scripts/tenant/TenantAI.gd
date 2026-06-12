@@ -99,10 +99,8 @@ func _sync_from_current_behavior() -> void:
 
 	var tenant_state: Dictionary = GameState.tenants.get(tenant_id, {})
 	var current_need := str(tenant_state.get("current_need", ""))
-	var behavior := ConfigManager.normalize_behavior_key(
-		str(tenant_state.get("current_behavior", "")),
-		GameState.IDLE_TENANT_BEHAVIOR
-	)
+	var raw_behavior := str(tenant_state.get("current_behavior", GameState.IDLE_TENANT_BEHAVIOR))
+	var behavior := ConfigManager.normalize_behavior_key(raw_behavior)
 	if not current_need.is_empty():
 		state = AIState.BUBBLE_ACTION
 		pending_action_need = current_need
@@ -200,7 +198,7 @@ func _enter_away(update_until: bool) -> void:
 	tenant.hide_behavior_bubble()
 	tenant.play_avatar_behavior(GameState.AWAY_TENANT_BEHAVIOR)
 	if update_until:
-		var away_seconds := maxi(1, int(ConfigManager.get_tenant_ai_value("away_seconds", 18)))
+		var away_seconds := maxi(1, int(ConfigManager.get_tenant_ai_value("away_seconds")))
 		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_AWAY, _staggered_away_until(away_seconds))
 
 func _enter_returning() -> void:
@@ -474,7 +472,7 @@ func _should_go_outside() -> bool:
 		return false
 	if _building_view() == null:
 		return false
-	var chance := clampf(float(ConfigManager.get_tenant_ai_value("away_chance", 0.12)), 0.0, 1.0)
+	var chance := clampf(float(ConfigManager.get_tenant_ai_value("away_chance")), 0.0, 1.0)
 	return chance > 0.0 and randf() < chance
 
 func _away_is_finished() -> bool:
@@ -508,7 +506,7 @@ func _return_start_delay_seconds() -> float:
 	return float(_tenant_return_order_index()) * _return_stagger_seconds()
 
 func _return_stagger_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("return_stagger_seconds", 4.0)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("return_stagger_seconds")))
 
 func _tenant_return_order_index() -> int:
 	var index := 0
@@ -563,25 +561,25 @@ func _room_floor_index() -> int:
 	return int(_room().get("floor_index", 1))
 
 func _route_speed() -> float:
-	return maxf(1.0, float(ConfigManager.get_tenant_ai_value("route_speed", 24.0)))
+	return maxf(1.0, float(ConfigManager.get_tenant_ai_value("route_speed")))
 
 func _door_animation_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_animation_seconds", 0.24)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_animation_seconds")))
 
 func _elevator_animation_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_animation_seconds", 0.56)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_animation_seconds")))
 
 func _door_open_idle_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_open_idle_seconds", 0.12)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("door_open_idle_seconds")))
 
 func _elevator_idle_seconds() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_idle_seconds", 0.25)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("elevator_idle_seconds")))
 
 func _elevator_open_show_progress() -> float:
-	return clampf(float(ConfigManager.get_tenant_ai_value("elevator_open_show_progress", 0.75)), 0.0, 1.0)
+	return clampf(float(ConfigManager.get_tenant_ai_value("elevator_open_show_progress")), 0.0, 1.0)
 
 func _elevator_close_hide_progress() -> float:
-	return clampf(float(ConfigManager.get_tenant_ai_value("elevator_close_hide_progress", 0.85)), 0.0, 1.0)
+	return clampf(float(ConfigManager.get_tenant_ai_value("elevator_close_hide_progress")), 0.0, 1.0)
 
 func _building_view() -> BuildingView:
 	var node: Node = tenant

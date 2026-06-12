@@ -11,10 +11,10 @@ var next_income_row: IconInfoRow
 var offline_cap_row: IconInfoRow
 var offline_cap_title_prefix := ""
 var next_income_idle_text := ""
-var next_income_tick_template := "%.1f"
-var offline_cap_hours_template := "%d"
-var offline_cap_hours_minutes_template := "%d %d"
-var rent_value_template := "%.1f"
+var next_income_tick_template := ""
+var offline_cap_hours_template := ""
+var offline_cap_hours_minutes_template := ""
+var rent_value_template := ""
 
 func open() -> void:
 	setup_panel("", false)
@@ -39,16 +39,17 @@ func _bind_scene_nodes() -> void:
 
 func _bind_scene_text() -> void:
 	next_income_idle_text = next_income_row.title_label.text
-	offline_cap_title_prefix = _template_text("OfflineCapTitlePrefix", "")
-	next_income_tick_template = _template_text("NextIncomeTickTemplate", next_income_tick_template)
-	offline_cap_hours_template = _template_text("OfflineCapHoursTemplate", offline_cap_hours_template)
-	offline_cap_hours_minutes_template = _template_text("OfflineCapHoursMinutesTemplate", offline_cap_hours_minutes_template)
-	rent_value_template = _template_text("RentValueTemplate", rent_value_template)
+	offline_cap_title_prefix = _template_text("OfflineCapTitlePrefix")
+	next_income_tick_template = _template_text("NextIncomeTickTemplate")
+	offline_cap_hours_template = _template_text("OfflineCapHoursTemplate")
+	offline_cap_hours_minutes_template = _template_text("OfflineCapHoursMinutesTemplate")
+	rent_value_template = _template_text("RentValueTemplate")
 
-func _template_text(node_name: String, fallback: String) -> String:
+func _template_text(node_name: String) -> String:
 	var template_label := get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TemplateText/%s" % node_name) as Label
 	if template_label == null:
-		return fallback
+		push_error("IncomeDetailPanel scene is missing TemplateText/%s." % node_name)
+		return ""
 	return template_label.text
 
 func _next_income_tick_text() -> String:
@@ -60,7 +61,7 @@ func _next_income_tick_text() -> String:
 	return next_income_tick_template % seconds
 
 func _offline_cap_text() -> String:
-	var seconds := int(ConfigManager.get_economy_value("max_offline_seconds", 14400))
+	var seconds := int(ConfigManager.get_economy_value("max_offline_seconds"))
 	var hours := seconds / 3600
 	var minutes := (seconds % 3600) / 60
 	if minutes <= 0:

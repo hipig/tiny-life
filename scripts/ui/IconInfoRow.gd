@@ -22,4 +22,4 @@ func set_detail(detail := "") -> void:
 func set_icon(icon_file: String) -> void:
 	if icon_file.is_empty():
 		return
-	AssetResolver.apply_asset_to_texture_rect(icon, UIPanelFactory.icon_asset(icon_file), Color("#fff4dc"), Vector2i(16, 16))
+	AssetResolver.apply_asset_to_texture_rect(icon, UIPanelFactory.icon_asset(icon_file), Vector2i(16, 16))

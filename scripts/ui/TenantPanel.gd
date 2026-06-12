@@ -23,8 +23,6 @@ var tenant_info_row: IconInfoRow
 
 var panel_title := ""
 var candidates_title_template := ""
-var fallback_region_name := ""
-var fallback_tolerance_level := ""
 var region_detail_template := ""
 var region_locked_suffix := ""
 var region_action_text := ""
@@ -40,7 +38,6 @@ var tenant_stat_value_template := ""
 var tenant_behavior_title_template := ""
 var tenant_preference_detail_template := ""
 var behavior_label_by_key := {}
-var fallback_behavior_label := ""
 
 func open(target_room_id: String, panel_mode: String) -> void:
 	room_id = target_room_id
@@ -82,11 +79,11 @@ func _show_regions() -> void:
 		region_list_root.add_child(action_row)
 		action_row.setup(
 			"Mail.png",
-			str(region.get("name", fallback_region_name)),
+			str(region["name"]),
 			region_detail_template % [
 			required_level,
-			region.get("rent_tolerance_level", fallback_tolerance_level),
-			float(region.get("max_rent_per_minute", 0.0)),
+			str(region["rent_tolerance_level"]),
+			float(region["max_rent_per_minute"]),
 			"" if unlocked else region_locked_suffix
 			],
 			region_action_text,
@@ -101,16 +98,16 @@ func _show_candidates(region_id: String) -> void:
 	selected_region_id = region_id
 	var room: Dictionary = GameState.rooms.get(room_id, {})
 	var region: Dictionary = ConfigManager.get_tenant_region_data(region_id)
-	setup_panel(candidates_title_template % region.get("name", fallback_region_name), false)
+	setup_panel(candidates_title_template % str(region["name"]), false)
 	_bind_scene_nodes()
 	_show_content("candidates")
 	UIPanelFactory.clear_children(candidate_list_root)
 	candidate_empty_row.visible = false
-	rent_limit_row.set_title(rent_limit_title_template % region.get("rent_tolerance_level", fallback_tolerance_level))
-	rent_limit_row.set_detail(rent_limit_detail_template % float(region.get("max_rent_per_minute", 0.0)))
-	var max_rent := float(region.get("max_rent_per_minute", 0.0))
+	rent_limit_row.set_title(rent_limit_title_template % str(region["rent_tolerance_level"]))
+	rent_limit_row.set_detail(rent_limit_detail_template % float(region["max_rent_per_minute"]))
+	var max_rent := float(region["max_rent_per_minute"])
 	var shown := 0
-	var application_count := int(region.get("application_count", ConfigManager.get_economy_value("recruit_application_count", 3)))
+	var application_count := int(region["application_count"])
 	for tenant_data in ConfigManager.get_region_candidate_tenants(region_id):
 		var tenant_id := str(tenant_data.get("id", ""))
 		var tenant_state: Dictionary = GameState.tenants.get(tenant_id, {})
@@ -128,7 +125,7 @@ func _show_candidates(region_id: String) -> void:
 			tenant_data.get("job", "")
 		], candidate_detail_template % [
 			float(tenant_data.get("pay_multiplier", 1.0)),
-			region.get("rent_tolerance_level", fallback_tolerance_level),
+			str(region["rent_tolerance_level"]),
 			expected_rent,
 			max_rent,
 			", ".join(tenant_data.get("favorite_tags", [])),
@@ -152,12 +149,11 @@ func _show_tenant_view() -> void:
 	tenant_info_row.set_detail(tenant_preference_detail_template % ", ".join(data.get("favorite_tags", [])))
 
 func _behavior_label(value: String) -> String:
-	var key := ConfigManager.normalize_behavior_key(value, "")
+	var key := ConfigManager.normalize_behavior_key(value)
 	if behavior_label_by_key.has(key):
 		return str(behavior_label_by_key.get(key))
-	if not fallback_behavior_label.is_empty():
-		return fallback_behavior_label
-	return key
+	push_error("TenantPanel scene is missing a behavior label for '%s'." % key)
+	return ""
 
 func _bind_scene_nodes() -> void:
 	region_content = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/RegionContent") as VBoxContainer
@@ -180,8 +176,6 @@ func _bind_scene_nodes() -> void:
 func _bind_scene_text() -> void:
 	panel_title = _template_text("PanelTitle")
 	candidates_title_template = _template_text("CandidatesTitleTemplate")
-	fallback_region_name = _template_text("FallbackRegionName")
-	fallback_tolerance_level = _template_text("FallbackToleranceLevel")
 	region_detail_template = _template_text("RegionDetailTemplate")
 	region_locked_suffix = _template_text("RegionLockedSuffix")
 	region_action_text = _template_text("RegionActionText")
@@ -196,7 +190,6 @@ func _bind_scene_text() -> void:
 	tenant_stat_value_template = _template_text("TenantStatValueTemplate")
 	tenant_behavior_title_template = _template_text("TenantBehaviorTitleTemplate")
 	tenant_preference_detail_template = _template_text("TenantPreferenceDetailTemplate")
-	fallback_behavior_label = _template_text("FallbackBehaviorLabel")
 	behavior_label_by_key = _behavior_labels_from_scene()
 
 func _template_text(node_name: String) -> String:

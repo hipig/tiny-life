@@ -21,25 +21,22 @@ func apply_visual_theme(theme: Dictionary) -> void:
 	if theme.is_empty():
 		set_closed()
 		return
-	var door_asset: Dictionary = theme.get("door_asset", {})
-	closed_frame = int(theme.get("closed_frame", closed_frame))
-	open_frame = int(theme.get("open_frame", open_frame))
-	default_animation = str(theme.get("default_animation", door_asset.get("default_animation", default_animation)))
-	var animations: Dictionary = door_asset.get("animations", {}) if door_asset.get("animations", {}) is Dictionary else {}
-	open_animation = str(theme.get("open_animation", "open" if animations.has("open") else open_animation))
-	close_animation = str(theme.get("close_animation", "close" if animations.has("close") else close_animation))
-	if not door_asset.is_empty():
-		_apply_door_asset(door_asset)
-	var sprite_offset: Variant = theme.get("sprite_offset", [])
-	if sprite_offset is Array and sprite_offset.size() >= 2:
-		door_sprite.position = Vector2(float(sprite_offset[0]), float(sprite_offset[1]))
+	var door_asset: Dictionary = theme["door_asset"]
+	closed_frame = int(theme["closed_frame"])
+	open_frame = int(theme["open_frame"])
+	default_animation = str(door_asset["default_animation"])
+	open_animation = "open"
+	close_animation = "close"
+	_apply_door_asset(door_asset)
+	var sprite_offset: Array = theme["sprite_offset"]
+	door_sprite.position = Vector2(float(sprite_offset[0]), float(sprite_offset[1]))
 	set_closed()
 
 func play_open(duration_seconds := -1.0) -> void:
-	_play_visual(open_animation, default_animation, closed_frame, open_frame, false, duration_seconds)
+	_play_visual(open_animation, duration_seconds)
 
 func play_close(duration_seconds := -1.0) -> void:
-	_play_visual(close_animation, default_animation, open_frame, closed_frame, true, duration_seconds)
+	_play_visual(close_animation, duration_seconds)
 
 func set_open() -> void:
 	_set_frame(default_animation, open_frame)
@@ -48,17 +45,17 @@ func set_closed() -> void:
 	_set_frame(default_animation, closed_frame)
 
 func _apply_door_asset(door_asset: Dictionary) -> void:
-	var placeholder_size := _vector2i_from_array(door_asset.get("frame_size", [16, 32]), Vector2i(16, 32))
+	var frame_size: Array = door_asset["frame_size"]
+	var expected_size := Vector2i(int(frame_size[0]), int(frame_size[1]))
 	if not Engine.is_editor_hint() and AssetResolver.has_method("apply_asset_to_animated_sprite"):
 		AssetResolver.apply_asset_to_animated_sprite(
 			door_sprite,
 			door_asset,
 			default_animation,
-			Color.WHITE,
-			placeholder_size
+			expected_size
 		)
 		return
-	var resolver_script := load("res://scripts/autoload/AssetResolver.gd") as Script
+	var resolver_script := ResourceLoader.load("res://scripts/autoload/AssetResolver.gd", "Script", ResourceLoader.CACHE_MODE_REPLACE) as Script
 	if resolver_script == null:
 		return
 	var resolver: Object = resolver_script.new()
@@ -67,29 +64,15 @@ func _apply_door_asset(door_asset: Dictionary) -> void:
 			door_sprite,
 			door_asset,
 			default_animation,
-			Color.WHITE,
-			placeholder_size
+			expected_size
 		)
 
-func _play_visual(animation_name: String, fallback_animation: String, start_frame: int, fallback_frame: int, backwards: bool, duration_seconds: float) -> void:
+func _play_visual(animation_name: String, duration_seconds: float) -> void:
 	if door_sprite == null or door_sprite.sprite_frames == null:
 		_warn_missing_frames()
 		return
 	if door_sprite.sprite_frames.has_animation(animation_name):
 		door_sprite.play(animation_name, _custom_speed_for_duration(animation_name, duration_seconds))
-		return
-	if door_sprite.sprite_frames.has_animation(fallback_animation):
-		var frame_count := door_sprite.sprite_frames.get_frame_count(fallback_animation)
-		if frame_count <= 1:
-			_set_frame(fallback_animation, fallback_frame)
-			return
-		door_sprite.animation = fallback_animation
-		door_sprite.frame = clampi(start_frame, 0, frame_count - 1)
-		var custom_speed := _custom_speed_for_duration(fallback_animation, duration_seconds)
-		if backwards:
-			door_sprite.play(fallback_animation, -custom_speed, true)
-		else:
-			door_sprite.play(fallback_animation, custom_speed)
 		return
 	_warn_missing_frames()
 
@@ -131,8 +114,3 @@ func _animation_duration(animation_name: String) -> float:
 	if speed <= 0.0:
 		return duration
 	return duration / speed
-
-func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
-	if value is Array and value.size() >= 2:
-		return Vector2i(int(value[0]), int(value[1]))
-	return fallback

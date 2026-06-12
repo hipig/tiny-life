@@ -8,7 +8,7 @@ func _process(delta: float) -> void:
 		return
 	income_tick(delta)
 	autosave_timer += delta
-	if autosave_timer >= float(ConfigManager.get_economy_value("autosave_seconds", 60.0)):
+	if autosave_timer >= float(ConfigManager.get_economy_value("autosave_seconds")):
 		autosave_timer = 0.0
 		SaveManager.save_game()
 
@@ -36,8 +36,8 @@ func get_room_rent_breakdown(room: Dictionary, tenant_id := "") -> Dictionary:
 		}
 	var tenant_state: Dictionary = GameState.tenants.get(tenant_id, {})
 	var tenant_data: Dictionary = ConfigManager.get_tenant_data(tenant_id)
-	var base_rent: float = float(ConfigManager.get_economy_value("base_rent", 10.0))
-	var score_factor: float = float(ConfigManager.get_economy_value("score_rent_factor", 0.5))
+	var base_rent: float = float(ConfigManager.get_economy_value("base_rent"))
+	var score_factor: float = float(ConfigManager.get_economy_value("score_rent_factor"))
 	var score_part: float = float(room.get("score", 0)) * score_factor
 	var pay_multiplier: float = float(tenant_data.get("pay_multiplier", 1.0))
 	var satisfaction := int(tenant_state.get("satisfaction", int(tenant_data.get("initial_satisfaction", 60))))
@@ -91,7 +91,7 @@ func get_income_buffer() -> float:
 func calculate_offline_income() -> Dictionary:
 	var now: int = TimeManager.now_unix()
 	var offline_seconds: int = max(0, now - GameState.last_save_timestamp)
-	var capped_seconds: int = min(offline_seconds, int(ConfigManager.get_economy_value("max_offline_seconds", 14400)))
+	var capped_seconds: int = min(offline_seconds, int(ConfigManager.get_economy_value("max_offline_seconds")))
 	var income: int = int(GameState.total_rent_per_minute / 60.0 * capped_seconds)
 	return {"seconds": capped_seconds, "amount": income}
 

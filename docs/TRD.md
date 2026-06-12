@@ -140,6 +140,8 @@ res://
     apartment_levels.json
     ui_text.json
     behavior_aliases.json
+    tenant_regions.json
+    room_decor.json
     platform_config.json
 
   assets/
@@ -202,7 +204,7 @@ UI 层以编辑器所见即所得为准。
 实例化已经拆分好的子条目场景
 ```
 
-禁止在 UI 脚本中用 `Button.new()`、`Label.new()`、`PanelContainer.new()`、`HBoxContainer.new()`、`VBoxContainer.new()` 等方式临时拼 UI 骨架，也禁止把固定 `StyleBox`、固定字号、固定颜色、固定描边、固定 anchors、固定 offsets、固定 `custom_minimum_size` 等 Inspector 可配置布局和视觉样式藏在脚本里。
+禁止在 UI / presentation 脚本中用 `Button.new()`、`Label.new()`、`PanelContainer.new()`、`HBoxContainer.new()`、`VBoxContainer.new()` 等方式临时拼 UI 骨架，也禁止把固定 `StyleBox`、固定字号、固定颜色、固定描边、固定 anchors、固定 offsets、固定 `custom_minimum_size` 等 Inspector 可配置布局和视觉样式藏在脚本里。角色表现脚本可以处理碰撞、动画和运行时空间关系，不纳入 UI 固定布局限制。
 
 动态列表允许按数据实例化独立子条目场景，例如：
 
@@ -400,7 +402,7 @@ BuildingView
 └── InputArea
 ```
 
-公寓主体应改为 TileMap / TileMapLayer 优先的可编辑结构。楼层外壳、房间格子、墙面、地面、屋檐和施工层表现应尽量由 `.tscn` 中的 TileMapLayer 或拆分子场景承载，脚本只绑定配置数据、切换状态和实例化子场景，不运行时绘制不可预览的主体结构。
+公寓主体应改为 TileMap / TileMapLayer 优先的可编辑结构，并采用 scene-first / WYSIWYG authoring。`ApartmentBuilding.tscn` 预摆所有 `Floor_X` 和 `BuildSlot_X`；`Floor.tscn` 预摆左右房间、左右公共区与中央服务核心；`Room.tscn` 预摆房间 shell、家具层、租客层和模板文本。脚本只绑定配置 ID、运行态数据和容器引用，刷新显隐/状态/文本；不从配置中的 scene path 动态选择核心楼层、房间或建造槽模板，也不运行时清空后重建核心结构。
 
 详细迁移边界与验收标准见 `docs/APARTMENT_TILEMAP_MIGRATION.md`。
 
@@ -409,9 +411,9 @@ BuildingView
 ```text
 1. 新增 res://tilesets/apartment_tileset.tres，统一引用公寓墙体、地板、屋檐、施工层、门梯等 16x16 素材。
 2. 新建 ApartmentTileMap.tscn，至少包含 WallpaperTileMap、WallTileMap、InfrastructureTileMap、RoofTileMap、ConstructionTileMap。
-3. Room.tscn / Floor.tscn 保留交互按钮和租客/家具挂点，但房间墙体、地板、骨架、屋檐改由 TileMapLayer 编辑器手动铺设。
+3. ApartmentBuilding.tscn / Floor.tscn / Room.tscn / BuildSlot.tscn 保留可预览的固定节点树；房间墙体、地板、骨架、屋檐改由 TileMapLayer 与拆分子场景承载。
 4. 建造槽状态通过切换已铺好的 TileMapLayer/子场景可见性表达，不在脚本中生成色块、框线或施工素材。
-5. 房间大小、格子大小、房间数量扩展继续来自 rooms.json / floors.json；脚本只把配置绑定到交互区域、家具网格和租客挂点。
+5. 房间大小、格子大小、房间数量扩展继续来自 rooms.json / floors.json；配置不再包含 `room_scene_path` / `floor_scene_path` / `build_slot_scene_path`，脚本只把配置绑定到预摆节点、交互区域、家具网格和租客挂点。
 6. 完成迁移后移除 RoomShell / BuildSlotShell 中用于墙面、地面、屋檐和施工表现的 TextureRect/ColorRect 兜底结构；租客、家具、摆放网格保留为数据驱动子场景或交互挂点。
 ```
 
@@ -779,7 +781,7 @@ spritesheet 某一帧
 tileset
 ```
 
-AssetResolver 统一处理。
+AssetResolver 统一处理。资源配置缺 key、缺文件或类型不符时必须报错，不生成占位纹理、占位颜色或默认资源。
 
 ---
 
@@ -787,7 +789,7 @@ AssetResolver 统一处理。
 
 ```gdscript
 func apply_asset_to_sprite(sprite: Sprite2D, asset_config: Dictionary):
-    var type = asset_config.get("type", "single_sprite")
+    var type = asset_config["type"]
 
     match type:
         "single_sprite":
@@ -1636,13 +1638,19 @@ func show_rewarded_ad(ad_type: String, callback: Callable):
 ```text
 furniture.json
 tenants.json
+rooms.json
 floors.json
 tasks.json
 economy.json
 apartment_levels.json
 ui_text.json
 behavior_aliases.json
+tenant_regions.json
+room_decor.json
+platform_config.json
 ```
+
+ConfigManager 启动即校验严格 schema。缺 key、重复 ID、引用不存在或类型不符时直接报错；访问器不接受业务 fallback 参数。
 
 ---
 

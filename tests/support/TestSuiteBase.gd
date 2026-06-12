@@ -118,7 +118,6 @@ func _presentation_script_paths() -> Array[String]:
 		"res://scripts/effects/FloatingCoinText.gd",
 		"res://scripts/furniture/Furniture.gd",
 		"res://scripts/furniture/FurniturePreview.gd",
-		"res://scripts/tenant/Tenant.gd",
 		"res://scripts/tenant/NeedBubble.gd",
 		"res://scripts/tenant/TenantEmote.gd"
 	])

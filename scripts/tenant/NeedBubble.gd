@@ -14,7 +14,7 @@ func _ready() -> void:
 	visible = false
 
 func show_behavior(behavior: String) -> void:
-	var key := ConfigManager.normalize_behavior_key(behavior, "")
+	var key := ConfigManager.normalize_behavior_key(behavior)
 	show_token += 1
 	var token := show_token
 	_hide_icons()
@@ -38,7 +38,7 @@ func hide_bubble() -> void:
 	visible = false
 
 func has_behavior_icon(behavior: String) -> bool:
-	var key := ConfigManager.normalize_behavior_key(behavior, "")
+	var key := ConfigManager.normalize_behavior_key(behavior)
 	return _find_icon_for_behavior(key) != null
 
 func _hide_icons() -> void:

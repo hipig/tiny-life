@@ -31,8 +31,12 @@ data/economy.json
 data/apartment_levels.json
 data/ui_text.json
 data/behavior_aliases.json
+data/tenant_regions.json
+data/room_decor.json
 data/platform_config.json
 ```
+
+配置采用严格 schema：缺文件、缺 key、类型不符、ID 重复、引用不存在或行为别名无法归一时，启动阶段必须报错。业务代码不得为价格、文案、资源、场景路径、租客区域、房间装饰或经济常量提供 fallback。
 
 ## 家具数据
 
@@ -79,9 +83,17 @@ comfort + entertainment + hygiene + food
 id
 floor_index
 room_name
-room_scene_path
+layout_side
+door_side
+door_mirrored
+door_visual_offset
 unlocked
 level
+frame_tiles
+grid_size
+wallpaper_id
+wall_style_id
+door_style_id
 tenant_id
 furniture_instances
 score
@@ -101,16 +113,37 @@ grid_pos
 mirrored
 ```
 
-`room_scene_path` 用于选择编辑器可打开的房间模板场景。不同房间尺寸或视觉外壳应优先拆成 `.tscn` 模板，并由配置选择，不要在 GDScript 中硬编码或临时拼主体视觉。
-
-楼层配置可包含：
+楼层配置必须包含：
 
 ```text
-floor_scene_path
-build_slot_scene_path
+floor_index
+display_name
+visual_role
+initial_built
+required_apartment_level
+build_cost
+service_label
+public_areas
+floor_icon_asset
+build_icon_asset
 ```
 
-这两个路径用于选择已建楼层模板和施工槽模板。楼层外壳、服务核心、屋檐、施工表现应由这些模板中的 TileMap/子场景承载。
+核心公寓结构采用 scene-first：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell` 由 `.tscn` 预摆节点定义结构，配置只绑定 ID、尺寸、门朝向、解锁和装饰数据。`rooms.json`、`floors.json` 和 `public_areas` 不允许使用 `*_scene_path` 字段选择运行时模板。
+
+## 房间装饰数据
+
+`room_decor.json` 保留为当前有效配置。每个装饰项必须声明：
+
+```text
+id
+category
+name
+price
+preview_asset
+theme 或 door_asset
+```
+
+装饰分类固定为 `wallpaper`、`wall`、`door`。房间默认装饰 ID 必须引用对应分类；RoomPanel 的装饰页签只渲染配置中存在的分类和条目，不提供默认文案、默认资源或默认价格。
 
 ## 租客数据
 
@@ -135,7 +168,24 @@ satisfaction
 current_need
 current_behavior
 room_id
+presence_state
+away_until_timestamp
+presence_target_room_id
 ```
+
+`tenant_regions.json` 保留为当前有效配置。每个区域必须声明：
+
+```text
+id
+name
+required_apartment_level
+rent_tolerance_level
+max_rent_per_minute
+tenant_ids
+application_count
+```
+
+租客招募区域、候选租客、候选数量、租金上限和展示文案必须来自该配置和场景模板文本；TenantPanel 不提供默认区域、默认候选数量或默认文案 fallback。
 
 PRD 中的 MVP 租客：
 
@@ -212,4 +262,4 @@ MVP 离线收益上限：
 - Spritesheet 帧。
 - TileSet。
 
-使用 `AssetResolver` 应用资源配置。玩法组件不要重复实现资源解析逻辑。
+使用 `AssetResolver` 应用资源配置。玩法组件不要重复实现资源解析逻辑，也不要生成占位颜色、占位纹理或临时资源来掩盖缺失配置。

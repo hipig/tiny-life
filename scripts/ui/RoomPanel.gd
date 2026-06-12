@@ -37,14 +37,12 @@ var decor_category_row: HBoxContainer
 var decor_list_root: GridContainer
 
 var title_template := ""
-var room_fallback_name := ""
 var attribute_detail_template := ""
 var tenant_stat_title_template := ""
 var tenant_satisfaction_title_template := ""
 var tenant_detail_template := ""
 var rent_value_template := ""
 var behavior_label_by_key := {}
-var fallback_behavior_label := ""
 
 func open(target_room_id: String, initial_tab := "furniture") -> void:
 	room_id = target_room_id
@@ -56,9 +54,9 @@ func refresh() -> void:
 		_refresh()
 
 func _refresh() -> void:
-	var room: Dictionary = GameState.rooms.get(room_id, {})
+	var room: Dictionary = GameState.get_room(room_id)
 	_bind_scene_text()
-	setup_panel(title_template % room.get("room_name", room_fallback_name), false)
+	setup_panel(title_template % str(room["room_name"]), false)
 	_bind_scene_nodes()
 	_configure_tabs()
 	_show_selected_content()
@@ -104,13 +102,11 @@ func _bind_scene_nodes() -> void:
 
 func _bind_scene_text() -> void:
 	title_template = _template_text("TitleTemplate")
-	room_fallback_name = _template_text("RoomFallbackName")
 	attribute_detail_template = _template_text("AttributeDetailTemplate")
 	tenant_stat_title_template = _template_text("TenantStatTitleTemplate")
 	tenant_satisfaction_title_template = _template_text("TenantSatisfactionTitleTemplate")
 	tenant_detail_template = _template_text("TenantDetailTemplate")
 	rent_value_template = _template_text("RentValueTemplate")
-	fallback_behavior_label = _template_text("FallbackBehaviorLabel")
 	behavior_label_by_key = _behavior_labels_from_scene()
 
 func _template_text(node_name: String) -> String:
@@ -228,12 +224,11 @@ func _render_decor_category(room: Dictionary, category: String, root: Node) -> v
 		row.apply_requested.connect(_on_decor_apply_pressed)
 
 func _behavior_label(value: String) -> String:
-	var key := ConfigManager.normalize_behavior_key(value, "")
+	var key := ConfigManager.normalize_behavior_key(value)
 	if behavior_label_by_key.has(key):
 		return str(behavior_label_by_key.get(key))
-	if not fallback_behavior_label.is_empty():
-		return fallback_behavior_label
-	return key
+	push_error("RoomPanel scene is missing a behavior label for '%s'." % key)
+	return ""
 
 func _is_decor_category(category: String) -> bool:
 	return category == ConfigManager.DECOR_WALLPAPER \

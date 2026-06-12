@@ -12,7 +12,6 @@ const FLOATING_CONTROL_OFFSET := Vector2(0.0, -12.0)
 
 var place_title_prefix := ""
 var move_title_prefix := ""
-var fallback_furniture_name := ""
 var place_confirm_text := ""
 var move_confirm_text := ""
 var place_hint_template := ""
@@ -216,7 +215,7 @@ func _refresh(snap_preview := true) -> void:
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var valid := _grid_pos_is_valid() and FurniturePlacementRules.can_place_furniture(room_id, furniture_id, grid_pos, instance_id)
 	var title_prefix := move_title_prefix if is_move else place_title_prefix
-	var furniture_name := str(data.get("name", fallback_furniture_name))
+	var furniture_name := str(data["name"])
 	title_label.text = ("%s %s" % [title_prefix, furniture_name])
 	var hint_template := move_hint_template if is_move else place_hint_template
 	hint_label.text = _format_name_template(hint_template, furniture_name)
@@ -400,7 +399,6 @@ func _clear_room_preview() -> void:
 func _bind_scene_text() -> void:
 	place_title_prefix = _template_text("PlaceTitlePrefix")
 	move_title_prefix = _template_text("MoveTitlePrefix")
-	fallback_furniture_name = _template_text("FallbackFurnitureName")
 	place_confirm_text = _template_text("PlaceConfirmText")
 	move_confirm_text = _template_text("MoveConfirmText")
 	place_hint_template = _template_text("PlaceHintTemplate")

@@ -1,16 +1,36 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/building/Floor.gd" id="1_floor"]
 [ext_resource type="PackedScene" path="res://scenes/building/FloorServiceCore.tscn" id="2_service_core"]
+[ext_resource type="PackedScene" path="res://scenes/building/Room.tscn" id="3_room"]
+[ext_resource type="PackedScene" path="res://scenes/building/PublicAreaShell.tscn" id="4_public_area"]
 
 [node name="Floor" type="HBoxContainer"]
 theme_override_constants/separation = 0
 script = ExtResource("1_floor")
 
 [node name="SceneConfig" type="Node" parent="."]
-metadata/room_scene_path = "res://scenes/building/Room.tscn"
-metadata/public_area_scene_path = "res://scenes/building/PublicAreaShell.tscn"
 metadata/service_width = 48.0
 metadata/default_frame_tiles = Vector2i(6, 4)
 
+[node name="LeftContent" type="Control" parent="."]
+custom_minimum_size = Vector2(96, 64)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LeftRoom" parent="LeftContent" instance=ExtResource("3_room")]
+
+[node name="LeftPublicArea" parent="LeftContent" instance=ExtResource("4_public_area")]
+visible = false
+
 [node name="FloorServiceCore" parent="." instance=ExtResource("2_service_core")]
+
+[node name="RightContent" type="Control" parent="."]
+custom_minimum_size = Vector2(96, 64)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RightRoom" parent="RightContent" instance=ExtResource("3_room")]
+
+[node name="RightPublicArea" parent="RightContent" instance=ExtResource("4_public_area")]
+visible = false

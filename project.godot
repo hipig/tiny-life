@@ -36,7 +36,7 @@ window/size/viewport_width=360
 window/size/viewport_height=640
 window/size/window_width_override=720
 window/size/window_height_override=1280
-window/stretch/mode="canvas_items"
+window/stretch/mode="viewport"
 window/stretch/aspect="keep_width"
 window/stretch/scale_mode="integer"
 window/handheld/orientation=1
@@ -47,6 +47,7 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
 [gui]
 
+common/snap_controls_to_pixels=true
 theme/default_font_antialiasing=0
 theme/default_font_subpixel_positioning=0
 theme/lcd_subpixel_layout=0

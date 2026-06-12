@@ -27,7 +27,7 @@ func setup(id: String, target_grid_pos := [0, 0], is_valid := false) -> void:
 	valid = is_valid
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var asset: Dictionary = data.get("asset", {})
-	AssetResolver.apply_asset_to_texture_rect(self, asset, Color("#b9784a"), Vector2i(56, 56))
+	AssetResolver.apply_asset_to_texture_rect(self, asset, Vector2i(56, 56))
 	_update_tint()
 
 func set_valid(value: bool) -> void:

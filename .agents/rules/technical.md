@@ -156,11 +156,13 @@ GDScript 在 UI 中只负责：
 - 连接信号。
 - 实例化已经拆分好的子条目场景，例如列表行、卡片模板、弹窗场景。
 
-禁止在 UI 脚本中用 `Button.new()`、`Label.new()`、`PanelContainer.new()`、`HBoxContainer.new()`、`VBoxContainer.new()` 等方式临时拼 UI 骨架。也不要在脚本中创建固定 `StyleBox`、固定字号、固定颜色、固定描边、固定 anchors、固定 offsets、固定 `custom_minimum_size` 等可在 Inspector 配置的布局和视觉样式。缺少必要 UI 节点时应报错并修正 `.tscn`，不要在脚本中兜底补建。
+禁止在 UI 脚本中用 `Button.new()`、`Label.new()`、`PanelContainer.new()`、`HBoxContainer.new()`、`VBoxContainer.new()` 等方式临时拼 UI 骨架。这里的 UI 脚本特指 UI / presentation 脚本。也不要在 UI / presentation 脚本中创建固定 `StyleBox`、固定字号、固定颜色、固定描边、固定 anchors、固定 offsets、固定 `custom_minimum_size` 等可在 Inspector 配置的布局和视觉样式。缺少必要 UI 节点时应报错并修正 `.tscn`，不要在脚本中兜底补建。`Tenant.gd` 这类角色表现脚本允许处理碰撞、动画、朝向、位置和运行时空间关系，不适用 UI 固定布局规则。
 
 节点较多的界面必须拆分独立子场景，例如列表行、统计卡、操作按钮、页签按钮、复杂弹窗内容块。动态内容只能通过这些可在编辑器打开的子场景模板渲染。
 
-公寓主体应优先使用 TileMap/TileMapLayer 结构实现。房间格子、墙面、地面、楼层外壳、屋檐和可建造状态尽量使用可编辑 TileMap 或拆分子场景表达，避免脚本运行时绘制不可预览的主体结构。
+公寓主体应优先使用 TileMap/TileMapLayer 结构实现。核心公寓与核心 UI 采用 scene-first / WYSIWYG authoring：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell` 的节点树、容器、服务核心、左右房间、公共区、覆盖层和模板文本必须预先存在于 `.tscn` 中。脚本只绑定配置 ID、刷新显隐/状态/文本、实例化家具、租客、飘字等天然运行时对象；禁止运行时清空后重建核心楼层、房间、建造槽或面板骨架。
+
+配置缺失即错误。`ConfigManager` 和 `AssetResolver` 不提供业务 fallback，不生成占位颜色、占位纹理或默认 scene path。存档只接受当前 schema；配置 ID 或结构失效时重置到当前默认状态并给出明确错误。
 
 ## 公寓骨架约束
 
@@ -171,6 +173,11 @@ GDScript 在 UI 中只负责：
 - 所有门所在墙体必须按“对应上角 + 竖向长边 + 门洞短边 + 独立门场景 + 下边”的结构组织。左墙门使用左上角，右墙门使用右上角。
 - 01 房在右墙开门且不镜像；02 房在左墙开门且镜像。门已外开，家具摆放和租客站位不得再剔除门口格。
 - 施工槽必须与建成楼层同宽同高，并保持左房 / 电梯厅 / 右房的横向结构，避免建造前后宽度跳变。
+- `ApartmentBuilding.tscn` 必须预摆所有当前配置楼层的 `Floor_X` 节点，以及 2F 以上对应的 `BuildSlot_X` 节点；`Floor.tscn` 必须预摆 `LeftRoom`、`RightRoom`、`LeftPublicArea`、`RightPublicArea` 和 `FloorServiceCore`。
+
+## 像素视口基线
+
+项目逻辑视口为 `360 x 640`，桌面预览覆盖为 `720 x 1280`。拉伸模式使用 `viewport`、`keep_width`、`integer`，并启用 Control 像素吸附，保证像素美术按整数倍放大。
 
 ## 性能规则
 
@@ -190,7 +197,8 @@ GDScript 在 UI 中只负责：
 设计基准：
 
 ```text
-720 x 1280
+360 x 640 logical viewport
+720 x 1280 desktop preview
 ```
 
 同时考虑：

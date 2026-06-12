@@ -6,7 +6,6 @@ func _ready() -> void:
 func save_game() -> void:
 	var data: Dictionary = GameState.to_save_data()
 	PlatformManager.save_data("save_main", data)
-	GameState.save_needs_writeback = false
 
 func load_game() -> void:
 	PlatformManager.init_platform()
@@ -20,8 +19,6 @@ func load_game() -> void:
 	var offline: Dictionary = EconomyManager.calculate_offline_income()
 	if int(offline.get("amount", 0)) > 0:
 		GameEvents.offline_income_ready.emit(int(offline.get("amount", 0)), int(offline.get("seconds", 0)))
-	if GameState.save_needs_writeback:
-		save_game()
 
 func delete_save_and_restart() -> void:
 	PlatformManager.delete_data("save_main")

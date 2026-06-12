@@ -226,10 +226,10 @@ func get_left_offscreen_route_mark_world_position(y: float) -> Vector2:
 func _public_entry_area() -> Control:
 	if building_root == null:
 		return null
-	var floor_node := building_root.get_node_or_null("Floor_1")
+	var floor_node := building_root.get_floor_node(1)
 	if floor_node == null:
 		return null
-	for child in floor_node.get_children():
+	for child in floor_node.get_active_public_areas():
 		var area := child as Control
 		if area != null and area.has_method("get_exit_door") and area.call("get_exit_door") != null:
 			return area
@@ -528,7 +528,7 @@ func _visible_world_left() -> float:
 	return world_camera.position.x - _visible_world_size().x * 0.5
 
 func _tenant_route_offscreen_margin() -> float:
-	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("offscreen_margin", 64.0)))
+	return maxf(0.0, float(ConfigManager.get_tenant_ai_value("offscreen_margin")))
 
 func _viewport_size() -> Vector2:
 	if world_viewport == null:

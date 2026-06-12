@@ -17,7 +17,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	coin_popup_timer += delta
-	var interval := float(ConfigManager.get_economy_value("coin_popup_interval", 6.0))
+	var interval := float(ConfigManager.get_economy_value("coin_popup_interval"))
 	if coin_popup_timer < interval:
 		return
 	coin_popup_timer = 0.0

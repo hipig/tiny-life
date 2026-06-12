@@ -16,7 +16,7 @@ var decor_id := ""
 func setup(item: Dictionary, current: bool, can_buy: bool) -> void:
 	_bind_scene_text()
 	decor_id = str(item.get("id", ""))
-	AssetResolver.apply_asset_to_texture_rect(preview, item.get("preview_asset", {}), Color("#b9784a"), Vector2i(64, 48))
+	AssetResolver.apply_asset_to_texture_rect(preview, item.get("preview_asset", {}), Vector2i(64, 48))
 	item_label.text = str(item.get("name", ""))
 	if current:
 		apply_button.text = applied_button_text

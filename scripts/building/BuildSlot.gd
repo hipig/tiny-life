@@ -1,21 +1,16 @@
 extends Button
 
-const DEFAULT_SLOT_WIDTH := 240.0
-const DEFAULT_SLOT_HEIGHT := 64.0
-const DEFAULT_SERVICE_WIDTH := 48.0
-const DEFAULT_FRAME_TILES := Vector2i(6, 4)
-
 const META_SERVICE_WIDTH := &"service_width"
 const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 const META_WALL_INSET := &"wall_inset"
 const META_FLOOR_HEIGHT := &"floor_height"
 const META_ROOF_HEIGHT := &"roof_height"
 
-var service_width := DEFAULT_SERVICE_WIDTH
-var default_frame_tiles := DEFAULT_FRAME_TILES
-var wall_inset := 9.0
-var floor_height := 22.0
-var roof_height := 13.0
+var service_width := 0.0
+var default_frame_tiles := Vector2i.ZERO
+var wall_inset := 0.0
+var floor_height := 0.0
+var roof_height := 0.0
 var locked_label_template := ""
 var buildable_label_template := ""
 
@@ -30,7 +25,7 @@ func _ready() -> void:
 	text = ""
 	if not pressed.is_connected(_on_pressed):
 		pressed.connect(_on_pressed)
-	_ensure_shell()
+	shell = $BuildSlotShell
 
 func setup(index: int) -> void:
 	floor_index = index
@@ -39,30 +34,23 @@ func setup(index: int) -> void:
 
 func _refresh() -> void:
 	_bind_scene_config()
-	_ensure_shell()
-	if shell == null:
-		return
 	text = ""
 	custom_minimum_size = _slot_size()
 	size = custom_minimum_size
-	var floor: Dictionary = ConfigManager.get_floor_data(floor_index)
-	if floor.is_empty():
-		visible = false
-		return
-	visible = true
-	var required_level := int(floor.get("required_apartment_level", 1))
-	var display_name := str(floor.get("display_name", "%dF" % floor_index))
+	var floor := ConfigManager.get_floor_data(floor_index)
+	var required_level := int(floor["required_apartment_level"])
+	var display_name := str(floor["display_name"])
 	if GameState.apartment_level < required_level:
-		visible = false
 		disabled = true
+		_add_build_visual(locked_label_template % [display_name, required_level], true)
 		return
 	disabled = false
-	_add_build_visual(_format_label(buildable_label_template, [display_name, int(floor.get("build_cost", 0))], display_name), false)
+	_add_build_visual(buildable_label_template % [display_name, int(floor["build_cost"])], false)
 
 func _add_build_visual(label_text: String, locked: bool) -> void:
 	var frames := _side_frame_tiles()
-	var left_frame_tiles: Vector2i = frames.get("left", default_frame_tiles)
-	var right_frame_tiles: Vector2i = frames.get("right", default_frame_tiles)
+	var left_frame_tiles: Vector2i = frames["left"]
+	var right_frame_tiles: Vector2i = frames["right"]
 	shell.apply_layout(
 		_slot_size(),
 		service_width,
@@ -76,21 +64,14 @@ func _add_build_visual(label_text: String, locked: bool) -> void:
 	shell.set_locked_visuals(locked)
 	shell.label.text = label_text
 
-func _ensure_shell() -> void:
-	shell = get_node_or_null("BuildSlotShell") as BuildSlotShell
-	if shell == null:
-		push_error("BuildSlot.tscn must expose a BuildSlotShell child.")
-
 func _on_pressed() -> void:
 	if floor_index > 0 and not disabled:
 		UIManager.open_build_confirm(floor_index)
 
 func _slot_size() -> Vector2:
 	var frames := _side_frame_tiles()
-	var left_frame_tiles: Vector2i = frames.get("left", default_frame_tiles)
-	var right_frame_tiles: Vector2i = frames.get("right", default_frame_tiles)
-	var left_size := _room_pixel_size_from_frame_tiles(left_frame_tiles)
-	var right_size := _room_pixel_size_from_frame_tiles(right_frame_tiles)
+	var left_size := _room_pixel_size_from_frame_tiles(frames["left"])
+	var right_size := _room_pixel_size_from_frame_tiles(frames["right"])
 	return Vector2(left_size.x + service_width + right_size.x, maxf(left_size.y, right_size.y))
 
 func _side_frame_tiles() -> Dictionary:
@@ -98,29 +79,26 @@ func _side_frame_tiles() -> Dictionary:
 		"left": default_frame_tiles,
 		"right": default_frame_tiles
 	}
-	var floor_data: Dictionary = ConfigManager.get_floor_data(floor_index)
-	var public_areas: Array = floor_data.get("public_areas", [])
+	var floor_data := ConfigManager.get_floor_data(floor_index)
+	var public_areas: Array = floor_data["public_areas"]
 	if not public_areas.is_empty():
 		for item in public_areas:
 			var area: Dictionary = item
-			var side := str(area.get("layout_side", "left")).strip_edges().to_lower()
+			var side := str(area["layout_side"]).strip_edges().to_lower()
 			if side == "left" or side == "right":
 				result[side] = _frame_tiles(area)
 		return result
-	for room in ConfigManager.get_room_configs_for_floor(floor_index):
-		var room_data: Dictionary = room
-		var side := str(room_data.get("layout_side", "left")).strip_edges().to_lower()
+	for room_data in ConfigManager.get_room_configs_for_floor(floor_index):
+		var room: Dictionary = room_data
+		var side := str(room["layout_side"]).strip_edges().to_lower()
 		if side == "suite":
-			result["left"] = _frame_tiles(room_data)
+			result["left"] = _frame_tiles(room)
 		elif side == "left" or side == "right":
-			result[side] = _frame_tiles(room_data)
+			result[side] = _frame_tiles(room)
 	return result
 
 func _frame_tiles(content: Dictionary) -> Vector2i:
-	var configured_frame_tiles: Variant = content.get("frame_tiles", [])
-	if configured_frame_tiles is Array and configured_frame_tiles.size() >= 2:
-		return _fixed_height_frame_tiles(Vector2i(int(configured_frame_tiles[0]), int(configured_frame_tiles[1])))
-	return default_frame_tiles
+	return _fixed_height_frame_tiles(Vector2i(int(content["frame_tiles"][0]), int(content["frame_tiles"][1])))
 
 func _room_pixel_size_from_frame_tiles(value: Vector2i) -> Vector2:
 	return Vector2(value.x * ApartmentTileMap.TILE_SIZE, value.y * ApartmentTileMap.TILE_SIZE)
@@ -129,38 +107,29 @@ func _fixed_height_frame_tiles(value: Vector2i) -> Vector2i:
 	return Vector2i(maxi(2, value.x), default_frame_tiles.y)
 
 func _bind_scene_config() -> void:
-	var config := get_node_or_null("SceneConfig")
-	if config == null:
-		push_error("BuildSlot.tscn must expose a SceneConfig node.")
-		return
-	service_width = _scene_meta_float(config, META_SERVICE_WIDTH, DEFAULT_SERVICE_WIDTH)
-	default_frame_tiles = _scene_meta_vector2i(config, META_DEFAULT_FRAME_TILES, DEFAULT_FRAME_TILES)
-	wall_inset = _scene_meta_float(config, META_WALL_INSET, 9.0)
-	floor_height = _scene_meta_float(config, META_FLOOR_HEIGHT, 22.0)
-	roof_height = _scene_meta_float(config, META_ROOF_HEIGHT, 13.0)
+	var config := $SceneConfig
+	service_width = _required_scene_meta_float(config, META_SERVICE_WIDTH)
+	default_frame_tiles = _required_scene_meta_vector2i(config, META_DEFAULT_FRAME_TILES)
+	wall_inset = _required_scene_meta_float(config, META_WALL_INSET)
+	floor_height = _required_scene_meta_float(config, META_FLOOR_HEIGHT)
+	roof_height = _required_scene_meta_float(config, META_ROOF_HEIGHT)
 	locked_label_template = _template_text("LockedLabelTemplate")
 	buildable_label_template = _template_text("BuildableLabelTemplate")
 
-func _format_label(template: String, values: Array, fallback: String) -> String:
-	if template.is_empty():
-		return fallback
-	return template % values
-
 func _template_text(node_name: String) -> String:
-	var template_label := get_node_or_null("TemplateText/%s" % node_name) as Label
-	if template_label == null:
-		push_error("BuildSlot scene is missing TemplateText/%s." % node_name)
-		return ""
+	var template_label := get_node("TemplateText/%s" % node_name) as Label
 	return template_label.text
 
-func _scene_meta_float(node: Node, meta_key: StringName, fallback: float) -> float:
+func _required_scene_meta_float(node: Node, meta_key: StringName) -> float:
 	if node == null or not node.has_meta(meta_key):
-		return fallback
+		push_error("BuildSlot.tscn SceneConfig is missing metadata '%s'." % str(meta_key))
+		return 0.0
 	return float(node.get_meta(meta_key))
 
-func _scene_meta_vector2i(node: Node, meta_key: StringName, fallback: Vector2i) -> Vector2i:
+func _required_scene_meta_vector2i(node: Node, meta_key: StringName) -> Vector2i:
 	if node == null or not node.has_meta(meta_key):
-		return fallback
+		push_error("BuildSlot.tscn SceneConfig is missing metadata '%s'." % str(meta_key))
+		return Vector2i.ZERO
 	var value: Variant = node.get_meta(meta_key)
 	if value is Vector2i:
 		return value
@@ -168,4 +137,5 @@ func _scene_meta_vector2i(node: Node, meta_key: StringName, fallback: Vector2i) 
 		return Vector2i(int(value.x), int(value.y))
 	if value is Array and value.size() >= 2:
 		return Vector2i(int(value[0]), int(value[1]))
-	return fallback
+	push_error("BuildSlot.tscn SceneConfig metadata '%s' must be Vector2i." % str(meta_key))
+	return Vector2i.ZERO

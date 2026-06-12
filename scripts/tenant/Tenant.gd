@@ -39,7 +39,7 @@ func setup(id: String, target_room_id := "") -> void:
 
 func _refresh() -> void:
 	var state: Dictionary = GameState.tenants.get(tenant_id, {})
-	var behavior := ConfigManager.normalize_behavior_key(str(state.get("current_behavior", "")), "wander")
+	var behavior := ConfigManager.normalize_behavior_key(str(state.get("current_behavior", GameState.DEFAULT_TENANT_BEHAVIOR)))
 	current_behavior = behavior
 	var next_animation := _animation_for_behavior(behavior)
 	_play_avatar_animation(next_animation)
@@ -55,11 +55,11 @@ func _start_ai() -> void:
 	tenant_ai.setup(self, tenant_id, room_id)
 
 func play_avatar_behavior(behavior: String) -> void:
-	var key := ConfigManager.normalize_behavior_key(behavior, "")
+	var key := ConfigManager.normalize_behavior_key(behavior)
 	_play_avatar_animation(_animation_for_behavior(key))
 
 func show_behavior_bubble(behavior: String) -> void:
-	var key := ConfigManager.normalize_behavior_key(behavior, "")
+	var key := ConfigManager.normalize_behavior_key(behavior)
 	if need_bubble.has_behavior_icon(key):
 		need_bubble.show_behavior(key)
 	else:
@@ -106,19 +106,15 @@ func _bind_scene_animation_config() -> void:
 
 func _apply_avatar_asset() -> void:
 	var tenant_data: Dictionary = ConfigManager.get_tenant_data(tenant_id)
-	var asset: Dictionary = tenant_data.get("asset", {})
-	if asset.is_empty():
-		return
-	var avatar_offset: Variant = tenant_data.get("avatar_offset", asset.get("avatar_offset", [0, -7]))
-	if avatar_offset is Array and avatar_offset.size() >= 2:
-		_apply_avatar_offset(Vector2(float(avatar_offset[0]), float(avatar_offset[1])))
-	var default_animation := str(asset.get("default_animation", "idle"))
+	var asset: Dictionary = tenant_data["asset"]
+	var avatar_offset: Array = asset["avatar_offset"]
+	_apply_avatar_offset(Vector2(float(avatar_offset[0]), float(avatar_offset[1])))
+	var default_animation := str(asset["default_animation"])
 	AssetResolver.apply_asset_to_animated_sprite(
 		avatar_sprite,
 		asset,
 		default_animation,
-		Color.WHITE,
-		_vector2i_from_array(asset.get("frame_size", [32, 32]), Vector2i(32, 32))
+		_vector2i_from_array(asset["frame_size"])
 	)
 	current_animation = ""
 
@@ -272,7 +268,8 @@ func _append_metadata_key(keys: Array[String], raw_key: String) -> void:
 		return
 	keys.append(key)
 
-func _vector2i_from_array(value: Variant, fallback: Vector2i) -> Vector2i:
+func _vector2i_from_array(value: Variant) -> Vector2i:
 	if value is Array and value.size() >= 2:
 		return Vector2i(int(value[0]), int(value[1]))
-	return fallback
+	push_error("Tenant asset frame_size must be [width, height].")
+	return Vector2i.ZERO

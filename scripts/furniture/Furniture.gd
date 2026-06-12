@@ -38,7 +38,7 @@ func setup(data: Dictionary) -> void:
 	room_id = str(instance_data.get("room_id", room_id))
 	var furniture_data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var asset: Dictionary = furniture_data.get("asset", {})
-	AssetResolver.apply_asset_to_texture_rect(self, asset, Color("#b9784a"), Vector2i(26, 26))
+	AssetResolver.apply_asset_to_texture_rect(self, asset, Vector2i(26, 26))
 	tooltip_text = _furniture_name(furniture_data)
 
 func _furniture_name(furniture_data: Dictionary) -> String:
