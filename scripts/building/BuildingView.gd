@@ -226,7 +226,7 @@ func get_left_offscreen_route_mark_world_position(y: float) -> Vector2:
 func _public_entry_area() -> Control:
 	if building_root == null:
 		return null
-	var floor_node := building_root.get_floor_node(1)
+	var floor_node = building_root.get_floor_node(1)
 	if floor_node == null:
 		return null
 	for child in floor_node.get_active_public_areas():

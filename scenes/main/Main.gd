@@ -1,6 +1,7 @@
 extends Control
 
 const ROOM_PANEL_SCENE := preload("res://scenes/ui/RoomPanel.tscn")
+const SPACE_DECOR_PANEL_SCENE := preload("res://scenes/ui/SpaceDecorPanel.tscn")
 const FURNITURE_SHOP_PANEL_SCENE := preload("res://scenes/ui/FurnitureShopPanel.tscn")
 const PLACEMENT_OVERLAY_SCENE := preload("res://scenes/ui/PlacementOverlay.tscn")
 const RECYCLE_CONFIRM_POPUP_SCENE := preload("res://scenes/ui/RecycleConfirmPopup.tscn")
@@ -31,7 +32,7 @@ func _connect_events() -> void:
 	GameEvents.room_updated.connect(_on_room_updated)
 	GameEvents.room_layout_changed.connect(func(_room_id): _refresh_building_if_loaded())
 	GameEvents.room_unlocked.connect(func(_room_id): _refresh_building_if_loaded())
-	GameEvents.room_decor_changed.connect(func(_room_id, _decor_id, _category): _refresh_building_if_loaded())
+	GameEvents.decor_target_changed.connect(_on_decor_target_changed)
 	GameEvents.furniture_placed.connect(func(_room_id, _furniture_id): _refresh_building_if_loaded())
 	GameEvents.furniture_moved.connect(func(_room_id, _furniture_id): _refresh_building_if_loaded())
 	GameEvents.furniture_recycled.connect(func(_room_id, _furniture_id): _refresh_building_if_loaded())
@@ -44,6 +45,7 @@ func _connect_events() -> void:
 	GameEvents.state_loaded.connect(_on_state_loaded)
 	GameEvents.offline_income_ready.connect(_show_offline_reward)
 	UIManager.room_panel_requested.connect(_show_room_panel)
+	UIManager.space_decor_panel_requested.connect(_show_space_decor_panel)
 	UIManager.furniture_shop_requested.connect(_show_furniture_shop)
 	UIManager.tenant_panel_requested.connect(_show_tenant_panel)
 	UIManager.build_confirm_requested.connect(_show_build_confirm)
@@ -71,6 +73,10 @@ func _on_apartment_level_changed(_level: int) -> void:
 func _on_room_updated(_room_id: String) -> void:
 	_refresh_building_if_loaded()
 	_refresh_room_panel_if_open()
+
+func _on_decor_target_changed(_kind: String, _target_id: String, _decor_id: String, _category: String) -> void:
+	_refresh_building_if_loaded()
+	_refresh_space_decor_panel_if_open()
 
 func _on_ui_state_changed(state: int) -> void:
 	var placement_active := state == UIManager.UIState.PLACING_NEW_FURNITURE or state == UIManager.UIState.MOVING_EXISTING_FURNITURE
@@ -101,6 +107,11 @@ func _show_room_panel(room_id: String) -> void:
 	panel.move_furniture_requested.connect(_on_move_furniture_pressed)
 	panel.recycle_furniture_requested.connect(_on_recycle_furniture_pressed)
 	panel.open(room_id)
+
+func _show_space_decor_panel(target_ref: Dictionary, initial_category: String) -> void:
+	var panel = _open_panel(SPACE_DECOR_PANEL_SCENE)
+	panel.decor_apply_requested.connect(_on_decor_apply_requested)
+	panel.open(target_ref, initial_category)
 
 func _show_furniture_shop(room_id: String) -> void:
 	selected_room_id = room_id
@@ -159,30 +170,33 @@ func _on_placement_recycle_requested(room_id: String, instance_id: String) -> vo
 func _on_shop_place_pressed(furniture_id: String, room_id: String) -> void:
 	UIManager.start_new_furniture_placement(furniture_id, room_id)
 
-func _on_decor_apply_requested(room_id: String, decor_id: String) -> void:
+func _on_decor_apply_requested(target_ref: Dictionary, decor_id: String) -> void:
 	var item: Dictionary = ConfigManager.get_room_decor_item(decor_id)
 	if item.is_empty():
 		return
 	var category := str(item.get("category", "")).strip_edges()
-	if ConfigManager.room_decor_field_for_category(category).is_empty():
+	if ConfigManager.decor_state_field_for_category(category).is_empty():
 		return
-	var room: Dictionary = GameState.rooms.get(room_id, {})
-	if ConfigManager.get_room_decor_id(room, category) == decor_id:
+	if GameState.get_space_decor_id(target_ref, category) == decor_id:
 		_refresh_room_panel_if_open()
+		_refresh_space_decor_panel_if_open()
 		return
 	var price := int(item.get("price", 0))
 	if GameState.coins < price:
 		_toast("toast_insufficient_coins")
 		_refresh_room_panel_if_open()
+		_refresh_space_decor_panel_if_open()
 		return
 	if not GameState.spend_coins(price):
 		_toast("toast_insufficient_coins")
 		_refresh_room_panel_if_open()
+		_refresh_space_decor_panel_if_open()
 		return
-	if GameState.apply_room_decor(room_id, decor_id):
+	if GameState.apply_space_decor(target_ref, decor_id):
 		SaveManager.save_game()
 		_toast("toast_room_decor_applied", [item.get("name", "")])
 		_refresh_room_panel_if_open()
+		_refresh_space_decor_panel_if_open()
 	else:
 		GameState.add_coins(price, "decor_apply_refund")
 
@@ -341,6 +355,12 @@ func _task_title(task_id: String) -> String:
 func _refresh_room_panel_if_open() -> void:
 	if UIManager.current_state == UIManager.UIState.ROOM_PANEL and not selected_room_id.is_empty():
 		var panel := _active_panel() as RoomPanel
+		if panel != null:
+			panel.refresh()
+
+func _refresh_space_decor_panel_if_open() -> void:
+	if UIManager.current_state == UIManager.UIState.SPACE_DECOR_PANEL:
+		var panel = _active_panel()
 		if panel != null:
 			panel.refresh()
 

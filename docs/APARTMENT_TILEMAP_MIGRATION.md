@@ -7,7 +7,7 @@
 - `Room.tscn`、`BuildSlot.tscn`、`Floor.tscn` 保留交互按钮和运行时数据绑定。
 - `ApartmentTileMap.tscn` 与 `ServiceCoreTileMap.tscn` 已作为共享 TileMap 子场景存在。
 - `ApartmentBuilding.tscn` 已预摆 `Floor_X`；`Floor.tscn` 已预摆左右房间、左右待建房间槽、左右公共区和中央服务核心；`Room.tscn` 保留房间 shell、家具层、租客层和模板文本。
-- `floors.json` / `rooms.json` 只绑定配置 ID、尺寸、门朝向、解锁条件和默认装饰 ID，不再选择运行时场景模板。
+- `floors.json` / `rooms.json` / `apartment_visuals.json` 只绑定配置 ID、尺寸、门朝向、解锁条件、默认装修 ID 和屋顶布局参数，不再选择运行时场景模板。
 - `rooms.json.frame_tiles` 是房间外框尺寸唯一标准，默认 `[6, 4]`，包含墙体；每格固定 16px，所以默认房间像素尺寸为 `96 x 64`。
 - 房间高度固定为 4 格；后续扩建房间只增加宽度，例如 `[8, 4]`。
 - `rooms.json.grid_size` 对应剖面房间摆放格，默认 `[6, 4]`，每格固定 `16px x 16px`；地面家具按自身高度吸附到最下面的地面线，墙面摆放层由上方墙面格派生为 `[columns, rows - 1]`，不写入配置。
@@ -24,7 +24,7 @@
   - 门口短墙：`body_door_cutout_cells`、`body_door_short_wall_cells`、`body_door_short_wall_tiles`
   - 门口短墙：`edge_door_cutout_cells`、`edge_door_short_wall_cells`、`edge_door_short_wall_tiles`
   - `door_cell_from_left`、`door_cell_from_bottom`
-  - 公寓级屋顶：`roof_left_tile`、`roof_tiles`、`roof_right_tile`、`total_width_tiles`、`offset_pixels`
+  - 公寓级屋顶：`roof` 装修条目提供图块主题，`apartment_visuals.json` 提供 `total_width_tiles`、`offset_pixels` 和默认屋顶装修 ID
   - `construction_marker_tile`
 
 ## 目标状态

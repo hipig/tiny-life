@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/ui/RoomPanel.gd" id="2_room_panel"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Package.png" id="11_icon_package"]
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Population.png" id="12_icon_population"]
 [ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Status_happiness_2.png" id="13_icon_happiness"]
+[ext_resource type="PackedScene" path="res://scenes/ui/DecorCatalogContent.tscn" id="14_decor_catalog"]
 
 [node name="RoomPanel" instance=ExtResource("1_base")]
 custom_minimum_size = Vector2(0, 300)
@@ -194,31 +195,8 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="DecorCategoryRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
+[node name="DecorCatalog" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent" instance=ExtResource("14_decor_catalog")]
 layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="WallpaperDecorFilter" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow" instance=ExtResource("3_tab")]
-layout_mode = 2
-text = "壁纸"
-metadata/tab_id = "wallpaper"
-
-[node name="WallDecorFilter" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow" instance=ExtResource("3_tab")]
-layout_mode = 2
-text = "墙体"
-metadata/tab_id = "wall"
-
-[node name="DoorDecorFilter" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCategoryRow" instance=ExtResource("3_tab")]
-layout_mode = 2
-text = "房门"
-metadata/tab_id = "door"
-
-[node name="DecorListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 2
 
 [node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
 visible = false

@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/DecorCatalogContent.gd" id="1_decor_catalog"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelTabButton.tscn" id="2_tab"]
+
+[node name="DecorCatalogContent" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+script = ExtResource("1_decor_catalog")
+
+[node name="DecorCategoryRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="WallpaperDecorFilter" parent="DecorCategoryRow" instance=ExtResource("2_tab")]
+layout_mode = 2
+text = "壁纸"
+metadata/tab_id = "wallpaper"
+
+[node name="WallDecorFilter" parent="DecorCategoryRow" instance=ExtResource("2_tab")]
+layout_mode = 2
+text = "墙体"
+metadata/tab_id = "wall"
+
+[node name="DoorDecorFilter" parent="DecorCategoryRow" instance=ExtResource("2_tab")]
+layout_mode = 2
+text = "房门"
+metadata/tab_id = "door"
+
+[node name="RoofDecorFilter" parent="DecorCategoryRow" instance=ExtResource("2_tab")]
+layout_mode = 2
+text = "屋顶"
+metadata/tab_id = "roof"
+
+[node name="DecorListRoot" type="GridContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 2

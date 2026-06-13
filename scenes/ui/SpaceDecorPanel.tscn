@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/ui/SpaceDecorPanel.gd" id="2_space_panel"]
+[ext_resource type="PackedScene" path="res://scenes/ui/DecorCatalogContent.tscn" id="3_decor_catalog"]
+
+[node name="SpaceDecorPanel" instance=ExtResource("1_base")]
+custom_minimum_size = Vector2(0, 300)
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -300.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("2_space_panel")
+
+[node name="TitleLabel" parent="PanelBox/Header" index="0"]
+text = "空间装修"
+
+[node name="DecorCatalog" parent="PanelBox/ScrollContainer/ContentRoot" index="0" instance=ExtResource("3_decor_catalog")]
+layout_mode = 2
+
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+visible = false
+layout_mode = 2
+
+[node name="TitleTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "%s 装修"

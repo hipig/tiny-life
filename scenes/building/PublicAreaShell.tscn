@@ -9,7 +9,7 @@ custom_minimum_size = Vector2(96, 64)
 layout_mode = 0
 offset_right = 96.0
 offset_bottom = 64.0
-mouse_filter = 2
+mouse_filter = 0
 script = ExtResource("1_public_area_shell")
 
 [node name="ApartmentTileMap" parent="." instance=ExtResource("2_apartment_tilemap")]

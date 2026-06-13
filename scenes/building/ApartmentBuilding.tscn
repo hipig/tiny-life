@@ -1,9 +1,12 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/building/ApartmentBuilding.gd" id="1_building"]
 [ext_resource type="PackedScene" path="res://scenes/building/Floor.tscn" id="2_floor"]
 [ext_resource type="Script" path="res://scripts/building/ApartmentRoof.gd" id="3_roof"]
 [ext_resource type="PackedScene" path="res://scenes/building/ApartmentTileMap.tscn" id="4_tilemap"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_roof_hitbox"]
+size = Vector2(272, 16)
 
 [node name="ApartmentBuilding" type="VBoxContainer"]
 layout_mode = 0
@@ -22,6 +25,14 @@ z_index = 10
 script = ExtResource("3_roof")
 
 [node name="ApartmentTileMap" parent="ApartmentRoof" instance=ExtResource("4_tilemap")]
+
+[node name="ClickArea" type="Area2D" parent="ApartmentRoof"]
+visible = false
+input_pickable = true
+
+[node name="Hitbox" type="CollisionShape2D" parent="ApartmentRoof/ClickArea"]
+shape = SubResource("RectangleShape2D_roof_hitbox")
+position = Vector2(136, -8)
 
 [node name="Floor_6" parent="." instance=ExtResource("2_floor")]
 visible = false

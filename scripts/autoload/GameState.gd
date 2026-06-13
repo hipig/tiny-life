@@ -1,6 +1,6 @@
 extends Node
 
-const SAVE_SCHEMA_VERSION := 4
+const SAVE_SCHEMA_VERSION := 5
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
 const IDLE_TENANT_BEHAVIOR := "idle"
@@ -60,6 +60,29 @@ const ROOM_STATE_KEYS := [
 	"rent_per_minute"
 ]
 
+const PUBLIC_AREA_DECOR_STATE_KEYS := [
+	"target_id",
+	"floor_index",
+	"area_id",
+	"wallpaper_id",
+	"wall_style_id",
+	"door_style_id"
+]
+
+const APARTMENT_DECOR_KEYS := [
+	"service_core",
+	"roof"
+]
+
+const SERVICE_CORE_DECOR_STATE_KEYS := [
+	"wallpaper_id",
+	"wall_style_id"
+]
+
+const ROOF_DECOR_STATE_KEYS := [
+	"roof_style_id"
+]
+
 const TENANT_STATE_KEYS := [
 	"id",
 	"satisfaction",
@@ -99,6 +122,8 @@ const SAVE_KEYS := [
 	"apartment_level",
 	"apartment_exp",
 	"rooms",
+	"public_area_decor",
+	"apartment_decor",
 	"tenants",
 	"tasks",
 	"stats",
@@ -112,6 +137,8 @@ var apartment_exp: int = 0
 var last_save_timestamp: int = 0
 
 var rooms: Dictionary = {}
+var public_area_decor: Dictionary = {}
+var apartment_decor: Dictionary = {}
 var tenants: Dictionary = {}
 var tasks: Dictionary = {}
 var stats: Dictionary = {}
@@ -126,6 +153,8 @@ func reset_new_game() -> void:
 	apartment_exp = 0
 	last_save_timestamp = TimeManager.now_unix()
 	rooms = _new_room_states()
+	public_area_decor = _new_public_area_decor_states()
+	apartment_decor = _new_apartment_decor_state()
 	tenants = _new_tenant_states()
 	tasks = _new_task_states()
 	stats = {
@@ -176,6 +205,34 @@ func get_room(room_id: String) -> Dictionary:
 		push_error("Runtime state is missing room '%s'." % room_id)
 		return {}
 	return rooms[room_id]
+
+func space_decor_target(kind: String, id: String) -> Dictionary:
+	return ConfigManager.build_space_decor_target(kind, id)
+
+func get_space_decor_state(target_ref: Dictionary) -> Dictionary:
+	var kind := str(target_ref.get("kind", "")).strip_edges()
+	var target_id := str(target_ref.get("id", "")).strip_edges()
+	match kind:
+		ConfigManager.TARGET_ROOM:
+			return get_room(target_id)
+		ConfigManager.TARGET_PUBLIC_AREA:
+			if not public_area_decor.has(target_id):
+				push_error("Runtime state is missing public area decor '%s'." % target_id)
+				return {}
+			return public_area_decor[target_id]
+		ConfigManager.TARGET_SERVICE_CORE:
+			return apartment_decor.get(ConfigManager.TARGET_SERVICE_CORE, {})
+		ConfigManager.TARGET_ROOF:
+			return apartment_decor.get(ConfigManager.TARGET_ROOF, {})
+		_:
+			push_error("Unknown decor target kind '%s'." % kind)
+			return {}
+
+func get_space_decor_id(target_ref: Dictionary, category: String) -> String:
+	var state := get_space_decor_state(target_ref)
+	if state.is_empty():
+		return ""
+	return ConfigManager.get_space_decor_id(state, category)
 
 func get_unlocked_rooms() -> Array:
 	var result: Array = []
@@ -304,21 +361,48 @@ func apply_room_layout_upgrade(room_id: String, target_level := 0) -> bool:
 		upgrade["grid_size"]
 	)
 
-func apply_room_decor(room_id: String, decor_id: String) -> bool:
-	if not rooms.has(room_id):
-		push_error("Cannot apply decor to unknown room '%s'." % room_id)
-		return false
-	var room: Dictionary = rooms[room_id]
+func apply_space_decor(target_ref: Dictionary, decor_id: String) -> bool:
 	var item: Dictionary = ConfigManager.get_room_decor_item(decor_id)
-	var category := str(item["category"]).strip_edges()
-	var field := ConfigManager.room_decor_field_for_category(category)
-	if str(room[field]) == decor_id:
+	if item.is_empty():
 		return false
-	room[field] = decor_id
-	rooms[room_id] = room
-	GameEvents.room_decor_changed.emit(room_id, decor_id, category)
-	GameEvents.room_updated.emit(room_id)
+	var kind := str(target_ref.get("kind", "")).strip_edges()
+	var target_id := str(target_ref.get("id", "")).strip_edges()
+	var category := str(item["category"]).strip_edges()
+	var supported_categories := ConfigManager.supported_decor_categories_for_target(target_ref)
+	_expect(supported_categories.has(category), "Decor target '%s:%s' does not support category '%s'." % [kind, target_id, category])
+	var current_state := get_space_decor_state(target_ref)
+	if current_state.is_empty():
+		return false
+	var field := ConfigManager.decor_state_field_for_category(category)
+	if str(current_state.get(field, "")).strip_edges() == decor_id:
+		return false
+	match kind:
+		ConfigManager.TARGET_ROOM:
+			var room_state := current_state.duplicate(true)
+			room_state[field] = decor_id
+			rooms[target_id] = room_state
+			GameEvents.room_decor_changed.emit(target_id, decor_id, category)
+			GameEvents.room_updated.emit(target_id)
+		ConfigManager.TARGET_PUBLIC_AREA:
+			var public_area_state := current_state.duplicate(true)
+			public_area_state[field] = decor_id
+			public_area_decor[target_id] = public_area_state
+		ConfigManager.TARGET_SERVICE_CORE:
+			var service_core_state := current_state.duplicate(true)
+			service_core_state[field] = decor_id
+			apartment_decor[ConfigManager.TARGET_SERVICE_CORE] = service_core_state
+		ConfigManager.TARGET_ROOF:
+			var roof_state := current_state.duplicate(true)
+			roof_state[field] = decor_id
+			apartment_decor[ConfigManager.TARGET_ROOF] = roof_state
+		_:
+			push_error("Unknown decor target kind '%s'." % kind)
+			return false
+	GameEvents.decor_target_changed.emit(kind, target_id, decor_id, category)
 	return true
+
+func apply_room_decor(room_id: String, decor_id: String) -> bool:
+	return apply_space_decor(space_decor_target(ConfigManager.TARGET_ROOM, room_id), decor_id)
 
 func recalculate_room_stats(room_id: String) -> void:
 	if not rooms.has(room_id):
@@ -510,6 +594,8 @@ func to_save_data() -> Dictionary:
 		"apartment_level": apartment_level,
 		"apartment_exp": apartment_exp,
 		"rooms": rooms,
+		"public_area_decor": public_area_decor,
+		"apartment_decor": apartment_decor,
 		"tenants": tenants,
 		"tasks": tasks,
 		"stats": stats,
@@ -532,6 +618,8 @@ func from_save_data(data: Dictionary) -> void:
 	apartment_exp = int(data["apartment_exp"])
 	last_save_timestamp = int(data["last_save_timestamp"])
 	rooms = (data["rooms"] as Dictionary).duplicate(true)
+	public_area_decor = (data["public_area_decor"] as Dictionary).duplicate(true)
+	apartment_decor = (data["apartment_decor"] as Dictionary).duplicate(true)
 	tenants = (data["tenants"] as Dictionary).duplicate(true)
 	tasks = (data["tasks"] as Dictionary).duplicate(true)
 	stats = (data["stats"] as Dictionary).duplicate(true)
@@ -585,6 +673,36 @@ func _new_room_states() -> Dictionary:
 			"rent_per_minute": 0.0
 		}
 	return result
+
+func _new_public_area_decor_states() -> Dictionary:
+	var result := {}
+	for floor in ConfigManager.floors:
+		var floor_data: Dictionary = floor
+		var floor_index := int(floor_data["floor_index"])
+		for area_item in floor_data["public_areas"]:
+			var area: Dictionary = area_item
+			var target_id := ConfigManager.public_area_target_id(floor_index, str(area["id"]))
+			result[target_id] = {
+				"target_id": target_id,
+				"floor_index": floor_index,
+				"area_id": str(area["id"]),
+				"wallpaper_id": str(area["default_wallpaper_id"]),
+				"wall_style_id": str(area["default_wall_style_id"]),
+				"door_style_id": str(area.get("default_door_style_id", "")).strip_edges()
+			}
+	return result
+
+func _new_apartment_decor_state() -> Dictionary:
+	var service_core_defaults := ConfigManager.apartment_service_core_defaults()
+	return {
+		ConfigManager.TARGET_SERVICE_CORE: {
+			"wallpaper_id": str(service_core_defaults["wallpaper_id"]),
+			"wall_style_id": str(service_core_defaults["wall_style_id"])
+		},
+		ConfigManager.TARGET_ROOF: {
+			"roof_style_id": ConfigManager.apartment_roof_default_style_id()
+		}
+	}
 
 func _new_tenant_states() -> Dictionary:
 	var result := {}
@@ -677,6 +795,10 @@ func _save_validation_error(data: Dictionary) -> String:
 			return "save field '%s' must be numeric" % numeric_key
 	if not (data["rooms"] is Dictionary):
 		return "save field 'rooms' must be a dictionary"
+	if not (data["public_area_decor"] is Dictionary):
+		return "save field 'public_area_decor' must be a dictionary"
+	if not (data["apartment_decor"] is Dictionary):
+		return "save field 'apartment_decor' must be a dictionary"
 	if not (data["tenants"] is Dictionary):
 		return "save field 'tenants' must be a dictionary"
 	if not (data["tasks"] is Dictionary):
@@ -686,6 +808,12 @@ func _save_validation_error(data: Dictionary) -> String:
 	var rooms_error := _rooms_validation_error(data["rooms"])
 	if not rooms_error.is_empty():
 		return rooms_error
+	var public_area_error := _public_area_decor_validation_error(data["public_area_decor"])
+	if not public_area_error.is_empty():
+		return public_area_error
+	var apartment_decor_error := _apartment_decor_validation_error(data["apartment_decor"])
+	if not apartment_decor_error.is_empty():
+		return apartment_decor_error
 	var tenants_error := _tenants_validation_error(data["tenants"], data["rooms"])
 	if not tenants_error.is_empty():
 		return tenants_error
@@ -742,12 +870,9 @@ func _room_validation_error(room_id: String, room: Dictionary, room_config: Dict
 		["wall_style_id", ConfigManager.DECOR_WALL],
 		["door_style_id", ConfigManager.DECOR_DOOR]
 	]:
-		var decor_id := str(room[str(pair[0])])
-		if not ConfigManager.room_decor_by_id.has(decor_id):
-			return "room '%s' field '%s' references unknown decor '%s'" % [room_id, str(pair[0]), decor_id]
-		var item: Dictionary = ConfigManager.room_decor_by_id[decor_id]
-		if str(item["category"]) != str(pair[1]):
-			return "room '%s' field '%s' references decor in the wrong category" % [room_id, str(pair[0])]
+		var decor_error := _decor_state_reference_error(str(room[str(pair[0])]), str(pair[1]), "room '%s' field '%s'" % [room_id, str(pair[0])])
+		if not decor_error.is_empty():
+			return decor_error
 	if not (room["unlocked"] is bool):
 		return "room '%s' unlocked must be bool" % room_id
 	if not (room["tenant_id"] is String):
@@ -763,6 +888,84 @@ func _room_validation_error(room_id: String, room: Dictionary, room_config: Dict
 	for numeric_key in ["score", "comfort", "entertainment", "hygiene", "food", "rent_per_minute"]:
 		if not _is_number(room[numeric_key]):
 			return "room '%s' field '%s' must be numeric" % [room_id, numeric_key]
+	return ""
+
+func _public_area_decor_validation_error(saved_public_area_decor: Dictionary) -> String:
+	if saved_public_area_decor.size() != ConfigManager.public_area_by_target_id.size():
+		return "public area decor count does not match config"
+	var valid_ids := {}
+	for target_id in ConfigManager.public_area_by_target_id.keys():
+		valid_ids[target_id] = true
+		if not saved_public_area_decor.has(target_id):
+			return "missing public area decor '%s'" % str(target_id)
+		var state: Variant = saved_public_area_decor[target_id]
+		if not (state is Dictionary):
+			return "public area decor '%s' must be a dictionary" % str(target_id)
+		var state_error := _public_area_state_validation_error(str(target_id), state, ConfigManager.get_public_area_config(str(target_id)))
+		if not state_error.is_empty():
+			return state_error
+	for target_id in saved_public_area_decor.keys():
+		if not valid_ids.has(str(target_id)):
+			return "unknown public area decor '%s'" % str(target_id)
+	return ""
+
+func _public_area_state_validation_error(target_id: String, state: Dictionary, area_config: Dictionary) -> String:
+	var key_error := _dictionary_keys_error(state, PUBLIC_AREA_DECOR_STATE_KEYS, "public area '%s'" % target_id)
+	if not key_error.is_empty():
+		return key_error
+	if str(state["target_id"]) != target_id:
+		return "public area '%s' target_id does not match key" % target_id
+	if not _is_number(state["floor_index"]) or int(state["floor_index"]) != int(area_config["floor_index"]):
+		return "public area '%s' floor_index does not match current config" % target_id
+	if str(state["area_id"]) != str(area_config["id"]):
+		return "public area '%s' area_id does not match current config" % target_id
+	for pair in [
+		["wallpaper_id", ConfigManager.DECOR_WALLPAPER],
+		["wall_style_id", ConfigManager.DECOR_WALL]
+	]:
+		var decor_error := _decor_state_reference_error(str(state[str(pair[0])]), str(pair[1]), "public area '%s' field '%s'" % [target_id, str(pair[0])])
+		if not decor_error.is_empty():
+			return decor_error
+	var door_style_id := str(state["door_style_id"]).strip_edges()
+	if bool(area_config["has_entrance_door"]):
+		var door_error := _decor_state_reference_error(door_style_id, ConfigManager.DECOR_DOOR, "public area '%s' field 'door_style_id'" % target_id)
+		if not door_error.is_empty():
+			return door_error
+	elif not door_style_id.is_empty():
+		return "public area '%s' must not preserve door_style_id without an entrance door" % target_id
+	return ""
+
+func _apartment_decor_validation_error(saved_apartment_decor: Dictionary) -> String:
+	var key_error := _dictionary_keys_error(saved_apartment_decor, APARTMENT_DECOR_KEYS, "apartment decor")
+	if not key_error.is_empty():
+		return key_error
+	var service_core_state: Variant = saved_apartment_decor[ConfigManager.TARGET_SERVICE_CORE]
+	if not (service_core_state is Dictionary):
+		return "apartment decor service_core must be a dictionary"
+	var service_key_error := _dictionary_keys_error(service_core_state, SERVICE_CORE_DECOR_STATE_KEYS, "apartment service_core decor")
+	if not service_key_error.is_empty():
+		return service_key_error
+	for pair in [
+		["wallpaper_id", ConfigManager.DECOR_WALLPAPER],
+		["wall_style_id", ConfigManager.DECOR_WALL]
+	]:
+		var decor_error := _decor_state_reference_error(str((service_core_state as Dictionary)[str(pair[0])]), str(pair[1]), "apartment service_core field '%s'" % str(pair[0]))
+		if not decor_error.is_empty():
+			return decor_error
+	var roof_state: Variant = saved_apartment_decor[ConfigManager.TARGET_ROOF]
+	if not (roof_state is Dictionary):
+		return "apartment decor roof must be a dictionary"
+	var roof_key_error := _dictionary_keys_error(roof_state, ROOF_DECOR_STATE_KEYS, "apartment roof decor")
+	if not roof_key_error.is_empty():
+		return roof_key_error
+	return _decor_state_reference_error(str((roof_state as Dictionary)["roof_style_id"]), ConfigManager.DECOR_ROOF, "apartment roof field 'roof_style_id'")
+
+func _decor_state_reference_error(decor_id: String, category: String, context: String) -> String:
+	if not ConfigManager.room_decor_by_id.has(decor_id):
+		return "%s references unknown decor '%s'" % [context, decor_id]
+	var item: Dictionary = ConfigManager.room_decor_by_id[decor_id]
+	if str(item["category"]) != category:
+		return "%s references decor in the wrong category" % context
 	return ""
 
 func _furniture_instance_validation_error(room_id: String, instance: Dictionary) -> String:

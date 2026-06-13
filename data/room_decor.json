@@ -2731,6 +2731,105 @@
 	  }
 	},
 	{
+	  "id": "roof_red_tile",
+	  "category": "roof",
+	  "name": "赤莓屋顶",
+	  "price": 260,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [
+		  112,
+		  0,
+		  80,
+		  32
+		]
+	  },
+	  "theme": {
+		"wall_edge_source_id": 0,
+		"roof_left_tile": [
+		  7,
+		  0
+		],
+		"roof_tiles": [
+		  [
+			9,
+			0
+		  ]
+		],
+		"roof_right_tile": [
+		  10,
+		  0
+		]
+	  }
+	},
+	{
+	  "id": "roof_sunset_tile",
+	  "category": "roof",
+	  "name": "暖橙屋顶",
+	  "price": 260,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [
+		  192,
+		  0,
+		  80,
+		  32
+		]
+	  },
+	  "theme": {
+		"wall_edge_source_id": 0,
+		"roof_left_tile": [
+		  12,
+		  0
+		],
+		"roof_tiles": [
+		  [
+			14,
+			0
+		  ]
+		],
+		"roof_right_tile": [
+		  15,
+		  0
+		]
+	  }
+	},
+	{
+	  "id": "roof_honey_tile",
+	  "category": "roof",
+	  "name": "蜂蜜屋顶",
+	  "price": 260,
+	  "preview_asset": {
+		"type": "atlas_region",
+		"texture": "res://assets/pixel_spaces/building/Infrastructure.png",
+		"region": [
+		  272,
+		  0,
+		  80,
+		  32
+		]
+	  },
+	  "theme": {
+		"wall_edge_source_id": 0,
+		"roof_left_tile": [
+		  17,
+		  0
+		],
+		"roof_tiles": [
+		  [
+			19,
+			0
+		  ]
+		],
+		"roof_right_tile": [
+		  20,
+		  0
+		]
+	  }
+	},
+	{
 	  "id": "wall_frame_red",
 	  "category": "wall",
 	  "name": "赤莓",

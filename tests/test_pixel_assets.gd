@@ -106,9 +106,19 @@ func test_pixel_space_assets_are_configured_for_mvp_surfaces() -> void:
 					assert_eq(Vector2i(int(frame_size[0]), int(frame_size[1])), Vector2i(16, 32), "%s door frame size should match room doors" % decor_item.get("id", ""))
 				assert_eq(int(decor_item.get("closed_frame", -1)), 0, "%s door should use frame 0 as closed" % decor_item.get("id", ""))
 				assert_eq(int(decor_item.get("open_frame", -1)), 3, "%s door should use frame 3 as fully open" % decor_item.get("id", ""))
+			"roof":
+				var theme: Dictionary = decor_item.get("theme", {})
+				assert_true(theme.has("wall_edge_source_id"), "%s roof should declare its TileSet source id" % decor_item.get("id", ""))
+				for tile_key in ["roof_left_tile", "roof_right_tile"]:
+					var tile: Array = theme.get(tile_key, [])
+					assert_true(tile.size() >= 2, "%s roof should declare %s" % [decor_item.get("id", ""), tile_key])
+				var roof_tiles: Array = theme.get("roof_tiles", [])
+				assert_true(roof_tiles.size() > 0, "%s roof should declare repeatable roof tiles" % decor_item.get("id", ""))
+				assert_true(roof_tiles[0] is Array and roof_tiles[0].size() >= 2, "%s roof tile entries should be atlas pairs" % decor_item.get("id", ""))
 	assert_true(decor_categories.has("wallpaper"), "room_decor should include wallpaper items")
 	assert_true(decor_categories.has("wall"), "room_decor should include wall items")
 	assert_true(decor_categories.has("door"), "room_decor should include door items")
+	assert_true(decor_categories.has("roof"), "room_decor should include roof items")
 	for floor in floors:
 		var floor_data: Dictionary = floor
 		assert_true(_asset_texture_exists(floor_data.get("floor_icon_asset", {})), "%dF icon asset should exist" % int(floor_data.get("floor_index", 0)))

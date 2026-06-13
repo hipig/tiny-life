@@ -18,6 +18,8 @@
   "toast_tenant_applications_refreshed":"租客申请已刷新",
   "toast_save_done":"已存档",
   "toast_reset_done":"已重置",
+  "decor_target_service_core":"电梯厅",
+  "decor_target_roof":"公寓屋顶",
   "time_duration_hours_minutes":"%d 小时 %d 分钟",
   "time_duration_minutes":"%d 分钟"
 }

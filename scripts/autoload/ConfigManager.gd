@@ -3,6 +3,20 @@ extends Node
 const DECOR_WALLPAPER := "wallpaper"
 const DECOR_WALL := "wall"
 const DECOR_DOOR := "door"
+const DECOR_ROOF := "roof"
+
+const TARGET_ROOM := "room"
+const TARGET_PUBLIC_AREA := "public_area"
+const TARGET_SERVICE_CORE := "service_core"
+const TARGET_ROOF := "roof"
+
+const APARTMENT_SERVICE_CORE_TARGET_ID := "service_core"
+const APARTMENT_ROOF_TARGET_ID := "roof"
+
+const ROOM_DECOR_CATEGORIES := [DECOR_WALLPAPER, DECOR_WALL, DECOR_DOOR]
+const PUBLIC_AREA_DECOR_CATEGORIES := [DECOR_WALLPAPER, DECOR_WALL]
+const SERVICE_CORE_DECOR_CATEGORIES := [DECOR_WALLPAPER, DECOR_WALL]
+const ROOF_DECOR_CATEGORIES := [DECOR_ROOF]
 
 const VALID_BEHAVIOR_KEYS := {
 	"wander": true,
@@ -41,6 +55,7 @@ var tenant_region_by_id: Dictionary = {}
 var room_decor_by_id: Dictionary = {}
 var room_decor_by_category: Dictionary = {}
 var floor_by_index: Dictionary = {}
+var public_area_by_target_id: Dictionary = {}
 var room_by_id: Dictionary = {}
 var rooms_by_floor_index: Dictionary = {}
 var level_by_value: Dictionary = {}
@@ -81,21 +96,15 @@ func get_room_decor_items(category: String) -> Array:
 	_expect(room_decor_by_category.has(category), "Unknown room decor category: %s" % category)
 	return room_decor_by_category[category]
 
+func get_space_decor_id(state: Dictionary, category: String) -> String:
+	var field := decor_state_field_for_category(category)
+	_expect(state.has(field), "Decor state is missing field '%s'." % field)
+	return str(state[field]).strip_edges()
+
 func get_room_decor_id(room: Dictionary, category: String) -> String:
-	var field := room_decor_field_for_category(category)
-	_expect(room.has(field), "Room runtime state is missing decor field '%s'." % field)
-	return str(room[field]).strip_edges()
+	return get_space_decor_id(room, category)
 
-func tile_theme_for_room(room: Dictionary) -> Dictionary:
-	var theme := {}
-	_merge_theme(theme, _wallpaper_theme_from_item(get_room_decor_item(get_room_decor_id(room, DECOR_WALLPAPER))))
-	_merge_theme(theme, _wall_theme_from_item(get_room_decor_item(get_room_decor_id(room, DECOR_WALL))))
-	return theme
-
-func door_theme_for_room(room: Dictionary) -> Dictionary:
-	return get_room_decor_item(get_room_decor_id(room, DECOR_DOOR)).duplicate(true)
-
-func room_decor_field_for_category(category: String) -> String:
+func decor_state_field_for_category(category: String) -> String:
 	match category:
 		DECOR_WALLPAPER:
 			return "wallpaper_id"
@@ -103,9 +112,14 @@ func room_decor_field_for_category(category: String) -> String:
 			return "wall_style_id"
 		DECOR_DOOR:
 			return "door_style_id"
+		DECOR_ROOF:
+			return "roof_style_id"
 		_:
-			_fail("Unknown room decor category: %s" % category)
+			_fail("Unknown decor category: %s" % category)
 			return ""
+
+func room_decor_field_for_category(category: String) -> String:
+	return decor_state_field_for_category(category)
 
 func room_decor_default_field_for_category(category: String) -> String:
 	match category:
@@ -118,6 +132,125 @@ func room_decor_default_field_for_category(category: String) -> String:
 		_:
 			_fail("Unknown room decor category: %s" % category)
 			return ""
+
+func tile_theme_from_decor_state(state: Dictionary) -> Dictionary:
+	var theme := {}
+	_merge_theme(theme, _wallpaper_theme_from_item(get_room_decor_item(get_space_decor_id(state, DECOR_WALLPAPER))))
+	_merge_theme(theme, _wall_theme_from_item(get_room_decor_item(get_space_decor_id(state, DECOR_WALL))))
+	return theme
+
+func door_theme_from_decor_state(state: Dictionary) -> Dictionary:
+	if not state.has(decor_state_field_for_category(DECOR_DOOR)):
+		return {}
+	var decor_id := str(state[decor_state_field_for_category(DECOR_DOOR)]).strip_edges()
+	if decor_id.is_empty():
+		return {}
+	return get_room_decor_item(decor_id).duplicate(true)
+
+func tile_theme_for_room(room: Dictionary) -> Dictionary:
+	return tile_theme_from_decor_state(room)
+
+func door_theme_for_room(room: Dictionary) -> Dictionary:
+	return door_theme_from_decor_state(room)
+
+func public_area_target_id(floor_index: int, area_id: String) -> String:
+	return "%d:%s" % [floor_index, area_id.strip_edges()]
+
+func get_public_area_config(target_id: String) -> Dictionary:
+	return _required_dict_from_index(public_area_by_target_id, target_id, "Public area")
+
+func build_space_decor_target(kind: String, id: String) -> Dictionary:
+	var target_kind := kind.strip_edges()
+	var target_id := id.strip_edges()
+	match target_kind:
+		TARGET_ROOM:
+			var room_data := get_room_config(target_id)
+			return {
+				"kind": target_kind,
+				"id": target_id,
+				"title": str(room_data["room_name"]),
+				"supported_categories": supported_decor_categories_for_target_kind(target_kind, room_data)
+			}
+		TARGET_PUBLIC_AREA:
+			var public_area := get_public_area_config(target_id)
+			return {
+				"kind": target_kind,
+				"id": target_id,
+				"title": str(public_area["label"]),
+				"supported_categories": supported_decor_categories_for_target_kind(target_kind, public_area)
+			}
+		TARGET_SERVICE_CORE:
+			return {
+				"kind": target_kind,
+				"id": APARTMENT_SERVICE_CORE_TARGET_ID,
+				"title": text("decor_target_service_core"),
+				"supported_categories": supported_decor_categories_for_target_kind(target_kind)
+			}
+		TARGET_ROOF:
+			return {
+				"kind": target_kind,
+				"id": APARTMENT_ROOF_TARGET_ID,
+				"title": text("decor_target_roof"),
+				"supported_categories": supported_decor_categories_for_target_kind(target_kind)
+			}
+		_:
+			_fail("Unknown decor target kind: %s" % target_kind)
+			return {}
+
+func supported_decor_categories_for_target(target_ref: Dictionary) -> Array:
+	if target_ref.has("supported_categories"):
+		var configured: Variant = target_ref["supported_categories"]
+		if configured is Array and not configured.is_empty():
+			return (configured as Array).duplicate(true)
+	var target_kind := str(target_ref.get("kind", "")).strip_edges()
+	var target_id := str(target_ref.get("id", "")).strip_edges()
+	match target_kind:
+		TARGET_ROOM:
+			return ROOM_DECOR_CATEGORIES.duplicate(true)
+		TARGET_PUBLIC_AREA:
+			return supported_decor_categories_for_target_kind(target_kind, get_public_area_config(target_id))
+		TARGET_SERVICE_CORE:
+			return SERVICE_CORE_DECOR_CATEGORIES.duplicate(true)
+		TARGET_ROOF:
+			return ROOF_DECOR_CATEGORIES.duplicate(true)
+		_:
+			_fail("Unknown decor target kind: %s" % target_kind)
+			return []
+
+func supported_decor_categories_for_target_kind(kind: String, target_config: Dictionary = {}) -> Array:
+	match kind:
+		TARGET_ROOM:
+			return ROOM_DECOR_CATEGORIES.duplicate(true)
+		TARGET_PUBLIC_AREA:
+			var categories := PUBLIC_AREA_DECOR_CATEGORIES.duplicate(true)
+			if bool(target_config.get("has_entrance_door", false)):
+				categories.append(DECOR_DOOR)
+			return categories
+		TARGET_SERVICE_CORE:
+			return SERVICE_CORE_DECOR_CATEGORIES.duplicate(true)
+		TARGET_ROOF:
+			return ROOF_DECOR_CATEGORIES.duplicate(true)
+		_:
+			_fail("Unknown decor target kind: %s" % kind)
+			return []
+
+func apartment_service_core_defaults() -> Dictionary:
+	return _require_dict(apartment_visuals, "service_core_defaults", "apartment_visuals.json").duplicate(true)
+
+func apartment_roof_layout() -> Dictionary:
+	return _require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json").duplicate(true)
+
+func apartment_roof_default_style_id() -> String:
+	return _require_string(_require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json"), "default_roof_style_id", "apartment roof_theme")
+
+func apartment_roof_theme_for_style(decor_id: String) -> Dictionary:
+	var roof_theme := apartment_roof_layout()
+	roof_theme.erase("default_roof_style_id")
+	_merge_theme(roof_theme, _roof_theme_from_item(get_room_decor_item(decor_id)))
+	return roof_theme
+
+func apartment_roof_theme() -> Dictionary:
+	return apartment_roof_theme_for_style(apartment_roof_default_style_id())
 
 func get_unlocked_tenant_regions(apartment_level: int) -> Array:
 	var result: Array = []
@@ -146,9 +279,6 @@ func refresh_tenant_applications() -> void:
 func get_floor_data(index: int) -> Dictionary:
 	_expect(floor_by_index.has(index), "Unknown floor index: %d" % index)
 	return floor_by_index[index]
-
-func apartment_roof_theme() -> Dictionary:
-	return _require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json").duplicate(true)
 
 func get_room_config(id: String) -> Dictionary:
 	return _required_dict_from_index(room_by_id, id, "Room")
@@ -295,7 +425,7 @@ func _validate_furniture() -> void:
 		_require_bool(data, "interactive", "furniture '%s'" % furniture_id)
 		_require_bool(data, "requires_wall", "furniture '%s'" % furniture_id)
 		_require_bool(data, "wall_item", "furniture '%s'" % furniture_id)
-		_validate_asset_config(_require_dict(data, "asset", "furniture '%s'" % furniture_id), "furniture '%s' asset" % furniture_id)
+		_validate_asset_config(_require_dict(data, "asset", "furniture '%s' asset" % furniture_id), "furniture '%s' asset" % furniture_id)
 		var interaction := _require_dict(data, "interaction", "furniture '%s'" % furniture_id)
 		if bool(data["interactive"]):
 			_require_string(interaction, "need", "furniture '%s' interaction" % furniture_id)
@@ -316,7 +446,7 @@ func _validate_tenants() -> void:
 		_require_number(data, "pay_multiplier", "tenant '%s'" % tenant_id)
 		_require_number(data, "initial_satisfaction", "tenant '%s'" % tenant_id)
 		_require_string_array(data, "favorite_tags", "tenant '%s'" % tenant_id)
-		var asset := _require_dict(data, "asset", "tenant '%s'" % tenant_id)
+		var asset := _require_dict(data, "asset", "tenant '%s' asset" % tenant_id)
 		_validate_asset_config(asset, "tenant '%s' asset" % tenant_id)
 		_expect(str(asset["type"]) == "spritesheet_animation", "tenant '%s' asset must use spritesheet_animation." % tenant_id)
 		_require_vector_array(asset, "avatar_offset", 2, "tenant '%s' asset" % tenant_id)
@@ -332,11 +462,11 @@ func _validate_room_decor() -> void:
 		_expect(not seen_ids.has(decor_id), "Duplicate room decor id '%s'." % decor_id)
 		seen_ids[decor_id] = true
 		var category := _require_string(data, "category", "room decor '%s'" % decor_id)
-		_expect(category in [DECOR_WALLPAPER, DECOR_WALL, DECOR_DOOR], "Unknown room decor category '%s'." % category)
+		_expect(category in [DECOR_WALLPAPER, DECOR_WALL, DECOR_DOOR, DECOR_ROOF], "Unknown room decor category '%s'." % category)
 		categories[category] = true
 		_require_string(data, "name", "room decor '%s'" % decor_id)
 		_require_number(data, "price", "room decor '%s'" % decor_id)
-		_validate_asset_config(_require_dict(data, "preview_asset", "room decor '%s'" % decor_id), "room decor '%s' preview_asset" % decor_id)
+		_validate_asset_config(_require_dict(data, "preview_asset", "room decor '%s' preview_asset" % decor_id), "room decor '%s' preview_asset" % decor_id)
 		match category:
 			DECOR_WALLPAPER:
 				_validate_wallpaper_theme(_require_dict(data, "theme", "room decor '%s'" % decor_id), decor_id)
@@ -344,7 +474,9 @@ func _validate_room_decor() -> void:
 				_validate_wall_theme(_require_dict(data, "theme", "room decor '%s'" % decor_id), decor_id)
 			DECOR_DOOR:
 				_validate_door_theme(data, decor_id)
-	for required_category in [DECOR_WALLPAPER, DECOR_WALL, DECOR_DOOR]:
+			DECOR_ROOF:
+				_validate_roof_style_theme(_require_dict(data, "theme", "room decor '%s'" % decor_id), decor_id)
+	for required_category in [DECOR_WALLPAPER, DECOR_WALL, DECOR_DOOR, DECOR_ROOF]:
 		_expect(categories.has(required_category), "room_decor.json must include category '%s'." % required_category)
 
 func _validate_floors() -> void:
@@ -368,18 +500,30 @@ func _validate_floors() -> void:
 		_expect(not data.has("floor_scene_path"), "floor %d must not configure runtime floor_scene_path." % floor_index)
 		_expect(not data.has("build_slot_scene_path"), "floor %d must not configure runtime build_slot_scene_path." % floor_index)
 		var public_areas := _require_array(data, "public_areas", "floor %d" % floor_index)
+		var seen_area_ids := {}
 		for entry in public_areas:
 			_expect(entry is Dictionary, "floor %d public areas must be dictionaries." % floor_index)
 			var area: Dictionary = entry
-			_require_id(area, "floor %d public area" % floor_index)
+			var area_id := _require_id(area, "floor %d public area" % floor_index)
+			_expect(not seen_area_ids.has(area_id), "floor %d has duplicate public area id '%s'." % [floor_index, area_id])
+			seen_area_ids[area_id] = true
 			_require_string(area, "label", "floor %d public area" % floor_index)
 			_require_string(area, "layout_side", "floor %d public area" % floor_index)
 			_require_bool(area, "has_entrance_door", "floor %d public area" % floor_index)
 			_require_vector_array(area, "frame_tiles", 2, "floor %d public area" % floor_index)
 			_expect(not area.has("public_area_scene_path"), "floor %d public area must not configure runtime public_area_scene_path." % floor_index)
+			var wallpaper_id := _require_string(area, "default_wallpaper_id", "floor %d public area '%s'" % [floor_index, area_id])
+			var wall_style_id := _require_string(area, "default_wall_style_id", "floor %d public area '%s'" % [floor_index, area_id])
+			_expect(_room_decor_id_has_category(wallpaper_id, DECOR_WALLPAPER), "floor %d public area '%s' default_wallpaper_id must reference wallpaper decor." % [floor_index, area_id])
+			_expect(_room_decor_id_has_category(wall_style_id, DECOR_WALL), "floor %d public area '%s' default_wall_style_id must reference wall decor." % [floor_index, area_id])
+			var door_style_id := str(area.get("default_door_style_id", "")).strip_edges()
 			if bool(area["has_entrance_door"]):
-				_require_string(area, "door_side", "floor %d public area" % floor_index)
-				_require_bool(area, "door_mirrored", "floor %d public area" % floor_index)
+				_require_string(area, "door_side", "floor %d public area '%s'" % [floor_index, area_id])
+				_require_bool(area, "door_mirrored", "floor %d public area '%s'" % [floor_index, area_id])
+				_expect(not door_style_id.is_empty(), "floor %d public area '%s' must declare default_door_style_id when it has an entrance door." % [floor_index, area_id])
+				_expect(_room_decor_id_has_category(door_style_id, DECOR_DOOR), "floor %d public area '%s' default_door_style_id must reference door decor." % [floor_index, area_id])
+			else:
+				_expect(door_style_id.is_empty(), "floor %d public area '%s' must not declare default_door_style_id without an entrance door." % [floor_index, area_id])
 
 func _validate_rooms() -> void:
 	var seen_ids := {}
@@ -422,7 +566,13 @@ func _validate_rooms() -> void:
 			_require_vector_array(layout_upgrade, "grid_size", 2, "room '%s' layout upgrade" % room_id)
 
 func _validate_apartment_visuals() -> void:
-	_validate_roof_theme(_require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json"), "apartment roof_theme")
+	var roof_layout := _require_dict(apartment_visuals, "roof_theme", "apartment_visuals.json")
+	_validate_apartment_roof_layout(roof_layout, "apartment roof_theme")
+	var service_core_defaults := _require_dict(apartment_visuals, "service_core_defaults", "apartment_visuals.json")
+	var service_wallpaper_id := _require_string(service_core_defaults, "wallpaper_id", "apartment service_core_defaults")
+	var service_wall_style_id := _require_string(service_core_defaults, "wall_style_id", "apartment service_core_defaults")
+	_expect(_room_decor_id_has_category(service_wallpaper_id, DECOR_WALLPAPER), "apartment service_core_defaults wallpaper_id must reference wallpaper decor.")
+	_expect(_room_decor_id_has_category(service_wall_style_id, DECOR_WALL), "apartment service_core_defaults wall_style_id must reference wall decor.")
 
 func _validate_tenant_regions() -> void:
 	var seen_ids := {}
@@ -499,9 +649,18 @@ func _rebuild_indexes() -> void:
 		room_decor_by_category[category].append(decor_data)
 
 	floor_by_index.clear()
+	public_area_by_target_id.clear()
 	for item in floors:
 		var floor_data: Dictionary = item
-		floor_by_index[int(floor_data["floor_index"])] = floor_data
+		var floor_index := int(floor_data["floor_index"])
+		floor_by_index[floor_index] = floor_data
+		for area_item in floor_data["public_areas"]:
+			var public_area: Dictionary = area_item
+			var target_id := public_area_target_id(floor_index, str(public_area["id"]))
+			var indexed_area := public_area.duplicate(true)
+			indexed_area["floor_index"] = floor_index
+			indexed_area["target_id"] = target_id
+			public_area_by_target_id[target_id] = indexed_area
 
 	room_by_id.clear()
 	rooms_by_floor_index.clear()
@@ -548,11 +707,15 @@ func _validate_wall_theme(theme: Dictionary, decor_id: String) -> void:
 	]:
 		_require_vector_array(theme, key, 2, "wall theme '%s'" % decor_id, true)
 
-func _validate_roof_theme(theme: Dictionary, context: String) -> void:
-	_require_number(theme, "wall_edge_source_id", context)
-	_require_vector_array(theme, "roof_left_tile", 2, context)
-	_require_vector_array(theme, "roof_tiles", 2, context, true)
-	_require_vector_array(theme, "roof_right_tile", 2, context)
+func _validate_roof_style_theme(theme: Dictionary, decor_id: String) -> void:
+	_require_number(theme, "wall_edge_source_id", "roof theme '%s'" % decor_id)
+	_require_vector_array(theme, "roof_left_tile", 2, "roof theme '%s'" % decor_id)
+	_require_vector_array(theme, "roof_tiles", 2, "roof theme '%s'" % decor_id, true)
+	_require_vector_array(theme, "roof_right_tile", 2, "roof theme '%s'" % decor_id)
+
+func _validate_apartment_roof_layout(theme: Dictionary, context: String) -> void:
+	var roof_style_id := _require_string(theme, "default_roof_style_id", context)
+	_expect(_room_decor_id_has_category(roof_style_id, DECOR_ROOF), "%s default_roof_style_id must reference roof decor." % context)
 	_expect(int(_require_number(theme, "total_width_tiles", context)) > 0, "%s total_width_tiles must be greater than 0." % context)
 	_require_vector_array(theme, "offset_pixels", 2, context)
 
@@ -610,6 +773,9 @@ func _wallpaper_theme_from_item(item: Dictionary) -> Dictionary:
 
 func _wall_theme_from_item(item: Dictionary) -> Dictionary:
 	return _require_dict(item, "theme", "wall decor")
+
+func _roof_theme_from_item(item: Dictionary) -> Dictionary:
+	return _require_dict(item, "theme", "roof decor")
 
 func _merge_theme(target: Dictionary, source: Dictionary) -> void:
 	for key in source.keys():

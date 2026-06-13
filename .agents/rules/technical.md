@@ -79,6 +79,7 @@ MVP 可以先使用 Mock Provider，但 Provider 接口应保持稳定。
 - 家具回收后。
 - 招募租客后。
 - 建造房间后。
+- 应用房间、公区、服务核心或屋顶装修后。
 - 完成任务后。
 - 应用暂停/退出时。
 
@@ -92,6 +93,8 @@ total_rent_per_minute
 apartment_level
 apartment_exp
 rooms
+public_area_decor
+apartment_decor
 tenants
 tasks
 stats
@@ -110,6 +113,7 @@ coin_gain_batched(amount)
 rent_changed(value)
 apartment_level_changed(level)
 room_updated(room_id)
+decor_target_changed(kind, target_id, decor_id, category)
 furniture_placed(room_id, furniture_id)
 furniture_moved(room_id, furniture_id)
 furniture_recycled(room_id, furniture_id)
@@ -158,9 +162,9 @@ GDScript 在 UI 中只负责：
 
 禁止在 UI 脚本中用 `Button.new()`、`Label.new()`、`PanelContainer.new()`、`HBoxContainer.new()`、`VBoxContainer.new()` 等方式临时拼 UI 骨架。这里的 UI 脚本特指 UI / presentation 脚本。也不要在 UI / presentation 脚本中创建固定 `StyleBox`、固定字号、固定颜色、固定描边、固定 anchors、固定 offsets、固定 `custom_minimum_size` 等可在 Inspector 配置的布局和视觉样式。缺少必要 UI 节点时应报错并修正 `.tscn`，不要在脚本中兜底补建。`Tenant.gd` 这类角色表现脚本允许处理碰撞、动画、朝向、位置和运行时空间关系，不适用 UI 固定布局规则。
 
-节点较多的界面必须拆分独立子场景，例如列表行、统计卡、操作按钮、页签按钮、复杂弹窗内容块。动态内容只能通过这些可在编辑器打开的子场景模板渲染。
+节点较多的界面必须拆分独立子场景，例如列表行、统计卡、操作按钮、页签按钮、复杂弹窗内容块。动态内容只能通过这些可在编辑器打开的子场景模板渲染。房间装修和公寓层级装修共享的 `DecorCatalogContent`、独立 `SpaceDecorPanel` 和装修条目行都必须保持 scene-first。
 
-公寓主体应优先使用 TileMap/TileMapLayer 结构实现。核心公寓与核心 UI 采用 scene-first / WYSIWYG authoring：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell` 的节点树、容器、服务核心、左右房间、公共区、覆盖层和模板文本必须预先存在于 `.tscn` 中。脚本只绑定配置 ID、刷新显隐/状态/文本、实例化家具、租客、飘字等天然运行时对象；禁止运行时清空后重建核心楼层、房间、建造槽或面板骨架。
+公寓主体应优先使用 TileMap/TileMapLayer 结构实现。核心公寓与核心 UI 采用 scene-first / WYSIWYG authoring：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell/FloorServiceCore/ApartmentRoof` 的节点树、容器、服务核心、左右房间、公共区、覆盖层、点击热区和模板文本必须预先存在于 `.tscn` 中。脚本只绑定配置 ID、刷新显隐/状态/文本、实例化家具、租客、飘字等天然运行时对象；禁止运行时清空后重建核心楼层、房间、建造槽或面板骨架。
 
 配置缺失即错误。`ConfigManager` 和 `AssetResolver` 不提供业务 fallback，不生成占位颜色、占位纹理或默认 scene path。存档只接受当前 schema；配置 ID 或结构失效时重置到当前默认状态并给出明确错误。
 
@@ -175,7 +179,9 @@ GDScript 在 UI 中只负责：
 - 房间是建造状态权威：`rooms[id].unlocked` 表示该房间已建成；`floors.json` 不保存房间建造价格或等级门槛。
 - 待建房间槽必须与同侧建成房间同宽同高，且放在 `Floor.tscn` 的左/右房间位中；待建房间所在楼层仍必须显示中央电梯厅和电梯门。
 - 整栋公寓只允许一个独立屋顶，由 `ApartmentBuilding.tscn` 的 `ApartmentRoof` 节点渲染；房间、待建槽和电梯厅不得各自绘制屋顶。
-- 公寓屋顶配置来自 `apartment_visuals.json`，必须支持主题、`total_width_tiles` 和 `offset_pixels`；屋顶锚定最高可见楼层上方，可按配置比公寓主体左右各宽一个格子并调整 Y 方向位置。
+- 公寓屋顶布局配置来自 `apartment_visuals.json`，必须支持 `default_roof_style_id`、`total_width_tiles` 和 `offset_pixels`；实际屋顶主题通过运行态 `apartment_decor` 选择 `room_decor.json` 中的 `roof` 分类条目解析。屋顶锚定最高可见楼层上方，可按配置比公寓主体左右各宽一个格子并调整 Y 方向位置。
+- 公共区、服务核心/电梯厅和屋顶都是可点击装修目标。服务核心装修为整栋共享；公共区目标 ID 使用 `<floor_index>:<area_id>`；屋顶目标为整栋共享。
+- 电梯门本体本期不纳入可换装范围，只保留原表现。
 - `ApartmentBuilding.tscn` 必须预摆所有当前配置楼层的 `Floor_X` 节点；`Floor.tscn` 必须预摆 `LeftRoom`、`RightRoom`、`LeftBuildSlot`、`RightBuildSlot`、`LeftPublicArea`、`RightPublicArea` 和 `FloorServiceCore`。
 
 ## 像素视口基线

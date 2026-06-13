@@ -4,7 +4,7 @@ extends VBoxContainer
 const META_SERVICE_CORE_WIDTH := &"service_core_width"
 const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 
-@onready var apartment_roof: ApartmentRoof = $ApartmentRoof
+@onready var apartment_roof = $ApartmentRoof
 
 var service_core_width := 0.0
 var default_frame_tiles := Vector2i.ZERO
@@ -21,12 +21,12 @@ func refresh() -> void:
 	for floor_data in ConfigManager.floors:
 		var data: Dictionary = floor_data
 		var floor_index := int(data["floor_index"])
-		var floor_node := floor_nodes_by_index.get(floor_index) as Floor
+		var floor_node = floor_nodes_by_index.get(floor_index)
 		if floor_node == null:
 			continue
 		if GameState.is_floor_visible(floor_index):
 			floor_node.visible = true
-			floor_node.setup(floor_index)
+			floor_node.call("setup", floor_index)
 		else:
 			floor_node.visible = false
 	_apply_roof(highest_visible_floor)
@@ -51,27 +51,29 @@ func get_building_size() -> Vector2:
 
 func find_room_node(room_id: String) -> Control:
 	var room_config := ConfigManager.get_room_config(room_id)
-	var floor_node := floor_nodes_by_index.get(int(room_config["floor_index"])) as Floor
+	var floor_node = floor_nodes_by_index.get(int(room_config["floor_index"]))
 	if floor_node == null:
 		return null
-	return floor_node.get_room_node(room_id)
+	return floor_node.call("get_room_node", room_id) as Control
 
-func find_floor_service_core(floor_index: int) -> FloorServiceCore:
-	var floor_node := floor_nodes_by_index.get(floor_index) as Floor
+func find_floor_service_core(floor_index: int):
+	var floor_node = floor_nodes_by_index.get(floor_index)
 	if floor_node == null:
 		return null
-	return floor_node.get_service_core()
+	return floor_node.call("get_service_core")
 
-func get_floor_node(floor_index: int) -> Floor:
-	return floor_nodes_by_index.get(floor_index) as Floor
+func get_floor_node(floor_index: int):
+	return floor_nodes_by_index.get(floor_index)
 
 func _apply_roof(highest_visible_floor: int) -> void:
 	if apartment_roof == null:
 		return
 	if highest_visible_floor <= 0:
-		apartment_roof.hide_roof()
+		apartment_roof.call("hide_roof")
 		return
-	apartment_roof.apply_layout(ConfigManager.apartment_roof_theme())
+	var roof_target_ref := GameState.space_decor_target(ConfigManager.TARGET_ROOF, ConfigManager.APARTMENT_ROOF_TARGET_ID)
+	var roof_style_id := GameState.get_space_decor_id(roof_target_ref, ConfigManager.DECOR_ROOF)
+	apartment_roof.call("apply_layout", ConfigManager.apartment_roof_theme_for_style(roof_style_id), roof_target_ref)
 
 func _floor_size(floor_index: int) -> Vector2:
 	var floor_data := ConfigManager.get_floor_data(floor_index)
@@ -150,7 +152,7 @@ func _bind_floor_nodes() -> void:
 	floor_nodes_by_index.clear()
 	for floor_data in ConfigManager.floors:
 		var floor_index := int((floor_data as Dictionary)["floor_index"])
-		var floor_node := get_node("Floor_%d" % floor_index) as Floor
+		var floor_node := get_node("Floor_%d" % floor_index)
 		floor_nodes_by_index[floor_index] = floor_node
 
 func _required_scene_meta_float(node: Node, meta_key: StringName) -> float:

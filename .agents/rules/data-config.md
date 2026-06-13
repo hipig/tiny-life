@@ -17,6 +17,7 @@
 - 经济常量。
 - 公寓等级要求。
 - 玩法配置文案和可复用本地化文案。
+- 房间、公区、服务核心和屋顶装修数据。
 - 平台配置。
 
 预期数据文件：
@@ -37,7 +38,7 @@ data/room_decor.json
 data/platform_config.json
 ```
 
-配置采用严格 schema：缺文件、缺 key、类型不符、ID 重复、引用不存在或行为别名无法归一时，启动阶段必须报错。业务代码不得为价格、文案、资源、场景路径、租客区域、房间装饰或经济常量提供 fallback。
+配置采用严格 schema：缺文件、缺 key、类型不符、ID 重复、引用不存在或行为别名无法归一时，启动阶段必须报错。业务代码不得为价格、文案、资源、场景路径、租客区域、装修数据或经济常量提供 fallback。
 
 ## 家具数据
 
@@ -129,22 +130,23 @@ floor_icon_asset
 build_icon_asset
 ```
 
+每个 `public_areas` 项必须包含默认墙纸和墙体装修 ID；存在入口门的公共区还必须包含默认门样式 ID。公共区唯一装修目标 ID 使用 `<floor_index>:<area_id>`。
+
 公寓视觉配置必须包含：
 
 ```text
-roof_theme.wall_edge_source_id
-roof_theme.roof_left_tile
-roof_theme.roof_tiles
-roof_theme.roof_right_tile
+roof_theme.default_roof_style_id
 roof_theme.total_width_tiles
 roof_theme.offset_pixels
+service_core_defaults.wallpaper_id
+service_core_defaults.wall_style_id
 ```
 
-核心公寓结构采用 scene-first：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell` 由 `.tscn` 预摆节点定义结构，配置只绑定 ID、尺寸、门朝向、解锁、建造成本、建造等级和装饰数据。`rooms.json`、`floors.json` 和 `public_areas` 不允许使用 `*_scene_path` 字段选择运行时模板。楼层配置只负责整层结构、服务核心、电梯厅和公区，不得配置房间建造价格、房间建造等级要求或屋顶资源；整栋公寓的唯一屋顶来自 `apartment_visuals.json`。
+核心公寓结构采用 scene-first：`ApartmentBuilding/Floor/Room/BuildSlot/PublicAreaShell/FloorServiceCore/ApartmentRoof` 由 `.tscn` 预摆节点定义结构，配置只绑定 ID、尺寸、门朝向、解锁、建造成本、建造等级和装修数据。`rooms.json`、`floors.json` 和 `public_areas` 不允许使用 `*_scene_path` 字段选择运行时模板。楼层配置只负责整层结构、服务核心、电梯厅和公区，不得配置房间建造价格、房间建造等级要求或屋顶资源；整栋公寓的唯一屋顶来自 `ApartmentBuilding.tscn` 的 `ApartmentRoof`，默认屋顶装修 ID 和布局参数来自 `apartment_visuals.json`。
 
-## 房间装饰数据
+## 统一装修数据
 
-`room_decor.json` 保留为当前有效配置。每个装饰项必须声明：
+`room_decor.json` 保留为当前有效配置文件名，但语义是房间与公寓目标共享的统一装修目录。每个装修项必须声明：
 
 ```text
 id
@@ -152,10 +154,12 @@ category
 name
 price
 preview_asset
-theme 或 door_asset
+theme、door_asset 或 roof theme
 ```
 
-装饰分类固定为 `wallpaper`、`wall`、`door`。房间默认装饰 ID 必须引用对应分类；RoomPanel 的装饰页签只渲染配置中存在的分类和条目，不提供默认文案、默认资源或默认价格。
+装修分类固定为 `wallpaper`、`wall`、`door`、`roof`。`wallpaper` 和 `wall` 必须提供 TileMap 主题；`door` 必须提供门资源、偏移和开关帧；`roof` 必须提供屋顶图块主题。房间默认装修 ID 必须引用对应分类；公共区、服务核心和屋顶默认装修 ID 也必须引用各自支持分类。
+
+RoomPanel 的装饰 Tab 与 `SpaceDecorPanel` 复用同一套装修内容组件，只渲染目标支持的分类和条目，不提供默认文案、默认资源或默认价格。
 
 ## 租客数据
 

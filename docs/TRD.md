@@ -42,6 +42,8 @@ res://
       TopStatusBar.tscn
       FloatingMenu.tscn
       RoomPanel.tscn
+      SpaceDecorPanel.tscn
+      DecorCatalogContent.tscn
       FurnitureShopPanel.tscn
       TenantPanel.tscn
       TaskPanel.tscn
@@ -56,9 +58,14 @@ res://
 
     building/
       BuildingView.tscn
+      ApartmentBuilding.tscn
       Floor.tscn
       Room.tscn
       BuildSlot.tscn
+      PublicAreaShell.tscn
+      FloorServiceCore.tscn
+      ApartmentRoof.tscn
+      ApartmentTileMap.tscn
 
     furniture/
       Furniture.tscn
@@ -123,6 +130,8 @@ res://
       TopStatusBar.gd
       FloatingMenu.gd
       RoomPanel.gd
+      SpaceDecorPanel.gd
+      DecorCatalogContent.gd
       FurnitureShopPanel.gd
       TenantPanel.gd
       TaskPanel.gd
@@ -230,6 +239,7 @@ TaskItemRow.tscn
 enum UIState {
     NORMAL,
     ROOM_PANEL,
+    SPACE_DECOR_PANEL,
     FURNITURE_SHOP,
     PLACING_NEW_FURNITURE,
     MOVING_EXISTING_FURNITURE,
@@ -254,7 +264,7 @@ enum UIState {
 控制面板打开关闭
 防止点击冲突
 控制摆放状态下的输入规则
-控制普通状态下点击房间 / 小人 / 待建房间
+控制普通状态下点击房间 / 公区装修目标 / 小人 / 待建房间
 ```
 
 ---
@@ -267,6 +277,7 @@ enum UIState {
 
 ```text
 点击房间
+点击公共区、服务核心或屋顶打开对应装修面板
 点击小人
 长按家具
 点击可施工房间
@@ -279,9 +290,21 @@ enum UIState {
 
 ```text
 切换房间 UI Tab
+在装饰 Tab 中切换房间装修
 打开家具商店
 打开租客招募
 点击其他房间切换目标房间，可选
+```
+
+### SPACE_DECOR_PANEL
+
+允许：
+
+```text
+切换目标支持的装修分类
+选择装修条目
+关闭装修面板
+点击其他可装修目标切换目标，可选
 ```
 
 ### FURNITURE_SHOP
@@ -505,7 +528,7 @@ enum RoomBuildSlotState {
 
 ## 7.3 floors.json
 
-`floors.json` 不配置房间建造价格、建造等级要求或屋顶资源，只配置整层结构、服务核心和公区。
+`floors.json` 不配置房间建造价格、建造等级要求或屋顶资源，只配置整层结构、服务核心和公区。公共区若存在可视区域，必须提供默认墙纸和墙体装修；存在入口门时额外提供默认门样式。
 
 ```json
 [
@@ -515,24 +538,34 @@ enum RoomBuildSlotState {
     "visual_role": "room_floor",
     "initial_built": false,
     "service_label": "3F",
-    "public_areas": []
+    "public_areas": [
+      {
+        "id": "hall_left",
+        "side": "left",
+        "display_name": "1F 大厅",
+        "default_wallpaper_id": "wallpaper_warm",
+        "default_wall_style_id": "wall_basic",
+        "default_door_style_id": "door_panel"
+      }
+    ]
   }
 ]
 ```
 
 ## 7.4 apartment_visuals.json
 
-整栋公寓只使用一个屋顶。屋顶主题、总宽度和位移由 `apartment_visuals.json` 配置；运行时锚定在最高可见楼层上方，不拆分到房间或电梯厅中渲染。
+整栋公寓只使用一个屋顶。`apartment_visuals.json` 只保存屋顶默认装修 ID、总宽度、位移和服务核心默认装修；屋顶图块主题由 `room_decor.json` 中 `roof` 分类条目解析，运行时实际选择保存在 `apartment_decor.roof`。屋顶锚定在最高可见楼层上方，不拆分到房间或电梯厅中渲染。
 
 ```json
 {
   "roof_theme": {
-    "wall_edge_source_id": 0,
-    "roof_left_tile": [7, 0],
-    "roof_tiles": [[9, 0]],
-    "roof_right_tile": [10, 0],
+    "default_roof_style_id": "roof_red_tile",
     "total_width_tiles": 17,
     "offset_pixels": [-16, -16]
+  },
+  "service_core_defaults": {
+    "wallpaper_id": "wallpaper_warm",
+    "wall_style_id": "wall_basic"
   }
 }
 ```
@@ -723,11 +756,14 @@ RoomPanel
 ├── TabBar
 │   ├── OverviewTabButton
 │   ├── FurnitureTabButton
-│   └── TenantTabButton
+│   ├── TenantTabButton
+│   └── DecorTabButton
 ├── ContentRoot
 │   ├── OverviewContent
 │   ├── FurnitureContent
-│   └── TenantContent
+│   ├── TenantContent
+│   └── DecorContent
+│       └── DecorCatalogContent
 ```
 
 ---
@@ -740,6 +776,7 @@ RoomPanel
 添加家具
 招募租客
 查看租客
+切换房间装修
 ```
 
 ---
@@ -759,6 +796,34 @@ func _on_add_furniture_pressed():
 func _on_recruit_tenant_pressed():
     UIManager.open_tenant_panel_for_recruit(target_room_id)
 ```
+
+---
+
+## 9.5 统一空间装修 UI
+
+房间、公区、服务核心和屋顶都使用统一装修目标结构：
+
+```gdscript
+{
+    "kind": "room | public_area | service_core | roof",
+    "id": "target id",
+    "title": "显示标题",
+    "supported_categories": []
+}
+```
+
+`RoomPanel` 的装饰 Tab 与独立 `SpaceDecorPanel.tscn` 都复用 `DecorCatalogContent.tscn`。`DecorCatalogContent` 负责根据目标支持分类显示筛选按钮、实例化 `RoomDecorItemRow.tscn`、显示已装备和金币不足状态，并发出统一应用请求。
+
+支持分类固定为：
+
+```text
+房间：wallpaper / wall / door
+公共区：wallpaper / wall；存在入口门时支持 door
+服务核心：wallpaper / wall
+屋顶：roof
+```
+
+公区、服务核心和屋顶从场景目标直接点击进入 `SpaceDecorPanel`，不新增底部导航或全局商城入口。电梯门本体本期不参与换装。
 
 ---
 
@@ -1583,6 +1648,8 @@ func load_game():
   "apartment_level": 3,
   "apartment_exp": 250,
   "rooms": [],
+  "public_area_decor": {},
+  "apartment_decor": {},
   "tenants": [],
   "tasks": [],
   "stats": {},
@@ -1601,6 +1668,7 @@ func load_game():
 家具回收后
 招募租客后
 建造房间后
+应用房间或公寓装修后
 完成任务后
 应用暂停 / 退出时
 ```
@@ -1684,6 +1752,8 @@ platform_config.json
 ```
 
 ConfigManager 启动即校验严格 schema。缺 key、重复 ID、引用不存在或类型不符时直接报错；访问器不接受业务 fallback 参数。
+
+`room_decor.json` 保留文件名，但语义是统一装修目录，分类固定为 `wallpaper`、`wall`、`door`、`roof`。房间默认装修来自 `rooms.json`，公共区默认装修来自 `floors.json.public_areas`，服务核心和屋顶默认装修来自 `apartment_visuals.json`。`ConfigManager` 必须校验所有默认 ID 存在且分类正确，并提供按目标解析墙纸/墙体/门/屋顶主题的统一接口。
 
 ---
 
@@ -1791,6 +1861,7 @@ signal rent_changed(value)
 signal apartment_level_changed(level)
 
 signal room_updated(room_id)
+signal decor_target_changed(kind, target_id, decor_id, category)
 signal furniture_placed(room_id, furniture_id)
 signal furniture_moved(room_id, furniture_id)
 signal furniture_recycled(room_id, furniture_id)

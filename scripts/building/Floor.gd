@@ -5,13 +5,13 @@ const META_SERVICE_WIDTH := &"service_width"
 const META_DEFAULT_FRAME_TILES := &"default_frame_tiles"
 
 @onready var left_content_root: Control = $LeftContent
-@onready var left_room: Room = $LeftContent/LeftRoom
-@onready var left_build_slot: BuildSlot = $LeftContent/LeftBuildSlot
+@onready var left_room = $LeftContent/LeftRoom
+@onready var left_build_slot = $LeftContent/LeftBuildSlot
 @onready var left_public_area: PublicAreaShell = $LeftContent/LeftPublicArea
 @onready var service_core: FloorServiceCore = $FloorServiceCore
 @onready var right_content_root: Control = $RightContent
-@onready var right_room: Room = $RightContent/RightRoom
-@onready var right_build_slot: BuildSlot = $RightContent/RightBuildSlot
+@onready var right_room = $RightContent/RightRoom
+@onready var right_build_slot = $RightContent/RightBuildSlot
 @onready var right_public_area: PublicAreaShell = $RightContent/RightPublicArea
 
 var service_width := 0.0
@@ -36,29 +36,32 @@ func setup(index: int) -> void:
 func get_service_core() -> FloorServiceCore:
 	return service_core
 
-func get_room_node(room_id: String) -> Room:
+func get_room_node(room_id: String):
 	for room_node in [left_room, right_room]:
 		if room_node.visible and room_node.room_id == room_id:
 			return room_node
 	return null
 
-func get_active_public_areas() -> Array[PublicAreaShell]:
-	var result: Array[PublicAreaShell] = []
+func get_active_public_areas() -> Array:
+	var result: Array = []
 	for area in [left_public_area, right_public_area]:
 		if area.visible:
 			result.append(area)
 	return result
 
 func _apply_side(side: String, floor_data: Dictionary) -> void:
-	var root := left_content_root if side == "left" else right_content_root
-	var room_node := left_room if side == "left" else right_room
-	var build_slot_node := left_build_slot if side == "left" else right_build_slot
-	var public_area_node := left_public_area if side == "left" else right_public_area
+	var root = left_content_root if side == "left" else right_content_root
+	var room_node = left_room if side == "left" else right_room
+	var build_slot_node = left_build_slot if side == "left" else right_build_slot
+	var public_area_node = left_public_area if side == "left" else right_public_area
 	room_node.visible = false
 	build_slot_node.visible = false
 	public_area_node.visible = false
 	var public_area := _public_area_for_side(side, floor_data)
 	if not public_area.is_empty():
+		var public_area_target_id := ConfigManager.public_area_target_id(floor_index, str(public_area["id"]))
+		var public_area_target_ref := GameState.space_decor_target(ConfigManager.TARGET_PUBLIC_AREA, public_area_target_id)
+		var public_area_state := GameState.get_space_decor_state(public_area_target_ref)
 		var area_size := _content_pixel_size(public_area, false)
 		root.custom_minimum_size = area_size
 		root.size = area_size
@@ -69,13 +72,15 @@ func _apply_side(side: String, floor_data: Dictionary) -> void:
 		public_area_node.apply_layout(
 			area_size,
 			_frame_tiles_for_content(public_area, false),
-			{},
+			ConfigManager.tile_theme_from_decor_state(public_area_state),
 			_room_edge_sides(str(public_area["layout_side"]).strip_edges().to_lower()),
 			_public_body_sides(str(public_area["layout_side"]).strip_edges().to_lower()),
 			str(public_area["label"]),
 			bool(public_area["has_entrance_door"]),
 			str(public_area.get("door_side", "")),
-			bool(public_area.get("door_mirrored", false))
+			bool(public_area.get("door_mirrored", false)),
+			ConfigManager.door_theme_from_decor_state(public_area_state),
+			public_area_target_ref
 		)
 		return
 	var room_data := _room_config_for_side(side)
@@ -103,7 +108,17 @@ func _apply_side(side: String, floor_data: Dictionary) -> void:
 
 func _apply_service_core(floor_data: Dictionary) -> void:
 	var floor_height := _floor_height()
-	service_core.apply_layout(service_width, floor_height, floor_index, _service_edge_sides(), _service_body_sides())
+	var service_core_target_ref := GameState.space_decor_target(ConfigManager.TARGET_SERVICE_CORE, ConfigManager.APARTMENT_SERVICE_CORE_TARGET_ID)
+	var service_core_state := GameState.get_space_decor_state(service_core_target_ref)
+	service_core.apply_layout(
+		service_width,
+		floor_height,
+		floor_index,
+		_service_edge_sides(),
+		_service_body_sides(),
+		ConfigManager.tile_theme_from_decor_state(service_core_state),
+		service_core_target_ref
+	)
 	var label_text := str(floor_data["service_label"])
 	service_core.set_floor_label(label_text)
 

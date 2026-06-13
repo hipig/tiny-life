@@ -48,7 +48,7 @@ func _refresh() -> void:
 	_add_build_visual(buildable_label_template % int(room_config["build_cost"]), locked, room_config)
 
 func _add_build_visual(label_text: String, locked: bool, room_config: Dictionary) -> void:
-	var tile_theme := ConfigManager.tile_theme_for_room(GameState.get_room(room_id))
+	var tile_theme := ConfigManager.tile_theme_from_decor_state(GameState.get_room(room_id))
 	shell.apply_layout(
 		_slot_size(room_config),
 		wall_inset,

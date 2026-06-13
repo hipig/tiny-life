@@ -50,13 +50,39 @@ func test_initial_building_starts_with_public_entry_and_second_floor_rooms() -> 
 		var floor_data: Dictionary = floor
 		assert_false(floor_data.has("roof_asset"), "floor config should not carry apartment roof assets")
 		assert_false(floor_data.has("roof_theme"), "floor config should not carry apartment roof themes")
+		for public_area in floor_data.get("public_areas", []):
+			var area_data: Dictionary = public_area
+			for pair in [
+				["default_wallpaper_id", "wallpaper"],
+				["default_wall_style_id", "wall"]
+			]:
+				var decor_item := _room_decor_item(str(area_data.get(str(pair[0]), "")))
+				assert_false(decor_item.is_empty(), "%s public area should configure %s" % [area_data.get("id", ""), pair[0]])
+				assert_eq(str(decor_item.get("category", "")), str(pair[1]), "%s public area %s should point at the expected decor category" % [area_data.get("id", ""), pair[0]])
+			if bool(area_data.get("has_entrance_door", false)):
+				var door_item := _room_decor_item(str(area_data.get("default_door_style_id", "")))
+				assert_false(door_item.is_empty(), "%s public area entrance should configure default door decor" % area_data.get("id", ""))
+				assert_eq(str(door_item.get("category", "")), "door", "%s public area entrance door should point at door decor" % area_data.get("id", ""))
+			else:
+				assert_false(area_data.has("default_door_style_id"), "%s public area without entrance door should not configure door decor" % area_data.get("id", ""))
 	var apartment_visuals := _load_json_dict("res://data/apartment_visuals.json")
 	var roof_theme: Dictionary = apartment_visuals.get("roof_theme", {})
+	var default_roof_item := _room_decor_item(str(roof_theme.get("default_roof_style_id", "")))
+	assert_false(default_roof_item.is_empty(), "apartment roof should configure a default roof decor")
+	assert_eq(str(default_roof_item.get("category", "")), "roof", "apartment default roof style should point at roof decor")
 	assert_eq(int(roof_theme.get("total_width_tiles", 0)), 17, "apartment roof should support a configured total width")
 	var roof_offset: Array = roof_theme.get("offset_pixels", [])
 	assert_eq(roof_offset.size(), 2, "apartment roof should support configured pixel offset")
 	assert_eq(int(roof_offset[0]), -16, "apartment roof x offset should allow one-tile left overflow")
 	assert_eq(int(roof_offset[1]), -16, "apartment roof y offset should be configurable")
+	var service_core_defaults: Dictionary = apartment_visuals.get("service_core_defaults", {})
+	for pair in [
+		["wallpaper_id", "wallpaper"],
+		["wall_style_id", "wall"]
+	]:
+		var decor_item := _room_decor_item(str(service_core_defaults.get(str(pair[0]), "")))
+		assert_false(decor_item.is_empty(), "service core should configure %s" % pair[0])
+		assert_eq(str(decor_item.get("category", "")), str(pair[1]), "service core %s should point at the expected decor category" % pair[0])
 	var room_301 := _room_data("room_301")
 	var room_302 := _room_data("room_302")
 	assert_false(bool(room_301.get("initial_unlocked", true)), "301 should start as a pending room")
@@ -112,7 +138,8 @@ func test_room_building_rules_unlock_same_floor_independently() -> void:
 	assert_false(state_source.contains("highest_built_floor"), "GameState should not use highest_built_floor as construction authority")
 	assert_true(task_source.contains("\"room_built_count\""), "TaskManager should support room-built-count tasks")
 	assert_false(task_source.contains("\"floor_built\""), "TaskManager should not use floor-built tasks")
-	assert_true(building_source.contains("ConfigManager.apartment_roof_theme()"), "ApartmentBuilding should render one configured apartment roof")
+	assert_true(building_source.contains("GameState.get_space_decor_id(roof_target_ref, ConfigManager.DECOR_ROOF)"), "ApartmentBuilding should render the runtime selected apartment roof decor")
+	assert_true(building_source.contains("ConfigManager.apartment_roof_theme_for_style(roof_style_id)"), "ApartmentBuilding should combine roof layout with the selected roof style")
 	assert_true(building_source.contains("GameState.is_floor_visible(floor_index)"), "ApartmentBuilding should size visible floors from room buildability")
 	assert_true(floor_source.contains("left_build_slot"), "Floor should own a left pending-room slot")
 	assert_true(floor_source.contains("right_build_slot"), "Floor should own a right pending-room slot")

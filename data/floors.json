@@ -13,14 +13,19 @@
 		"has_entrance_door": true,
 		"door_side": "left",
 		"door_mirrored": false,
-		"frame_tiles": [6, 4]
+		"frame_tiles": [6, 4],
+		"default_wallpaper_id": "wallpaper_slate_gray_plain",
+		"default_wall_style_id": "wall_frame_gray",
+		"default_door_style_id": "door_wood"
 	  },
 	  {
 		"id": "lounge",
 		"label": "公共休息区",
 		"layout_side": "right",
 		"has_entrance_door": false,
-		"frame_tiles": [6, 4]
+		"frame_tiles": [6, 4],
+		"default_wallpaper_id": "wallpaper_mint_white_plain",
+		"default_wall_style_id": "wall_frame_gray"
 	  }
 	],
 	"construction_cloth_asset": {

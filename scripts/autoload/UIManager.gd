@@ -3,6 +3,7 @@ extends Node
 enum UIState {
 	NORMAL,
 	ROOM_PANEL,
+	SPACE_DECOR_PANEL,
 	FURNITURE_SHOP,
 	PLACING_NEW_FURNITURE,
 	MOVING_EXISTING_FURNITURE,
@@ -22,6 +23,7 @@ signal room_panel_requested(room_id: String)
 signal furniture_shop_requested(room_id: String)
 signal tenant_panel_requested(room_id: String, mode: String)
 signal build_confirm_requested(room_id: String)
+signal space_decor_panel_requested(target_ref: Dictionary, initial_category: String)
 signal panel_requested(panel_name: String)
 signal placement_requested(furniture_id: String, room_id: String)
 signal move_existing_requested(room_id: String, instance_id: String)
@@ -54,6 +56,10 @@ func open_room_panel(room_id: String) -> void:
 func open_furniture_shop(room_id: String) -> void:
 	set_state(UIState.FURNITURE_SHOP)
 	furniture_shop_requested.emit(room_id)
+
+func open_space_decor_panel(target_ref: Dictionary, initial_category := "") -> void:
+	set_state(UIState.SPACE_DECOR_PANEL)
+	space_decor_panel_requested.emit(target_ref.duplicate(true), initial_category)
 
 func start_new_furniture_placement(furniture_id: String, room_id: String) -> void:
 	set_state(UIState.PLACING_NEW_FURNITURE)

@@ -50,7 +50,7 @@ func _rebuild() -> void:
 	custom_minimum_size = _room_pixel_size()
 	size = custom_minimum_size
 	var room := GameState.get_room(room_id)
-	var tile_theme := ConfigManager.tile_theme_for_room(room)
+	var tile_theme := ConfigManager.tile_theme_from_decor_state(room)
 	room_shell.roof_visible = false
 	room_shell.apply_layout(
 		size,
@@ -63,7 +63,7 @@ func _rebuild() -> void:
 		{},
 		_room_door_side(room),
 		_room_door_mirrored(room),
-		ConfigManager.door_theme_for_room(room),
+		ConfigManager.door_theme_from_decor_state(room),
 		_room_door_visual_offset(room)
 	)
 	room_shell.clear_dynamic_views()
@@ -342,7 +342,7 @@ func _vector2_from_array(value: Variant) -> Vector2:
 	return Vector2.ZERO
 
 func _on_pressed() -> void:
-	if UIManager.current_state != UIManager.UIState.NORMAL and UIManager.current_state != UIManager.UIState.ROOM_PANEL:
+	if UIManager.current_state != UIManager.UIState.NORMAL and UIManager.current_state != UIManager.UIState.ROOM_PANEL and UIManager.current_state != UIManager.UIState.SPACE_DECOR_PANEL:
 		return
 	if not room_id.is_empty():
 		UIManager.open_room_panel(room_id)

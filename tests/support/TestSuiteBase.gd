@@ -31,7 +31,8 @@ func _panel_scene_paths() -> Array[String]:
 		"res://scenes/ui/TaskPanel.tscn",
 		"res://scenes/ui/RewardPanel.tscn",
 		"res://scenes/ui/SettingsPanel.tscn",
-		"res://scenes/ui/OfflineRewardPopup.tscn"
+		"res://scenes/ui/OfflineRewardPopup.tscn",
+		"res://scenes/ui/SpaceDecorPanel.tscn"
 	]
 
 
@@ -48,7 +49,8 @@ func _app_panel_scene_paths() -> Array[String]:
 		"res://scenes/ui/RewardPanel.tscn",
 		"res://scenes/ui/SettingsPanel.tscn",
 		"res://scenes/ui/OfflineRewardPopup.tscn",
-		"res://scenes/ui/RecycleConfirmPopup.tscn"
+		"res://scenes/ui/RecycleConfirmPopup.tscn",
+		"res://scenes/ui/SpaceDecorPanel.tscn"
 	]
 
 
@@ -70,6 +72,7 @@ func _support_scene_paths() -> Array[String]:
 		"res://scenes/ui/FurnitureShopItemRow.tscn",
 		"res://scenes/ui/RoomFurnitureItemRow.tscn",
 		"res://scenes/ui/RoomDecorItemRow.tscn",
+		"res://scenes/ui/DecorCatalogContent.tscn",
 		"res://scenes/ui/RentRoomRow.tscn",
 		"res://scenes/ui/FloorOverviewRow.tscn",
 		"res://scenes/ui/TenantOverviewRow.tscn"
@@ -100,8 +103,10 @@ func _ui_script_paths() -> Array[String]:
 		"res://scripts/ui/RewardPanel.gd",
 		"res://scripts/ui/RoomFurnitureItemRow.gd",
 		"res://scripts/ui/RoomDecorItemRow.gd",
+		"res://scripts/ui/DecorCatalogContent.gd",
 		"res://scripts/ui/RoomPanel.gd",
 		"res://scripts/ui/SettingsPanel.gd",
+		"res://scripts/ui/SpaceDecorPanel.gd",
 		"res://scripts/ui/StatCard.gd",
 		"res://scripts/ui/TaskPanel.gd",
 		"res://scripts/ui/TaskItemRow.gd",
