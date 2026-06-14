@@ -10,7 +10,7 @@
 - `floors.json` / `rooms.json` / `apartment_visuals.json` 只绑定配置 ID、尺寸、门朝向、解锁条件、默认装修 ID 和屋顶布局参数，不再选择运行时场景模板。
 - `rooms.json.frame_tiles` 是房间外框尺寸唯一标准，默认 `[6, 4]`，包含墙体；每格固定 16px，所以默认房间像素尺寸为 `96 x 64`。
 - 房间高度固定为 4 格；后续扩建房间只增加宽度，例如 `[8, 4]`。
-- `rooms.json.grid_size` 对应剖面房间摆放格，默认 `[6, 4]`，每格固定 `16px x 16px`；地面家具按自身高度吸附到最下面的地面线，墙面摆放层由上方墙面格派生为 `[columns, rows - 1]`，不写入配置。
+- `rooms.json.grid_size` 仅用于墙面区域派生和测试容量估算；家具摆放不再使用隐藏格吸附。地面家具使用房间本地连续 `anchor_pos`，按自身高度对齐最下面的地面线；租客室内位置不配置可站区、巡逻点或互动点，只从 `frame_tiles` 派生的地面线连续坐标计算；墙面摆放层由上方墙面区域派生，不写入配置。
 - 家具、租客、摆放预览仍作为子场景挂到房间可视层。
 - `ApartmentTileMap.gd` 是唯一允许调用 `set_cell` 动态生成房间骨架的建筑脚本；`Room.gd`、`Floor.gd`、`BuildSlot.gd`、`ApartmentBuilding.gd` 只传递 `frame_tiles` 和显隐状态。
 - 图块坐标不在业务脚本中猜测。`ApartmentTileMap.gd` 已导出具体 Inspector 字段，由编辑器填：

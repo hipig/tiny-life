@@ -10,6 +10,7 @@ const MIN_ZOOM: float = 0.7
 const MAX_ZOOM: float = 2.0
 const ZOOM_STEP: float = 0.1
 const PLACEMENT_FOCUS_ZOOM: float = 1.6
+const PLACEMENT_FOCUS_SECONDS: float = 0.2
 const FOCUS_ATTEMPTS: int = 3
 const NORMAL_TOP_MIN: float = 44.0
 const DEFAULT_GROUND_BAND_HEIGHT: float = 48.0
@@ -43,6 +44,7 @@ var _camera_initialized: bool = false
 var _active_touch_points: Dictionary = {}
 var _pinch_distance: float = 0.0
 var _pinch_center: Vector2 = Vector2.ZERO
+var _focus_tween: Tween
 
 func _ready() -> void:
 	if not resized.is_connected(_on_resized):
@@ -77,10 +79,11 @@ func refresh() -> void:
 		return
 	building_root.refresh()
 	_layout_world()
-	_ensure_world_tenants()
+	_ensure_tenant_views()
 	zoom_changed.emit(zoom_scale)
 
 func zoom_by(delta: float, anchor_viewport_position: Vector2 = Vector2.INF) -> void:
+	_cancel_focus_tween()
 	set_zoom(zoom_scale + delta, anchor_viewport_position)
 
 func set_zoom(value: float, anchor_viewport_position: Vector2 = Vector2.INF) -> void:
@@ -116,11 +119,10 @@ static func calculate_min_zoom_for_bounds(viewport_size: Vector2, bounds_size: V
 	return maxf(viewport_size.x / bounds_size.x, viewport_size.y / bounds_size.y)
 
 func focus_room(room_id: String) -> void:
-	if zoom_scale < PLACEMENT_FOCUS_ZOOM:
-		set_zoom(PLACEMENT_FOCUS_ZOOM, _viewport_center())
-	call_deferred("_apply_room_focus", room_id, 0)
+	call_deferred("_focus_room_deferred", room_id, 0)
 
 func clear_focus() -> void:
+	_cancel_focus_tween()
 	_layout_world(false)
 	_clamp_camera()
 
@@ -274,7 +276,7 @@ func _layout_world(clamp_camera: bool = true) -> void:
 		_camera_initialized = true
 	elif clamp_camera:
 		_clamp_camera()
-	_ensure_world_tenants()
+	_ensure_tenant_views()
 
 func _building_position_in_world(building_size: Vector2, current_world_size: Vector2) -> Vector2:
 	var ground_band: float = _ground_band_height()
@@ -295,37 +297,194 @@ func _apply_room_focus(room_id: String, attempt: int = 0) -> void:
 	if attempt < FOCUS_ATTEMPTS:
 		call_deferred("_apply_room_focus", room_id, attempt + 1)
 
-func _ensure_world_tenants() -> void:
+func _focus_room_deferred(room_id: String, attempt: int = 0) -> void:
+	var room_node: Control = find_room_node(room_id)
+	if room_node == null:
+		if attempt < FOCUS_ATTEMPTS:
+			call_deferred("_focus_room_deferred", room_id, attempt + 1)
+		return
+	_layout_world(false)
+	var target_zoom := maxf(zoom_scale, PLACEMENT_FOCUS_ZOOM)
+	target_zoom = clampf(target_zoom, get_min_zoom_scale(), MAX_ZOOM)
+	var previous_zoom := zoom_scale
+	zoom_scale = target_zoom
+	world_camera.zoom = Vector2.ONE * zoom_scale
+	var room_center: Vector2 = room_node.get_global_transform() * (room_node.size * 0.5)
+	var desired_screen_position: Vector2 = _viewport_size() * FOCUS_SCREEN_ANCHOR
+	var target_position := _clamped_camera_position(_camera_position_for_anchor(room_center, desired_screen_position))
+	zoom_scale = previous_zoom
+	world_camera.zoom = Vector2.ONE * zoom_scale
+	_start_focus_tween(target_zoom, target_position)
+
+func _start_focus_tween(target_zoom: float, target_position: Vector2) -> void:
+	if world_camera == null:
+		return
+	_cancel_focus_tween()
+	_focus_tween = create_tween()
+	_focus_tween.set_parallel(true)
+	_focus_tween.set_trans(Tween.TRANS_QUAD)
+	_focus_tween.set_ease(Tween.EASE_OUT)
+	_focus_tween.tween_method(_apply_focus_zoom, zoom_scale, target_zoom, PLACEMENT_FOCUS_SECONDS)
+	_focus_tween.tween_property(world_camera, "position", target_position, PLACEMENT_FOCUS_SECONDS)
+
+func _apply_focus_zoom(value: float) -> void:
+	zoom_scale = clampf(value, get_min_zoom_scale(), MAX_ZOOM)
+	world_camera.zoom = Vector2.ONE * zoom_scale
+	_clamp_camera()
+	zoom_changed.emit(zoom_scale)
+
+func _cancel_focus_tween() -> void:
+	if _focus_tween != null and _focus_tween.is_valid():
+		_focus_tween.kill()
+	_focus_tween = null
+
+func _ensure_tenant_views() -> void:
 	if tenant_world_layer == null:
 		return
-	for tenant_id in GameState.tenants.keys():
+	var tenant_views_by_id := _tenant_views_by_id()
+	for tenant_id_value in GameState.tenants.keys():
+		var tenant_id := str(tenant_id_value)
 		var tenant_state: Dictionary = GameState.tenants[tenant_id]
 		var presence := str(tenant_state.get("presence_state", GameState.TENANT_PRESENCE_HOME))
 		var room_id := str(tenant_state.get("room_id", ""))
-		var node_name := "Tenant_%s" % str(tenant_id)
-		var existing := tenant_world_layer.get_node_or_null(node_name)
-		if presence == GameState.TENANT_PRESENCE_HOME or room_id.is_empty():
-			if existing != null:
-				existing.queue_free()
+		var candidates: Array = tenant_views_by_id.get(tenant_id, [])
+		if room_id.is_empty():
+			_queue_free_tenant_views(candidates)
 			continue
-		if existing != null:
+		match presence:
+			GameState.TENANT_PRESENCE_HOME:
+				_ensure_home_tenant_view(tenant_id, room_id, candidates)
+			GameState.TENANT_PRESENCE_LEAVING:
+				_ensure_leaving_tenant_view(tenant_id, room_id, candidates)
+			GameState.TENANT_PRESENCE_AWAY, GameState.TENANT_PRESENCE_RETURNING:
+				_ensure_route_tenant_view(tenant_id, room_id, presence, candidates)
+			_:
+				_queue_free_tenant_views(candidates)
+	for tenant_id in tenant_views_by_id.keys():
+		if not GameState.tenants.has(str(tenant_id)):
+			_queue_free_tenant_views(tenant_views_by_id[tenant_id])
+
+func _ensure_home_tenant_view(tenant_id: String, room_id: String, candidates: Array) -> void:
+	var room_layer := get_room_visual_layer(room_id)
+	var tenant_view := _select_tenant_view_in_parent(candidates, room_layer)
+	if tenant_view != null:
+		_queue_free_other_tenant_views(candidates, tenant_view)
+		return
+	var reusable := _select_existing_tenant_view(candidates)
+	var room_node := find_room_node(room_id)
+	if room_node == null or not room_node.has_method("ensure_home_tenant_view"):
+		_queue_free_tenant_view(reusable)
+		return
+	var ensured := room_node.call("ensure_home_tenant_view", tenant_id, reusable) as Tenant
+	_queue_free_other_tenant_views(candidates, ensured)
+
+func _ensure_leaving_tenant_view(tenant_id: String, room_id: String, candidates: Array) -> void:
+	var tenant_view := _select_tenant_view_in_parent(candidates, tenant_world_layer)
+	if tenant_view == null:
+		tenant_view = _select_existing_tenant_view(candidates)
+	if tenant_view == null:
+		tenant_view = _create_route_tenant_view(tenant_id, room_id, GameState.TENANT_PRESENCE_LEAVING)
+	_queue_free_other_tenant_views(candidates, tenant_view)
+
+func _ensure_route_tenant_view(tenant_id: String, room_id: String, presence: String, candidates: Array) -> void:
+	var tenant_view := _select_tenant_view_in_parent(candidates, tenant_world_layer)
+	if tenant_view == null:
+		tenant_view = _select_existing_tenant_view(candidates)
+	if tenant_view == null:
+		tenant_view = _create_route_tenant_view(tenant_id, room_id, presence)
+	else:
+		_move_tenant_to_world_layer(tenant_view)
+	_queue_free_other_tenant_views(candidates, tenant_view)
+
+func _create_route_tenant_view(tenant_id: String, room_id: String, presence: String) -> Tenant:
+	var tenant_view := TENANT_SCENE.instantiate() as Tenant
+	if tenant_view == null:
+		return null
+	tenant_view.name = "Tenant_%s" % tenant_id
+	tenant_world_layer.add_child(tenant_view)
+	var route_start := _route_start_for_tenant(room_id)
+	tenant_view.position = route_start
+	tenant_view.visible = presence != GameState.TENANT_PRESENCE_AWAY
+	tenant_view.setup(tenant_id, room_id)
+	return tenant_view
+
+func _route_start_for_tenant(room_id: String) -> Vector2:
+	var route_start := get_tenant_entry_start_world_position(room_id)
+	if route_start == Vector2.ZERO:
+		var room_door_position := get_room_door_world_position(room_id)
+		route_start = get_offscreen_left_world_position(room_door_position.y)
+	return route_start
+
+func _tenant_views_by_id() -> Dictionary:
+	var result := {}
+	var tree := get_tree()
+	if tree == null:
+		return result
+	for node in tree.get_nodes_in_group(Tenant.TENANT_VIEW_GROUP):
+		var tenant_view := node as Tenant
+		if not _tenant_view_is_available(tenant_view):
 			continue
-		var tenant_view := TENANT_SCENE.instantiate() as Tenant
-		if tenant_view == null:
+		var tenant_id := _tenant_id_for_view(tenant_view)
+		if tenant_id.is_empty():
 			continue
-		tenant_view.name = node_name
-		tenant_world_layer.add_child(tenant_view)
-		var route_start := get_tenant_entry_start_world_position(room_id)
-		if route_start == Vector2.ZERO:
-			var room_door_position := get_room_door_world_position(room_id)
-			route_start = get_offscreen_left_world_position(room_door_position.y)
-		tenant_view.position = route_start
-		tenant_view.visible = presence != GameState.TENANT_PRESENCE_AWAY
-		tenant_view.setup(str(tenant_id), room_id)
+		if not result.has(tenant_id):
+			result[tenant_id] = []
+		(result[tenant_id] as Array).append(tenant_view)
+	return result
+
+func _tenant_id_for_view(tenant_view: Tenant) -> String:
+	if tenant_view.has_meta(Tenant.META_TENANT_ID):
+		return str(tenant_view.get_meta(Tenant.META_TENANT_ID))
+	return tenant_view.tenant_id
+
+func _select_tenant_view_in_parent(candidates: Array, parent: Node) -> Tenant:
+	if parent == null:
+		return null
+	for candidate in candidates:
+		var tenant_view := candidate as Tenant
+		if _tenant_view_is_available(tenant_view) and tenant_view.get_parent() == parent:
+			return tenant_view
+	return null
+
+func _select_existing_tenant_view(candidates: Array) -> Tenant:
+	for candidate in candidates:
+		var tenant_view := candidate as Tenant
+		if _tenant_view_is_available(tenant_view):
+			return tenant_view
+	return null
+
+func _move_tenant_to_world_layer(tenant_view: Tenant) -> void:
+	if tenant_view == null or tenant_view.get_parent() == tenant_world_layer:
+		return
+	var current_global_position := tenant_view.global_position
+	var parent := tenant_view.get_parent()
+	if parent != null:
+		parent.remove_child(tenant_view)
+	tenant_world_layer.add_child(tenant_view)
+	tenant_view.global_position = current_global_position
+
+func _queue_free_other_tenant_views(candidates: Array, kept: Tenant) -> void:
+	for candidate in candidates:
+		var tenant_view := candidate as Tenant
+		if tenant_view == kept:
+			continue
+		_queue_free_tenant_view(tenant_view)
+
+func _queue_free_tenant_views(candidates: Array) -> void:
+	for candidate in candidates:
+		_queue_free_tenant_view(candidate as Tenant)
+
+func _queue_free_tenant_view(tenant_view: Tenant) -> void:
+	if _tenant_view_is_available(tenant_view):
+		tenant_view.queue_free()
+
+func _tenant_view_is_available(tenant_view: Tenant) -> bool:
+	return tenant_view != null and is_instance_valid(tenant_view) and not tenant_view.is_queued_for_deletion()
 
 func _pan_camera(delta_world: Vector2) -> void:
 	if world_camera == null:
 		return
+	_cancel_focus_tween()
 	world_camera.position += delta_world
 	_clamp_camera()
 

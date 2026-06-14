@@ -417,6 +417,7 @@ func _validate_furniture() -> void:
 		_require_number(data, "price", "furniture '%s'" % furniture_id)
 		_require_number(data, "refund_rate", "furniture '%s'" % furniture_id)
 		_require_vector_array(data, "size", 2, "furniture '%s'" % furniture_id)
+		_require_vector_array(data, "footprint", 2, "furniture '%s'" % furniture_id)
 		_require_number(data, "comfort", "furniture '%s'" % furniture_id)
 		_require_number(data, "entertainment", "furniture '%s'" % furniture_id)
 		_require_number(data, "hygiene", "furniture '%s'" % furniture_id)

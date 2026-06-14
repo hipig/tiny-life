@@ -2,96 +2,51 @@
 class_name TenantRoomLocator
 extends RefCounted
 
-const TENANT_FOOTPRINT := [1, 1]
 const TILE_SIZE := FurniturePlacementRules.TILE_SIZE
-
-static func spawn_grid(room: Dictionary, stable_key := "") -> Array:
-	var cells := standing_grids(room)
-	if cells.is_empty():
-		return [0, 0]
-	return cells[_stable_spawn_index(stable_key, cells.size())]
+const EDGE_INSET_PIXELS := 4.0
+const DEFAULT_SPAWN_RATIO := 0.6
+const HASH_BUCKETS := 1000
 
 static func spawn_position(room: Dictionary, stable_key := "") -> Vector2:
-	return grid_to_position(room, spawn_grid(room, stable_key))
+	var ratio := DEFAULT_SPAWN_RATIO
+	if not stable_key.is_empty():
+		ratio = _stable_ratio(stable_key)
+	var rect := floor_rect(room)
+	return floor_position_at_x(room, lerpf(_floor_min_x(rect), _floor_max_x(rect), ratio))
 
-static func walk_grids(room: Dictionary) -> Array:
-	var cells := standing_grids(room)
-	if cells.is_empty():
-		return [[0, 0], [0, 0]]
-	return [cells.front(), cells.back()]
-
-static func walk_positions(room: Dictionary) -> Array[Vector2]:
-	var grids := walk_grids(room)
-	return [grid_to_position(room, grids[0]), grid_to_position(room, grids[1])]
-
-static func room_door_inside_grid(room: Dictionary) -> Array:
-	var grid_size := FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
-	var columns := maxi(1, int(grid_size[0]) if grid_size.size() >= 1 else 1)
-	var door_side := str(room.get("door_side", "left")).strip_edges().to_lower()
-	if door_side == "right":
-		return [columns - 1, floor_grid_y(room)]
-	return [0, floor_grid_y(room)]
+static func wander_target_position(room: Dictionary, current_position: Vector2) -> Vector2:
+	var rect := floor_rect(room)
+	var left := floor_position_at_x(room, _floor_min_x(rect))
+	var right := floor_position_at_x(room, _floor_max_x(rect))
+	if current_position.distance_to(right) < current_position.distance_to(left):
+		return left
+	return right
 
 static func room_door_inside_position(room: Dictionary) -> Vector2:
-	return grid_to_position(room, room_door_inside_grid(room))
+	var rect := floor_rect(room)
+	var door_side := str(room.get("door_side", "left")).strip_edges().to_lower()
+	if door_side == "right":
+		return floor_position_at_x(room, _floor_max_x(rect))
+	return floor_position_at_x(room, _floor_min_x(rect))
 
-static func interaction_grid(room: Dictionary, furniture_instance: Dictionary, furniture_data: Dictionary) -> Array:
-	var floor_row := floor_grid_y(room)
-	var grid_pos: Array = furniture_instance.get("grid_pos", [0, floor_row])
-	var size: Array = furniture_data.get("size", [1, 1])
-	var gx := int(grid_pos[0]) if grid_pos.size() >= 1 else 0
-	var width := maxi(1, int(size[0]) if size.size() >= 1 else 1)
-	var candidates := [
-		[gx + width, floor_row],
-		[gx - 1, floor_row],
-		[gx, floor_row]
-	]
-	var cells := standing_grids(room)
-	for candidate in candidates:
-		if cells.has(candidate):
-			return candidate
-	if cells.is_empty():
-		return [0, floor_row]
-	return _nearest_grid(cells, [gx, floor_row])
+static func furniture_use_position(room: Dictionary, furniture_instance: Dictionary, furniture_data: Dictionary) -> Vector2:
+	var anchor_pos: Array = furniture_instance.get("anchor_pos", [])
+	if anchor_pos.size() < 2:
+		return spawn_position(room)
+	var bounds := FurniturePlacementRules.bounds_rect_for_anchor(room, furniture_data, anchor_pos)
+	if bounds.size.x <= 0.0:
+		return spawn_position(room)
+	return floor_position_at_x(room, bounds.position.x + bounds.size.x * 0.5)
 
-static func interaction_position(room: Dictionary, furniture_instance: Dictionary, furniture_data: Dictionary) -> Vector2:
-	return grid_to_position(room, interaction_grid(room, furniture_instance, furniture_data))
-
-static func standing_grids(room: Dictionary) -> Array:
-	var grid_size := FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
-	var columns := maxi(1, int(grid_size[0]) if grid_size.size() >= 1 else 1)
-	var floor_row := floor_grid_y(room)
-	var blocked := _blocked_floor_grids(room)
-	var cells := []
-	for x in range(columns):
-		var cell := [x, floor_row]
-		if blocked.has(cell):
-			continue
-		cells.append(cell)
-	if cells.is_empty():
-		for x in range(columns):
-			cells.append([x, floor_row])
-	return cells
-
-static func floor_grid_y(room: Dictionary) -> int:
-	return FurniturePlacementRules.floor_grid_y_for(
-		FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR),
-		TENANT_FOOTPRINT
-	)
-
-static func grid_to_position(room: Dictionary, grid: Array) -> Vector2:
-	var floor_rect := floor_rect(room)
-	var grid_size := FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
-	var columns := maxf(1.0, float(grid_size[0]) if grid_size.size() >= 1 else 1.0)
-	var rows := maxf(1.0, float(grid_size[1]) if grid_size.size() >= 2 else 1.0)
-	var gx := clampf(float(grid[0]) if grid.size() >= 1 else 0.0, 0.0, columns - 1.0)
-	var gy := clampf(float(grid[1]) if grid.size() >= 2 else floor_grid_y(room), 0.0, rows - 1.0)
-	var cell_x := floor_rect.size.x / columns
-	var cell_y := floor_rect.size.y / rows
+static func floor_position_at_x(room: Dictionary, x: float) -> Vector2:
+	var rect := floor_rect(room)
 	return Vector2(
-		floor_rect.position.x + (gx + 0.5) * cell_x,
-		floor_rect.position.y + (gy + 1.0) * cell_y
+		roundf(clampf(x, _floor_min_x(rect), _floor_max_x(rect))),
+		floor_y(room)
 	)
+
+static func floor_y(room: Dictionary) -> float:
+	return floor_rect(room).end.y
 
 static func floor_rect(room: Dictionary) -> Rect2:
 	var frame_tiles := _frame_tiles(room)
@@ -102,43 +57,18 @@ static func floor_rect(room: Dictionary) -> Rect2:
 		float(maxi(1, frame_tiles.y) * TILE_SIZE)
 	)
 
-static func _blocked_floor_grids(room: Dictionary) -> Array:
-	var blocked := []
-	var grid_size := FurniturePlacementRules.grid_size_for_layer(room, FurniturePlacementRules.LAYER_FLOOR)
-	var floor_row := floor_grid_y(room)
-	for instance in room.get("furniture_instances", []):
-		var instance_data: Dictionary = instance
-		var furniture_data := ConfigManager.get_furniture_data(str(instance_data.get("furniture_id", "")))
-		if FurniturePlacementRules.placement_layer_for(furniture_data) != FurniturePlacementRules.LAYER_FLOOR:
-			continue
-		var pos: Array = instance_data.get("grid_pos", [0, 0])
-		var size: Array = furniture_data.get("size", [1, 1])
-		var gx := int(pos[0]) if pos.size() >= 1 else 0
-		var gy := int(pos[1]) if pos.size() >= 2 else floor_row
-		var width := maxi(1, int(size[0]) if size.size() >= 1 else 1)
-		var height := maxi(1, int(size[1]) if size.size() >= 2 else 1)
-		for y in range(gy, mini(int(grid_size[1]), gy + height)):
-			for x in range(gx, mini(int(grid_size[0]), gx + width)):
-				if y == floor_row and not blocked.has([x, y]):
-					blocked.append([x, y])
-	return blocked
+static func _floor_min_x(rect: Rect2) -> float:
+	if rect.size.x <= EDGE_INSET_PIXELS * 2.0:
+		return rect.position.x + rect.size.x * 0.5
+	return rect.position.x + EDGE_INSET_PIXELS
 
-static func _nearest_grid(cells: Array, target: Array) -> Array:
-	var nearest: Array = cells[0]
-	var nearest_distance: int = abs(int(nearest[0]) - int(target[0]))
-	for cell in cells:
-		var distance: int = abs(int(cell[0]) - int(target[0]))
-		if distance < nearest_distance:
-			nearest = cell
-			nearest_distance = distance
-	return nearest
+static func _floor_max_x(rect: Rect2) -> float:
+	if rect.size.x <= EDGE_INSET_PIXELS * 2.0:
+		return rect.position.x + rect.size.x * 0.5
+	return rect.end.x - EDGE_INSET_PIXELS
 
-static func _stable_spawn_index(stable_key: String, cell_count: int) -> int:
-	if cell_count <= 0:
-		return 0
-	if stable_key.is_empty():
-		return mini(cell_count - 1, int(floor(float(cell_count) * 0.6)))
-	return posmod(int(stable_key.hash()), cell_count)
+static func _stable_ratio(stable_key: String) -> float:
+	return float(posmod(int(stable_key.hash()), HASH_BUCKETS)) / float(HASH_BUCKETS - 1)
 
 static func _frame_tiles(room: Dictionary) -> Vector2i:
 	var raw: Variant = room.get("frame_tiles", [6, 4])

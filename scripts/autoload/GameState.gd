@@ -1,6 +1,6 @@
 extends Node
 
-const SAVE_SCHEMA_VERSION := 5
+const SAVE_SCHEMA_VERSION := 7
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
 const IDLE_TENANT_BEHAVIOR := "idle"
@@ -104,8 +104,9 @@ const TASK_STATE_KEYS := [
 const FURNITURE_INSTANCE_KEYS := [
 	"instance_id",
 	"furniture_id",
-	"grid_pos",
-	"mirrored"
+	"anchor_pos",
+	"mirrored",
+	"orientation"
 ]
 
 const STATS_KEYS := [
@@ -428,7 +429,7 @@ func recalculate_room_stats(room_id: String) -> void:
 	rooms[room_id] = room
 	GameEvents.room_updated.emit(room_id)
 
-func add_furniture_instance(room_id: String, furniture_id: String, grid_pos: Array, mirrored := false) -> Dictionary:
+func add_furniture_instance(room_id: String, furniture_id: String, anchor_pos: Array, mirrored := false, orientation := "default") -> Dictionary:
 	if not rooms.has(room_id):
 		push_error("Cannot add furniture to unknown room '%s'." % room_id)
 		return {}
@@ -437,8 +438,9 @@ func add_furniture_instance(room_id: String, furniture_id: String, grid_pos: Arr
 	var instance: Dictionary = {
 		"instance_id": "f_%d_%d" % [Time.get_ticks_msec(), randi_range(100, 999)],
 		"furniture_id": furniture_id,
-		"grid_pos": grid_pos,
-		"mirrored": mirrored
+		"anchor_pos": anchor_pos,
+		"mirrored": mirrored,
+		"orientation": orientation
 	}
 	var list: Array = room["furniture_instances"]
 	list.append(instance)
@@ -452,7 +454,7 @@ func add_furniture_instance(room_id: String, furniture_id: String, grid_pos: Arr
 	add_apartment_exp(5)
 	return instance
 
-func move_furniture_instance(room_id: String, instance_id: String, grid_pos: Array) -> bool:
+func move_furniture_instance(room_id: String, instance_id: String, anchor_pos: Array) -> bool:
 	if not rooms.has(room_id):
 		push_error("Cannot move furniture in unknown room '%s'." % room_id)
 		return false
@@ -461,7 +463,7 @@ func move_furniture_instance(room_id: String, instance_id: String, grid_pos: Arr
 	for i in range(list.size()):
 		var instance_data: Dictionary = list[i]
 		if str(instance_data["instance_id"]) == instance_id:
-			instance_data["grid_pos"] = grid_pos
+			instance_data["anchor_pos"] = anchor_pos
 			list[i] = instance_data
 			room["furniture_instances"] = list
 			rooms[room_id] = room
@@ -977,10 +979,12 @@ func _furniture_instance_validation_error(room_id: String, instance: Dictionary)
 	var furniture_id := str(instance["furniture_id"])
 	if not ConfigManager.furniture_by_id.has(furniture_id):
 		return "room '%s' furniture references unknown furniture '%s'" % [room_id, furniture_id]
-	if not _is_int_array(instance["grid_pos"], 2):
-		return "room '%s' furniture grid_pos must be [x, y]" % room_id
+	if not _is_number_array(instance["anchor_pos"], 2):
+		return "room '%s' furniture anchor_pos must be [x, y]" % room_id
 	if not (instance["mirrored"] is bool):
 		return "room '%s' furniture mirrored must be bool" % room_id
+	if not (instance["orientation"] is String) or str(instance["orientation"]).strip_edges().is_empty():
+		return "room '%s' furniture orientation must be a non-empty string" % room_id
 	return ""
 
 func _tenants_validation_error(saved_tenants: Dictionary, saved_rooms: Dictionary) -> String:
@@ -1084,6 +1088,9 @@ func _is_number(value: Variant) -> bool:
 	return value is int or value is float
 
 func _is_int_array(value: Variant, size: int) -> bool:
+	return _is_number_array(value, size)
+
+func _is_number_array(value: Variant, size: int) -> bool:
 	if not (value is Array) or value.size() < size:
 		return false
 	for index in range(size):

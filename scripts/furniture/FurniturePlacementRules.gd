@@ -5,8 +5,11 @@ extends RefCounted
 const LAYER_FLOOR := "floor"
 const LAYER_WALL := "wall"
 const TILE_SIZE := 16
+const HORIZONTAL_SUBDIVISIONS := 2
+const DEFAULT_ORIENTATION := "default"
+const ANCHOR_EPSILON := 0.01
 
-static func can_place_furniture(room_id: String, furniture_id: String, grid_pos: Array, ignored_instance_id := "") -> bool:
+static func can_place_furniture(room_id: String, furniture_id: String, anchor_pos: Array, ignored_instance_id := "") -> bool:
 	var game_state := _game_state()
 	var config_manager := _config_manager()
 	if game_state == null or config_manager == null:
@@ -20,7 +23,7 @@ static func can_place_furniture(room_id: String, furniture_id: String, grid_pos:
 		data,
 		func(other_furniture_id: String) -> Dictionary:
 			return config_manager.call("get_furniture_data", other_furniture_id),
-		grid_pos,
+		anchor_pos,
 		ignored_instance_id
 	)
 
@@ -29,21 +32,21 @@ static func can_place_furniture_in_room(
 	furniture_id: String,
 	furniture_data: Dictionary,
 	furniture_lookup: Callable,
-	grid_pos: Array,
+	anchor_pos: Array,
 	ignored_instance_id := ""
 ) -> bool:
+	if anchor_pos.size() < 2:
+		return false
 	var layer := placement_layer_for(furniture_data)
-	var grid_size := grid_size_for_layer(room, layer)
-	var size: Array = furniture_data.get("size", [1, 1])
-	if grid_pos.size() < 2 or grid_size.size() < 2 or size.size() < 2:
+	var rect := placement_rect_for_layer(room, layer)
+	var visual_size := visual_size_for(room, furniture_data)
+	var normalized_anchor := normalized_anchor_for(room, furniture_data, anchor_pos)
+	if not _anchors_equal(anchor_pos, normalized_anchor):
 		return false
-	var gx := int(grid_pos[0])
-	var gy := int(grid_pos[1])
-	var w := int(size[0])
-	var h := int(size[1])
-	if gx < 0 or gy < 0 or gx + w > int(grid_size[0]) or gy + h > int(grid_size[1]):
+	var bounds := bounds_rect_for_anchor(room, furniture_data, anchor_pos, visual_size)
+	if bounds.size.x <= 0.0 or bounds.size.y <= 0.0:
 		return false
-	if layer == LAYER_FLOOR and gy != floor_grid_y_for(grid_size, size):
+	if not _rect_contains_rect(rect, bounds):
 		return false
 
 	for instance in room.get("furniture_instances", []):
@@ -53,21 +56,24 @@ static func can_place_furniture_in_room(
 		var other_data: Dictionary = furniture_lookup.call(str(instance_data.get("furniture_id", "")))
 		if placement_layer_for(other_data) != layer:
 			continue
-		var other_pos: Array = instance_data.get("grid_pos", [0, 0])
-		var other_size: Array = other_data.get("size", [1, 1])
-		if _rects_overlap(gx, gy, w, h, int(other_pos[0]), int(other_pos[1]), int(other_size[0]), int(other_size[1])):
+		var other_anchor: Array = instance_data.get("anchor_pos", [])
+		if other_anchor.size() < 2:
+			continue
+		var other_size := visual_size_for(room, other_data)
+		var other_bounds := bounds_rect_for_anchor(room, other_data, other_anchor, other_size)
+		if bounds.intersects(other_bounds):
 			return false
 	return true
 
-static func find_first_valid_grid(room_id: String, furniture_id: String, ignored_instance_id := "") -> Array:
+static func find_first_valid_anchor(room_id: String, furniture_id: String, ignored_instance_id := "") -> Array:
 	var game_state := _game_state()
 	var config_manager := _config_manager()
 	if game_state == null or config_manager == null:
-		return [0, 0]
+		return [0.0, 0.0]
 	var rooms: Dictionary = game_state.get("rooms")
 	var room: Dictionary = rooms.get(room_id, {})
 	var data: Dictionary = config_manager.call("get_furniture_data", furniture_id)
-	return find_first_valid_grid_in_room(
+	return find_first_valid_anchor_in_room(
 		room,
 		furniture_id,
 		data,
@@ -76,7 +82,7 @@ static func find_first_valid_grid(room_id: String, furniture_id: String, ignored
 		ignored_instance_id
 	)
 
-static func find_first_valid_grid_in_room(
+static func find_first_valid_anchor_in_room(
 	room: Dictionary,
 	furniture_id: String,
 	furniture_data: Dictionary,
@@ -84,28 +90,117 @@ static func find_first_valid_grid_in_room(
 	ignored_instance_id := ""
 ) -> Array:
 	var layer := placement_layer_for(furniture_data)
-	var grid_size := grid_size_for_layer(room, layer)
-	if grid_size.size() < 2:
-		return [0, 0]
+	var rect := placement_rect_for_layer(room, layer)
+	var visual_size := visual_size_for(room, furniture_data)
+	var anchor := [0.0, 0.0]
 	if layer == LAYER_FLOOR:
-		var floor_y := floor_grid_y_for(grid_size, furniture_data.get("size", [1, 1]))
-		for x in range(int(grid_size[0])):
-			if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, [x, floor_y], ignored_instance_id):
-				return [x, floor_y]
+		anchor = [
+			roundf(rect.position.x + maxf(0.0, (rect.size.x - visual_size.x) * 0.5)),
+			floor_baseline_y(room)
+		]
 	else:
-		for y in range(int(grid_size[1])):
-			for x in range(int(grid_size[0])):
-				if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, [x, y], ignored_instance_id):
-					return [x, y]
-		for x in range(int(grid_size[0])):
-			if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, [x, 0], ignored_instance_id):
-				return [x, 0]
-	return [0, 0]
+		anchor = [
+			roundf(rect.position.x + maxf(0.0, (rect.size.x - visual_size.x) * 0.5)),
+			roundf(rect.position.y + maxf(0.0, (rect.size.y - visual_size.y) * 0.5))
+		]
+	anchor = normalized_anchor_for(room, furniture_data, anchor)
+	if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, anchor, ignored_instance_id):
+		return anchor
+
+	var step := 1.0
+	var min_x := rect.position.x
+	var max_x := rect.end.x - visual_size.x
+	var min_y := rect.position.y
+	var max_y := rect.end.y - visual_size.y
+	if layer == LAYER_FLOOR:
+		for x_index in range(maxi(1, int(ceil(maxf(0.0, max_x - min_x) / step)) + 1)):
+			var candidate := normalized_anchor_for(room, furniture_data, [roundf(min_x + float(x_index) * step), floor_baseline_y(room)])
+			if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, candidate, ignored_instance_id):
+				return candidate
+	else:
+		for y_index in range(maxi(1, int(ceil(maxf(0.0, max_y - min_y) / step)) + 1)):
+			for x_index in range(maxi(1, int(ceil(maxf(0.0, max_x - min_x) / step)) + 1)):
+				var candidate := normalized_anchor_for(room, furniture_data, [roundf(min_x + float(x_index) * step), roundf(min_y + float(y_index) * step)])
+				if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, candidate, ignored_instance_id):
+					return candidate
+	return normalized_anchor_for(room, furniture_data, anchor)
+
+static func normalized_anchor_for(room: Dictionary, furniture_data: Dictionary, anchor_pos: Array) -> Array:
+	var layer := placement_layer_for(furniture_data)
+	var rect := placement_rect_for_layer(room, layer)
+	var visual_size := visual_size_for(room, furniture_data)
+	var x := roundf(float(anchor_pos[0]) if anchor_pos.size() >= 1 else rect.position.x)
+	var y := roundf(float(anchor_pos[1]) if anchor_pos.size() >= 2 else rect.position.y)
+	var max_x := floorf(maxf(rect.position.x, rect.end.x - visual_size.x))
+	x = clampf(x, rect.position.x, max_x)
+	if layer == LAYER_FLOOR:
+		y = floor_baseline_y(room)
+	else:
+		var max_y := floorf(maxf(rect.position.y, rect.end.y - visual_size.y))
+		y = clampf(y, rect.position.y, max_y)
+	return [x, y]
+
+static func bounds_rect_for_anchor(room: Dictionary, furniture_data: Dictionary, anchor_pos: Array, visual_size := Vector2.ZERO) -> Rect2:
+	var size := visual_size
+	if size == Vector2.ZERO:
+		size = visual_size_for(room, furniture_data)
+	var layer := placement_layer_for(furniture_data)
+	var anchor := Vector2(
+		float(anchor_pos[0]) if anchor_pos.size() >= 1 else 0.0,
+		float(anchor_pos[1]) if anchor_pos.size() >= 2 else 0.0
+	)
+	if layer == LAYER_FLOOR:
+		return Rect2(Vector2(anchor.x, anchor.y - size.y), size)
+	return Rect2(anchor, size)
+
+static func visual_size_for(room: Dictionary, furniture_data: Dictionary) -> Vector2:
+	var asset_size := _asset_region_size(furniture_data.get("asset", {}))
+	var visual_grid: Array = furniture_data.get("size", [1, 1])
+	var layer := placement_layer_for(furniture_data)
+	var rect := placement_rect_for_layer(room, layer)
+	var layer_grid := visual_grid_size_for_layer(room, layer)
+	var cell_x := rect.size.x / maxf(1.0, float(layer_grid[0]) if layer_grid.size() >= 1 else 1.0)
+	var cell_y := rect.size.y / maxf(1.0, float(layer_grid[1]) if layer_grid.size() >= 2 else 1.0)
+	var max_width := maxf(16.0, float(visual_grid[0]) * cell_x * 1.05)
+	var max_height := maxf(15.0, float(visual_grid[1]) * cell_y * 1.8)
+	if bool(furniture_data.get("wall_item", false)):
+		max_width = maxf(14.0, float(visual_grid[0]) * cell_x * 0.85)
+		max_height = maxf(12.0, float(visual_grid[1]) * cell_y * 1.15)
+	if asset_size == Vector2.ZERO:
+		return Vector2(roundf(max_width), roundf(max_height))
+	var scale := minf(max_width / asset_size.x, max_height / asset_size.y)
+	scale = clampf(scale, 0.9, 2.0)
+	return Vector2(
+		roundf(maxf(12.0, asset_size.x * scale)),
+		roundf(maxf(10.0, asset_size.y * scale))
+	)
+
+static func placement_rect_for_layer(room: Dictionary, layer: String) -> Rect2:
+	var floor_rect := floor_rect(room)
+	if layer == LAYER_WALL:
+		return Rect2(floor_rect.position, Vector2(floor_rect.size.x, maxf(TILE_SIZE, floor_rect.size.y - TILE_SIZE)))
+	return floor_rect
+
+static func floor_rect(room: Dictionary) -> Rect2:
+	var frame_tiles := _frame_tiles(room)
+	return Rect2(
+		Vector2.ZERO,
+		Vector2(float(maxi(1, frame_tiles.x) * TILE_SIZE), float(maxi(1, frame_tiles.y) * TILE_SIZE))
+	)
+
+static func floor_baseline_y(room: Dictionary) -> float:
+	return floor_rect(room).end.y
 
 static func placement_layer_for(furniture_data: Dictionary) -> String:
 	return LAYER_WALL if bool(furniture_data.get("wall_item", false)) else LAYER_FLOOR
 
 static func grid_size_for_layer(room: Dictionary, layer: String) -> Array:
+	var visual_grid := visual_grid_size_for_layer(room, layer)
+	if visual_grid.size() < 2:
+		return [1, 1]
+	return [maxi(1, int(visual_grid[0]) * HORIZONTAL_SUBDIVISIONS), maxi(1, int(visual_grid[1]))]
+
+static func visual_grid_size_for_layer(room: Dictionary, layer: String) -> Array:
 	var floor_grid: Array = room.get("grid_size", [6, 4])
 	var columns := 6
 	var rows := 4
@@ -121,11 +216,55 @@ static func floor_grid_y_for(grid_size: Array, furniture_size: Array) -> int:
 		return 0
 	return maxi(0, int(grid_size[1]) - maxi(1, int(furniture_size[1])))
 
+static func footprint_for_orientation(furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> Array:
+	var footprint: Array = furniture_data["footprint"]
+	match str(orientation):
+		DEFAULT_ORIENTATION:
+			return [maxi(1, int(footprint[0])), maxi(1, int(footprint[1]))]
+		_:
+			return [maxi(1, int(footprint[0])), maxi(1, int(footprint[1]))]
+
 static func door_cells_for_layer(room: Dictionary, layer: String) -> Array:
 	return []
 
-static func _rects_overlap(ax: int, ay: int, aw: int, ah: int, bx: int, by: int, bw: int, bh: int) -> bool:
-	return ax < bx + bw and ax + aw > bx and ay < by + bh and ay + ah > by
+static func _rect_contains_rect(outer: Rect2, inner: Rect2) -> bool:
+	return inner.position.x >= outer.position.x \
+		and inner.position.y >= outer.position.y \
+		and inner.end.x <= outer.end.x \
+		and inner.end.y <= outer.end.y
+
+static func _anchors_equal(left: Array, right: Array) -> bool:
+	if left.size() < 2 or right.size() < 2:
+		return false
+	return absf(float(left[0]) - float(right[0])) <= ANCHOR_EPSILON \
+		and absf(float(left[1]) - float(right[1])) <= ANCHOR_EPSILON
+
+static func _frame_tiles(room: Dictionary) -> Vector2i:
+	var raw: Variant = room.get("frame_tiles", room.get("grid_size", [6, 4]))
+	if raw is Array and raw.size() >= 2:
+		return Vector2i(maxi(2, int(raw[0])), int(raw[1]))
+	if raw is Vector2i:
+		return Vector2i(maxi(2, raw.x), raw.y)
+	if raw is Vector2:
+		return Vector2i(maxi(2, int(raw.x)), int(raw.y))
+	return Vector2i(6, 4)
+
+static func _asset_region_size(asset_config: Dictionary) -> Vector2:
+	var asset_type := str(asset_config.get("type", "")).strip_edges()
+	match asset_type:
+		"atlas_region":
+			var region: Array = asset_config.get("region", [])
+			if region.size() >= 4:
+				return Vector2(float(region[2]), float(region[3]))
+		"spritesheet_frame":
+			var frame_size: Array = asset_config.get("frame_size", [])
+			if frame_size.size() >= 2:
+				return Vector2(float(frame_size[0]), float(frame_size[1]))
+		"single_sprite":
+			var texture := load(str(asset_config.get("texture", ""))) as Texture2D
+			if texture != null:
+				return Vector2(texture.get_width(), texture.get_height())
+	return Vector2.ZERO
 
 static func _game_state() -> Node:
 	var main_loop := Engine.get_main_loop()

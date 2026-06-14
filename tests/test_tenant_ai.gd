@@ -8,6 +8,7 @@ func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	var tenant_scene := FileAccess.get_file_as_string("res://scenes/tenant/Tenant.tscn")
 	var tenant_source := FileAccess.get_file_as_string("res://scripts/tenant/Tenant.gd")
 	var room_source := FileAccess.get_file_as_string("res://scripts/building/Room.gd")
+	var building_view_source := FileAccess.get_file_as_string("res://scripts/building/BuildingView.gd")
 	var main_source := FileAccess.get_file_as_string("res://scenes/main/Main.gd")
 	var locator_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantRoomLocator.gd")
 	var ai_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantAI.gd")
@@ -81,7 +82,8 @@ func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	assert_false(ai_source.contains("_run_startup_entry_route"), "TenantAI should not own a startup route from offscreen")
 	assert_true(ai_source.contains("_run_leaving_route"), "TenantAI should own the deterministic leaving route")
 	assert_true(ai_source.contains("_run_returning_route"), "TenantAI should own the deterministic returning route")
-	assert_true(ai_source.contains("TenantRoomLocator.spawn_position(_room(), tenant_id)"), "Home tenants should initialize at stable in-room floor-grid coordinates")
+	assert_true(ai_source.contains("not tenant.ai_position_initialized"), "Home tenants should only initialize position once")
+	assert_true(ai_source.contains("TenantRoomLocator.spawn_position(_room(), tenant_id)"), "Home tenants should initialize at stable in-room floor-line coordinates")
 	assert_true(ai_source.contains("func _visible_return_start_position"), "Returning tenants should choose a visible route start instead of offscreen")
 	assert_true(ai_source.contains("tenant.position = _visible_return_start_position"), "Hidden returning tenants should resume from a visible route anchor")
 	assert_false(ai_source.contains("_run_entry_route(false, true)"), "Startup entry should not reuse returning routes from offscreen")
@@ -97,18 +99,29 @@ func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	assert_true(ai_source.contains("var show_progress := _elevator_open_show_progress()"), "TenantAI should show tenants near the end of target elevator open")
 	assert_true(ai_source.contains("tenant.visible = false"), "TenantAI should hide tenants during source elevator close")
 	assert_true(ai_source.contains("tenant.visible = true"), "TenantAI should show tenants during target elevator open")
+	assert_false(ai_source.contains("_ai_paused"), "TenantAI should not pause all movement during furniture placement")
+	assert_false(ai_source.contains("tenant.position == Vector2.ZERO"), "TenantAI should not use origin as an uninitialized-position sentinel")
 	assert_true(ai_source.contains("GameState.set_tenant_presence"), "TenantAI routes should sync persisted presence state")
 	assert_true(ai_source.contains("get_tenant_world_layer"), "TenantAI should promote route movement to the building tenant layer")
 	assert_true(ai_source.contains("get_offscreen_left_world_position"), "TenantAI should finish leaving routes at the shared offscreen mark")
-	assert_true(ai_source.contains("TenantRoomLocator.spawn_position"), "TenantAI should spawn from the room floor grid")
-	assert_false(room_source.contains("TenantAI.is_startup_entry_active"), "Room should always create HOME tenants in the in-room visual layer")
+	assert_true(ai_source.contains("TenantRoomLocator.spawn_position"), "TenantAI should spawn from the room floor line")
+	assert_false(room_source.contains("TenantAI.is_startup_entry_active"), "Room should not gate HOME tenant rendering on startup route state")
+	assert_true(tenant_source.contains("TENANT_VIEW_GROUP"), "Tenant views should be discoverable for scene-wide deduplication")
+	assert_true(tenant_source.contains("set_meta(META_TENANT_ID"), "Tenant views should expose tenant_id metadata for ownership checks")
+	assert_true(room_source.contains("func ensure_home_tenant_view"), "Room should expose a targeted HOME tenant view hook")
+	assert_false(room_source.contains("for tenant_id in GameState.tenants.keys()"), "Room should not auto-create every tenant while binding visual layers")
+	assert_true(building_view_source.contains("func _ensure_tenant_views"), "BuildingView should own tenant visual synchronization")
+	assert_true(building_view_source.contains("func _tenant_views_by_id"), "BuildingView should group tenant view instances by tenant_id")
+	assert_true(building_view_source.contains("_queue_free_other_tenant_views"), "BuildingView should remove duplicate tenant views after choosing the owner instance")
+	assert_true(building_view_source.contains("ensure_home_tenant_view"), "BuildingView should place HOME tenants back into the room visual layer")
+	assert_false(building_view_source.contains("func _ensure_world_tenants"), "BuildingView should not keep the old route-only tenant spawner")
 	assert_true(room_source.contains("tenant_view.visible = false"), "Room should hide tenant instances before adding them to the scene so preview coordinates never flash")
 	assert_true(room_source.contains("visual_layer.add_child(tenant_view)\n\ttenant_view.setup(tenant_id, room_id)"), "Room should add tenant views before setup so TenantAI can resolve the room and place them safely")
-	assert_true(ai_source.contains("TenantRoomLocator.walk_positions"), "TenantAI should patrol using room floor grid positions")
-	assert_true(ai_source.contains("TenantRoomLocator.interaction_position"), "TenantAI should use grid-based furniture interaction points")
-	assert_true(locator_source.contains("class_name TenantRoomLocator"), "Tenant room positions should live in a dedicated grid locator")
+	assert_true(ai_source.contains("TenantRoomLocator.wander_target_position"), "TenantAI should wander along the room floor line")
+	assert_true(ai_source.contains("TenantRoomLocator.furniture_use_position"), "TenantAI should derive furniture use positions from the continuous floor line")
+	assert_true(locator_source.contains("class_name TenantRoomLocator"), "Tenant room positions should live in a dedicated floor-line locator")
 	assert_true(locator_source.contains("room.get(\"door_side\""), "Tenant door route points should follow the configured room door side")
-	assert_false(locator_source.contains("door_cells_for_layer(room"), "Tenant standing grids should not avoid old door cells after doors became outward-opening")
+	assert_false(locator_source.contains("door_cells_for_layer(room"), "Tenant floor-line positions should not avoid old door cells after doors became outward-opening")
 	assert_true(need_bubble_source.contains("await bubble_animation.animation_finished"), "NeedBubble should reveal icons only after the bubble animation finishes")
 	assert_true(emote_source.contains("await emote_animation.animation_finished"), "TenantEmote should reveal icons only after the emote animation finishes")
 	assert_false(tenant_scene.contains("behavior_animation_map = {"), "Tenant.tscn should not keep script-exported behavior animation config")
@@ -167,7 +180,7 @@ func test_tenant_uses_character_body_click_area_and_strict_animations() -> void:
 	assert_false(emote_source.contains("mouse_filter ="), "TenantEmote fixed interaction settings should stay in TenantEmote.tscn")
 
 
-func test_tenant_room_locator_uses_floor_grid_positions() -> void:
+func test_tenant_room_locator_uses_continuous_floor_line_positions() -> void:
 	var locator_source := FileAccess.get_file_as_string("res://scripts/tenant/TenantRoomLocator.gd")
 	var room := {
 		"id": "__tenant_locator_test",
@@ -176,43 +189,44 @@ func test_tenant_room_locator_uses_floor_grid_positions() -> void:
 		"door_side": "left",
 		"furniture_instances": []
 	}
-	assert_true(locator_source.contains("static func floor_grid_y"), "TenantRoomLocator should expose floor row calculation")
+	assert_true(locator_source.contains("static func floor_y"), "TenantRoomLocator should expose floor-line y calculation")
+	assert_true(locator_source.contains("static func floor_position_at_x"), "TenantRoomLocator should expose continuous floor-line positions")
 	assert_true(locator_source.contains("static func spawn_position"), "TenantRoomLocator should expose spawn position generation")
 	assert_true(locator_source.contains("stable_key"), "TenantRoomLocator should support stable per-tenant spawn distribution")
-	assert_true(locator_source.contains("static func walk_positions"), "TenantRoomLocator should expose patrol position generation")
-	assert_true(locator_source.contains("static func interaction_position"), "TenantRoomLocator should expose furniture interaction position generation")
-	assert_true(locator_source.contains("static func room_door_inside_grid"), "TenantRoomLocator should expose the room-door route grid")
+	assert_true(locator_source.contains("static func wander_target_position"), "TenantRoomLocator should expose floor-line wander target generation")
+	assert_true(locator_source.contains("static func furniture_use_position"), "TenantRoomLocator should expose furniture-derived use positions")
 	assert_true(locator_source.contains("static func room_door_inside_position"), "TenantRoomLocator should expose the room-door route position")
-	var floor_row: int = FurniturePlacementRules.floor_grid_y_for(room["grid_size"], [1, 1])
-	var standing_grids: Array = []
-	for x in range(int(room["grid_size"][0])):
-		var cell: Array = [x, floor_row]
-		standing_grids.append(cell)
-	var tile_size: int = int(FurniturePlacementRules.TILE_SIZE)
-	var floor_origin := Vector2.ZERO
-	var door_route_grid: Array = TenantRoomLocator.room_door_inside_grid(room)
+	assert_true(locator_source.contains("bounds_rect_for_anchor"), "Furniture use positions should use continuous furniture bounds")
+	assert_false(locator_source.contains("standing_grids"), "TenantRoomLocator should not model legal standing grids")
+	assert_false(locator_source.contains("static func walk_grids"), "TenantRoomLocator should not expose patrol grids")
+	assert_false(locator_source.contains("static func interaction_grid"), "TenantRoomLocator should not expose furniture interaction grids")
+	assert_false(locator_source.contains("static func room_door_inside_grid"), "TenantRoomLocator should not expose door route grids")
+
+	var floor_rect := TenantRoomLocator.floor_rect(room)
 	var door_route_position: Vector2 = TenantRoomLocator.room_door_inside_position(room)
-	assert_eq(floor_row, 3, "Tenant floor row should be the bottom floor grid row")
-	assert_eq(standing_grids, [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3]], "Tenant standing grids should use the full room width")
-	assert_eq(door_route_grid, [0, 3], "Left-door rooms should route to the left-bottom door grid")
-	assert_eq(door_route_position, Vector2(8.0, 64.0), "Left-door route should walk to the inside of the left room door")
+	assert_eq(floor_rect, Rect2(0.0, 0.0, 96.0, 64.0), "Tenant floor line should derive from the room frame pixels")
+	assert_eq(TenantRoomLocator.floor_y(room), 64.0, "Tenant floor y should be the room floor baseline")
+	assert_eq(TenantRoomLocator.floor_position_at_x(room, -100.0), Vector2(4.0, 64.0), "Floor-line positions should clamp to the left visible room edge")
+	assert_eq(TenantRoomLocator.floor_position_at_x(room, 999.0), Vector2(92.0, 64.0), "Floor-line positions should clamp to the right visible room edge")
+	assert_eq(door_route_position, Vector2(4.0, 64.0), "Left-door rooms should route to the left end of the floor line")
 	room["door_side"] = "right"
-	assert_eq(TenantRoomLocator.room_door_inside_grid(room), [5, 3], "Right-door rooms should route to the right-bottom door grid")
-	assert_eq(TenantRoomLocator.room_door_inside_position(room), Vector2(88.0, 64.0), "Right-door route should walk to the inside of the right room door")
+	assert_eq(TenantRoomLocator.room_door_inside_position(room), Vector2(92.0, 64.0), "Right-door rooms should route to the right end of the floor line")
 	room["door_side"] = "left"
-	assert_eq(standing_grids[3], [3, 3], "Tenant spawn should default to a middle-right floor cell")
-	assert_eq(floor_origin + Vector2(3.5 * tile_size, 4.0 * tile_size), Vector2(56.0, 64.0), "Tenant spawn foot point should sit on the room floor")
-	assert_true(standing_grids.has(TenantRoomLocator.spawn_grid(room, "tenant_student_01")), "Stable tenant spawn should remain on a legal standing grid")
-	assert_eq([standing_grids.front(), standing_grids.back()], [[0, 3], [5, 3]], "Tenant walk range should include the old door cells")
+	var spawn := TenantRoomLocator.spawn_position(room, "tenant_student_01")
+	assert_eq(spawn.y, 64.0, "Stable tenant spawn should stay on the floor line")
+	assert_true(spawn.x >= 4.0 and spawn.x <= 92.0, "Stable tenant spawn should stay within the room width")
+	assert_eq(TenantRoomLocator.wander_target_position(room, Vector2(4.0, 64.0)), Vector2(92.0, 64.0), "Floor-line wander should choose the far visible room edge")
+	assert_eq(TenantRoomLocator.wander_target_position(room, Vector2(92.0, 64.0)), Vector2(4.0, 64.0), "Floor-line wander should switch back across the room")
 
 	room["furniture_instances"] = [
-		{"instance_id": "bed_a", "furniture_id": "bed_basic", "grid_pos": [1, 2]}
+		{"instance_id": "bed_a", "furniture_id": "bed_basic", "anchor_pos": [8.0, 64.0], "orientation": "default"}
 	]
 	var bed_data := _furniture_data("bed_basic")
-	var bed_size: Array = bed_data.get("size", [])
-	var interaction_grid := [int(room["furniture_instances"][0]["grid_pos"][0]) + int(bed_size[0]), floor_row]
-	assert_eq(interaction_grid, [3, 3], "Tenant interaction point should stand beside floor furniture")
-	assert_eq(floor_origin + Vector2(3.5 * tile_size, 4.0 * tile_size), Vector2(56.0, 64.0), "Tenant interaction foot point should remain on the floor")
+	var bed_instance: Dictionary = room["furniture_instances"][0]
+	var use_position := TenantRoomLocator.furniture_use_position(room, bed_instance, bed_data)
+	assert_eq(use_position.y, 64.0, "Furniture use position should remain on the floor line")
+	assert_true(use_position.x >= 4.0 and use_position.x <= 92.0, "Furniture use position should stay inside the room width")
+	assert_true(use_position != Vector2.ZERO, "Furniture use position should not use origin as a fallback")
 
 
 func test_tenant_presence_state_is_saved_and_normalized() -> void:

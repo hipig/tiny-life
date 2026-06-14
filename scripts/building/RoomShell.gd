@@ -33,6 +33,8 @@ func set_construction_visible(value: bool) -> void:
 
 func clear_dynamic_views() -> void:
 	for child in visual_layer.get_children():
+		if child is Tenant:
+			continue
 		child.queue_free()
 
 func get_room_door() -> TrafficDoor:

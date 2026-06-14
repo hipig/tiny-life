@@ -1,8 +1,8 @@
 class_name PlacementOverlay
 extends Control
 
-signal new_placement_confirmed(room_id: String, furniture_id: String, grid_pos: Array)
-signal move_confirmed(room_id: String, instance_id: String, grid_pos: Array)
+signal new_placement_confirmed(room_id: String, furniture_id: String, anchor_pos: Array)
+signal move_confirmed(room_id: String, instance_id: String, anchor_pos: Array)
 signal cancelled(room_id: String)
 signal recycle_requested(room_id: String, instance_id: String)
 
@@ -20,7 +20,7 @@ var move_hint_template := ""
 var room_id := ""
 var furniture_id := ""
 var instance_id := ""
-var grid_pos: Array = [0, 0]
+var anchor_pos: Array = [0.0, 0.0]
 var is_move := false
 var target_room: Button
 var preview: FurniturePreview
@@ -43,7 +43,7 @@ func open_new(target_room_id: String, target_furniture_id: String) -> void:
 	instance_id = ""
 	is_move = false
 	_attach_to_room()
-	grid_pos = FurniturePlacementRules.find_first_valid_grid(room_id, furniture_id, instance_id)
+	anchor_pos = FurniturePlacementRules.find_first_valid_anchor(room_id, furniture_id, instance_id)
 	_refresh()
 
 func open_move(target_room_id: String, target_instance_id: String) -> void:
@@ -54,7 +54,7 @@ func open_move(target_room_id: String, target_instance_id: String) -> void:
 		var instance_data: Dictionary = instance
 		if str(instance_data.get("instance_id", "")) == instance_id:
 			furniture_id = str(instance_data.get("furniture_id", ""))
-			grid_pos = instance_data.get("grid_pos", [0, 0])
+			anchor_pos = instance_data.get("anchor_pos", [0.0, 0.0])
 			break
 	is_move = true
 	_attach_to_room()
@@ -202,7 +202,7 @@ func _attach_to_room() -> void:
 	if is_move and target_room.has_method("set_furniture_instance_hidden"):
 		target_room.call("set_furniture_instance_hidden", instance_id, true)
 	if target_room.has_method("show_placement_grid"):
-		target_room.call("show_placement_grid", true, furniture_id, grid_pos, instance_id)
+		target_room.call("show_placement_grid", true, furniture_id, anchor_pos, instance_id)
 	if preview == null:
 		preview = FURNITURE_PREVIEW_SCENE.instantiate() as FurniturePreview
 		preview.name = "SceneFurniturePreview"
@@ -213,7 +213,7 @@ func _attach_to_room() -> void:
 func _refresh(snap_preview := true) -> void:
 	_bind_scene_text()
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
-	var valid := _grid_pos_is_valid() and FurniturePlacementRules.can_place_furniture(room_id, furniture_id, grid_pos, instance_id)
+	var valid := _anchor_pos_is_valid() and FurniturePlacementRules.can_place_furniture(room_id, furniture_id, anchor_pos, instance_id)
 	var title_prefix := move_title_prefix if is_move else place_title_prefix
 	var furniture_name := str(data["name"])
 	title_label.text = ("%s %s" % [title_prefix, furniture_name])
@@ -223,11 +223,11 @@ func _refresh(snap_preview := true) -> void:
 		floating_controls.set_confirm_enabled(valid)
 		floating_controls.set_recycle_visible(is_move)
 	if target_room != null and target_room.has_method("show_placement_grid"):
-		target_room.call("show_placement_grid", true, furniture_id, grid_pos, instance_id)
+		target_room.call("show_placement_grid", true, furniture_id, anchor_pos, instance_id)
 	if preview != null:
-		preview.setup(furniture_id, grid_pos, valid)
-		if snap_preview and _grid_pos_is_valid() and target_room != null and target_room.has_method("get_preview_position"):
-			preview.position = target_room.call("get_preview_position", furniture_id, grid_pos)
+		preview.setup(furniture_id, anchor_pos, valid)
+		if snap_preview and _anchor_pos_is_valid() and target_room != null and target_room.has_method("get_preview_position"):
+			preview.position = target_room.call("get_preview_position", furniture_id, anchor_pos)
 			preview.custom_minimum_size = target_room.call("get_preview_size", furniture_id)
 			preview.size = preview.custom_minimum_size
 		_position_floating_controls()
@@ -242,9 +242,9 @@ func _begin_drag(screen_position: Vector2) -> bool:
 	return true
 
 func _update_drag_preview(screen_position: Vector2, snap_preview := false) -> bool:
-	var inside_room := _select_grid(screen_position)
-	_refresh(snap_preview and inside_room)
-	if not snap_preview or not inside_room:
+	var inside_room := _select_anchor(screen_position)
+	_refresh(inside_room)
+	if not inside_room:
 		_position_preview_under_pointer(screen_position)
 		_position_floating_controls()
 	return inside_room
@@ -255,19 +255,17 @@ func _end_drag(screen_position: Vector2) -> void:
 		floating_controls.visible = true
 		_position_floating_controls()
 
-func _select_grid(viewport_position: Vector2) -> bool:
+func _select_anchor(viewport_position: Vector2) -> bool:
 	if target_room == null:
 		return false
 	var world_position := _screen_to_room_world_position(viewport_position)
-	var next_grid: Array = []
-	if target_room.has_method("world_position_to_placement_grid"):
-		next_grid = target_room.call("world_position_to_placement_grid", world_position, furniture_id)
-	elif target_room.has_method("global_position_to_grid"):
-		next_grid = target_room.call("global_position_to_grid", world_position)
-	if next_grid.is_empty():
-		grid_pos = []
+	var next_anchor: Array = []
+	if target_room.has_method("world_position_to_placement_anchor"):
+		next_anchor = target_room.call("world_position_to_placement_anchor", world_position, furniture_id)
+	if next_anchor.is_empty():
+		anchor_pos = []
 		return false
-	grid_pos = next_grid
+	anchor_pos = next_anchor
 	return true
 
 func _position_preview_under_pointer(screen_position: Vector2) -> void:
@@ -281,12 +279,12 @@ func _position_preview_under_pointer(screen_position: Vector2) -> void:
 	preview.position = local_position - preview.size * 0.5
 
 func _on_confirm_pressed() -> void:
-	if not _grid_pos_is_valid() or not FurniturePlacementRules.can_place_furniture(room_id, furniture_id, grid_pos, instance_id):
+	if not _anchor_pos_is_valid() or not FurniturePlacementRules.can_place_furniture(room_id, furniture_id, anchor_pos, instance_id):
 		return
 	if is_move:
-		move_confirmed.emit(room_id, instance_id, grid_pos)
+		move_confirmed.emit(room_id, instance_id, anchor_pos)
 	else:
-		new_placement_confirmed.emit(room_id, furniture_id, grid_pos)
+		new_placement_confirmed.emit(room_id, furniture_id, anchor_pos)
 
 func _find_room_node() -> Button:
 	var building_view := _building_view()
@@ -379,8 +377,8 @@ func _building_view() -> Node:
 func _room_node_is_available(node: Node) -> bool:
 	return node != null and is_instance_valid(node) and not node.is_queued_for_deletion()
 
-func _grid_pos_is_valid() -> bool:
-	return grid_pos.size() >= 2
+func _anchor_pos_is_valid() -> bool:
+	return anchor_pos.size() >= 2
 
 func _format_name_template(template: String, value: String) -> String:
 	if template.contains("%s"):
@@ -389,7 +387,7 @@ func _format_name_template(template: String, value: String) -> String:
 
 func _clear_room_preview() -> void:
 	if target_room != null and target_room.has_method("show_placement_grid"):
-		target_room.call("show_placement_grid", false, furniture_id, grid_pos, instance_id)
+		target_room.call("show_placement_grid", false, furniture_id, anchor_pos, instance_id)
 	if is_move and target_room != null and target_room.has_method("set_furniture_instance_hidden"):
 		target_room.call("set_furniture_instance_hidden", instance_id, false)
 	if is_instance_valid(preview):

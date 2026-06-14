@@ -24,7 +24,7 @@
 		"layout_side": "right",
 		"has_entrance_door": false,
 		"frame_tiles": [6, 4],
-		"default_wallpaper_id": "wallpaper_mint_white_plain",
+		"default_wallpaper_id": "wallpaper_slate_gray_plain",
 		"default_wall_style_id": "wall_frame_gray"
 	  }
 	],

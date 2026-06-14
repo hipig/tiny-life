@@ -17,7 +17,7 @@ func setup(instance_data: Dictionary, furniture_data: Dictionary) -> void:
 	_bind_scene_text()
 	instance_id = str(instance_data.get("instance_id", ""))
 	AssetResolver.apply_asset_to_texture_rect(preview, furniture_data.get("asset", {}), Vector2i(32, 32))
-	item_label.text = item_text_template % [str(furniture_data["name"]), str(instance_data.get("grid_pos", []))]
+	item_label.text = item_text_template % [str(furniture_data["name"]), str(instance_data.get("anchor_pos", []))]
 	if not move_button.pressed.is_connected(_on_move_pressed):
 		move_button.pressed.connect(_on_move_pressed)
 	if not recycle_button.pressed.is_connected(_on_recycle_pressed):

@@ -733,7 +733,7 @@ var rent_per_minute: float
     {
       "instance_id": "f_0001",
       "furniture_id": "bed_basic",
-      "grid_pos": [2, 3],
+      "anchor_pos": [32.0, 64.0],
       "mirrored": false
     }
   ],
@@ -937,7 +937,7 @@ Furniture
 var instance_id: String
 var furniture_id: String
 var room_id: String
-var grid_pos: Vector2i
+var anchor_pos: Array
 var data: Dictionary
 ```
 
@@ -945,7 +945,7 @@ var data: Dictionary
 
 ```text
 应用资源
-提供互动点
+提供家具使用状态
 进入使用状态
 退出使用状态
 响应长按
@@ -997,7 +997,7 @@ func start_new_furniture_placement(furniture_id: String, target_room_id: String)
     preview.setup(furniture_id)
     preview.position = target_room.get_center_position()
 
-    target_room.show_grid(true)
+    target_room.show_placement_area(true)
 ```
 
 ---
@@ -1020,7 +1020,7 @@ func confirm_new_placement():
 
     target_room.add_furniture_instance(
         current_furniture_id,
-        preview.grid_pos,
+        preview.anchor_pos,
         false
     )
 
@@ -1045,12 +1045,12 @@ func start_move_existing(furniture: Furniture):
 
     current_mode = "move"
     moving_furniture = furniture
-    original_grid_pos = furniture.grid_pos
+    original_anchor_pos = furniture.anchor_pos
     target_room = BuildingManager.get_room(furniture.room_id)
 
-    target_room.grid.release(furniture)
+    target_room.release_preview_collision(furniture)
     furniture.set_as_preview(true)
-    target_room.show_grid(true)
+    target_room.show_placement_area(true)
 ```
 
 ---
@@ -1062,8 +1062,8 @@ func confirm_move():
     if not moving_furniture.preview_valid:
         return
 
-    moving_furniture.grid_pos = moving_furniture.preview_grid_pos
-    target_room.grid.occupy(moving_furniture)
+    moving_furniture.anchor_pos = moving_furniture.preview_anchor_pos
+    target_room.occupy_preview_collision(moving_furniture)
     moving_furniture.set_as_preview(false)
 
     target_room.recalculate_stats()
@@ -1077,8 +1077,8 @@ func confirm_move():
 
 ```gdscript
 func cancel_move():
-    moving_furniture.grid_pos = original_grid_pos
-    target_room.grid.occupy(moving_furniture)
+    moving_furniture.anchor_pos = original_anchor_pos
+    target_room.occupy_preview_collision(moving_furniture)
     moving_furniture.restore_position()
     moving_furniture.set_as_preview(false)
 
@@ -1108,17 +1108,17 @@ func recycle_furniture(furniture: Furniture):
 
 ---
 
-# 13. PlacementGrid 技术设计
+# 13. PlacementArea 技术设计
 
-## 13.1 PlacementGrid.gd
+## 13.1 PlacementArea / FurniturePlacementRules
 
 职责：
 
 ```text
-管理网格大小
-管理占用格子
-世界坐标转网格坐标
-网格坐标转世界坐标
+管理地面线和墙面摆放区域
+管理连续 anchor 与家具矩形
+世界坐标转房间 anchor
+anchor 转世界坐标
 判断家具是否可摆放
 ```
 
@@ -1127,13 +1127,13 @@ func recycle_furniture(furniture: Furniture):
 ## 13.2 核心函数
 
 ```gdscript
-func world_to_grid(world_pos: Vector2) -> Vector2i:
+func world_to_anchor(world_pos: Vector2) -> Array:
     pass
 
-func grid_to_world(grid_pos: Vector2i) -> Vector2:
+func anchor_to_world(anchor_pos: Array) -> Vector2:
     pass
 
-func can_place(furniture_data: Dictionary, grid_pos: Vector2i) -> bool:
+func can_place(furniture_data: Dictionary, anchor_pos: Array) -> bool:
     pass
 
 func occupy(furniture_instance):
@@ -1351,7 +1351,7 @@ Idle
 ↓
 寻找对应家具
 ↓
-走到互动点
+沿地面线走到目标家具附近
 ↓
 显示气泡 / 进度条 / 家具高亮
 ↓
@@ -1924,7 +1924,7 @@ offline_reward_claimed
 RoomPanel 支持家具 Tab
 家具商店
 新家具购买即摆放
-隐藏网格吸附
+连续坐标摆放，地面家具保持地面线对齐
 确认后扣金币
 ```
 
@@ -2031,7 +2031,7 @@ RoomPanel 有家具 / 租客 Tab
 
 ```text
 选择家具后进入摆放
-家具吸附网格
+家具按连续坐标摆放
 合法位置可确认
 确认后扣金币
 长按家具可移动

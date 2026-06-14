@@ -8,7 +8,7 @@ const INVALID_FILL_COLOR := Color(0.98, 0.22, 0.18, 0.14)
 const OUTLINE_WIDTH := 2.0
 
 var furniture_id := ""
-var grid_pos: Array = [0, 0]
+var anchor_pos: Array = [0.0, 0.0]
 var valid := false
 
 func _ready() -> void:
@@ -21,9 +21,9 @@ func _draw() -> void:
 	draw_rect(rect, VALID_FILL_COLOR if valid else INVALID_FILL_COLOR, true)
 	draw_rect(rect, VALID_OUTLINE_COLOR if valid else INVALID_OUTLINE_COLOR, false, OUTLINE_WIDTH)
 
-func setup(id: String, target_grid_pos := [0, 0], is_valid := false) -> void:
+func setup(id: String, target_anchor_pos := [0.0, 0.0], is_valid := false) -> void:
 	furniture_id = id
-	grid_pos = target_grid_pos
+	anchor_pos = target_anchor_pos
 	valid = is_valid
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var asset: Dictionary = data.get("asset", {})

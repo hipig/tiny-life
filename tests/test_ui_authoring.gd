@@ -449,7 +449,7 @@ func test_placement_overlay_is_scene_based_not_grid_panel() -> void:
 	assert_true(overlay_source.contains("show_placement_grid"), "placement should still update hidden target-room placement state")
 	assert_true(room_source.contains("placement_grid_layer.visible = false"), "Room should keep the placement grid hidden")
 	assert_false(room_source.contains("draw_rect(cell_rect"), "Room should not draw every placement grid cell")
-	assert_true(room_source.contains("world_position_to_placement_grid"), "Room should translate scene taps into furniture-aware placement grid cells")
+	assert_true(room_source.contains("world_position_to_placement_anchor"), "Room should translate scene taps into continuous furniture anchors")
 	assert_true(room_source.contains("get_preview_position"), "Room should provide scene preview positions")
 	assert_true(room_source.contains("UIManager.current_state != UIManager.UIState.NORMAL"), "Room clicks should not steal placement-state input")
 	assert_true(popup_source.contains("open_overlay"), "PopupLayer should support transparent placement overlays")

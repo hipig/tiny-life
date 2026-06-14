@@ -113,7 +113,7 @@ rent_per_minute
 ```text
 instance_id
 furniture_id
-grid_pos
+anchor_pos
 mirrored
 ```
 

@@ -39,7 +39,9 @@ func setup(owner: Tenant, id: String, target_room_id: String) -> void:
 	var presence := _presence_state()
 	if presence == GameState.TENANT_PRESENCE_HOME:
 		tenant.visible = true
-		tenant.position = TenantRoomLocator.spawn_position(_room(), tenant_id)
+		if not tenant.ai_position_initialized:
+			tenant.position = TenantRoomLocator.spawn_position(_room(), tenant_id)
+			tenant.ai_position_initialized = true
 	elif presence == GameState.TENANT_PRESENCE_AWAY:
 		tenant.visible = false
 	else:
@@ -48,8 +50,6 @@ func setup(owner: Tenant, id: String, target_room_id: String) -> void:
 
 func _process(delta: float) -> void:
 	if tenant == null or tenant_id.is_empty() or room_id.is_empty():
-		return
-	if state != AIState.AWAY and _ai_paused():
 		return
 	state_elapsed += delta
 	match state:
@@ -75,12 +75,12 @@ func _choose_next_state() -> void:
 	if _should_go_outside():
 		_enter_leaving()
 		return
-	var interactions := _interaction_targets()
+	var use_targets := _furniture_use_targets()
 	var roll := randf()
-	if not interactions.is_empty() and roll < 0.35:
-		_walk_to_interaction(interactions.pick_random())
+	if not use_targets.is_empty() and roll < 0.35:
+		_walk_to_furniture_use(use_targets.pick_random())
 	elif roll < 0.65:
-		_enter_patrol_walk()
+		_enter_wander_walk()
 	elif roll < 0.82:
 		_enter_jump()
 	else:
@@ -108,7 +108,7 @@ func _sync_from_current_behavior() -> void:
 		state_duration = pending_action_duration
 		return
 	if behavior == GameState.DEFAULT_TENANT_BEHAVIOR:
-		_enter_patrol_walk()
+		_enter_wander_walk()
 		return
 	if behavior == "happy" or behavior == "jump":
 		state = AIState.JUMP
@@ -126,17 +126,11 @@ func _enter_idle() -> void:
 	tenant.play_avatar_behavior(GameState.IDLE_TENANT_BEHAVIOR)
 	tenant.hide_behavior_bubble()
 
-func _enter_patrol_walk() -> void:
-	var positions := TenantRoomLocator.walk_positions(_room())
-	if positions.is_empty():
-		_enter_idle()
-		return
-	var left: Vector2 = positions[0]
-	var right: Vector2 = positions[positions.size() - 1]
-	target_position = left if tenant.position.distance_to(right) < tenant.position.distance_to(left) else right
+func _enter_wander_walk() -> void:
+	target_position = TenantRoomLocator.wander_target_position(_room(), tenant.position)
 	_enter_walk()
 
-func _walk_to_interaction(target: Dictionary) -> void:
+func _walk_to_furniture_use(target: Dictionary) -> void:
 	pending_action_need = str(target.get("need", ""))
 	pending_action_duration = maxf(0.1, float(target.get("duration", DEFAULT_ACTION_SECONDS)))
 	var position_value: Variant = target.get("position", tenant.position)
@@ -264,8 +258,9 @@ func _run_entry_route(update_presence_on_finish: bool):
 	var exit_position := view.get_service_exit_world_position()
 	if exit_position == Vector2.ZERO:
 		exit_position = view.get_room_door_world_position(room_id)
-	if tenant.position == Vector2.ZERO or not tenant.visible:
+	if not tenant.ai_position_initialized or not tenant.visible:
 		tenant.position = _visible_return_start_position(view, floor_index, exit_position)
+		tenant.ai_position_initialized = true
 	tenant.visible = true
 	await _enter_through_exit_door(view)
 	if floor_index > 1:
@@ -292,15 +287,13 @@ func _move_to_position(destination: Vector2):
 	if tenant != null and tenant.position.distance_to(destination) > ARRIVE_DISTANCE:
 		_play_route_walk()
 	while tenant != null and tenant.position.distance_to(destination) > ARRIVE_DISTANCE:
-		if _ai_paused():
-			await get_tree().process_frame
-			continue
 		var previous := tenant.position
 		tenant.position = tenant.position.move_toward(destination, _route_speed() * get_process_delta_time())
 		tenant.face_towards(tenant.position.x - previous.x)
 		await get_tree().process_frame
 	if tenant != null:
 		tenant.position = destination
+		tenant.ai_position_initialized = true
 
 func _leave_through_exit_door(view: BuildingView):
 	var exit_position := view.get_service_exit_world_position()
@@ -358,6 +351,7 @@ func _exit_elevator_at_floor(view: BuildingView, floor_index: int, direction: fl
 	await _wait_seconds(duration * show_progress)
 	if tenant != null:
 		tenant.position = elevator_position
+		tenant.ai_position_initialized = true
 		tenant.visible = true
 		_play_route_idle()
 	await _wait_seconds(duration * (1.0 - show_progress))
@@ -465,6 +459,7 @@ func _finish_route_at_home(update_presence := true) -> void:
 	if update_presence:
 		GameState.set_tenant_presence(tenant_id, GameState.TENANT_PRESENCE_HOME)
 	tenant.position = TenantRoomLocator.spawn_position(_room(), tenant_id)
+	tenant.ai_position_initialized = true
 	_enter_idle()
 
 func _should_go_outside() -> bool:
@@ -531,7 +526,7 @@ func _tenant_return_order_index() -> int:
 		index += 1
 	return maxi(0, tenant_ids.find(tenant_id))
 
-func _interaction_targets() -> Array:
+func _furniture_use_targets() -> Array:
 	var room := _room()
 	var targets := []
 	for instance in room.get("furniture_instances", []):
@@ -544,7 +539,7 @@ func _interaction_targets() -> Array:
 		targets.append({
 			"need": need,
 			"duration": float(interaction.get("duration", DEFAULT_ACTION_SECONDS)),
-			"position": TenantRoomLocator.interaction_position(room, instance_data, furniture_data)
+			"position": TenantRoomLocator.furniture_use_position(room, instance_data, furniture_data)
 		})
 	return targets
 
@@ -588,7 +583,3 @@ func _building_view() -> BuildingView:
 			return node as BuildingView
 		node = node.get_parent()
 	return null
-
-func _ai_paused() -> bool:
-	return UIManager.current_state == UIManager.UIState.PLACING_NEW_FURNITURE \
-		or UIManager.current_state == UIManager.UIState.MOVING_EXISTING_FURNITURE

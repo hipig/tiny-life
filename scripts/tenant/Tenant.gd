@@ -4,6 +4,9 @@ extends CharacterBody2D
 const META_BEHAVIOR_KEY := &"behavior_key"
 const META_BEHAVIOR_KEYS := &"behavior_keys"
 const META_AVATAR_ANIMATION := &"avatar_animation"
+const TENANT_VIEW_GROUP := &"tenant_views"
+const META_TENANT_ID := &"tenant_id"
+const META_ROOM_ID := &"room_id"
 
 @onready var avatar_sprite: AnimatedSprite2D = $AvatarSprite
 @onready var need_bubble: NeedBubble = $NeedBubble
@@ -19,6 +22,7 @@ var current_animation := ""
 var current_behavior := ""
 var behavior_animation_by_key := {}
 var click_handled_frame := -1
+var ai_position_initialized := false
 
 func _ready() -> void:
 	_bind_scene_animation_config()
@@ -32,10 +36,17 @@ func _ready() -> void:
 func setup(id: String, target_room_id := "") -> void:
 	tenant_id = id
 	room_id = target_room_id
+	_bind_view_identity()
 	if is_inside_tree():
 		_apply_avatar_asset()
 		_start_ai()
 		_refresh()
+
+func _bind_view_identity() -> void:
+	if not is_in_group(TENANT_VIEW_GROUP):
+		add_to_group(TENANT_VIEW_GROUP)
+	set_meta(META_TENANT_ID, tenant_id)
+	set_meta(META_ROOM_ID, room_id)
 
 func _refresh() -> void:
 	var state: Dictionary = GameState.tenants.get(tenant_id, {})

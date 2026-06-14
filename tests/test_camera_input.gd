@@ -69,9 +69,11 @@ func test_building_view_zoom_uses_map_root() -> void:
 	assert_true(script_text.contains("_world_size_for_content"), "BuildingView should size camera bounds from viewport and apartment content")
 	assert_true(script_text.contains("calculate_min_zoom_for_bounds"), "BuildingView should expose minimum-zoom calculation for tests and UI state")
 	assert_true(script_text.contains("PLACEMENT_FOCUS_ZOOM"), "BuildingView should use a stable placement focus zoom")
+	assert_true(script_text.contains("PLACEMENT_FOCUS_SECONDS"), "BuildingView should tune placement focus transition duration")
+	assert_true(script_text.contains("create_tween()"), "BuildingView should ease into placement focus instead of jumping")
+	assert_true(script_text.contains("_cancel_focus_tween"), "Camera gestures should be able to interrupt placement focus")
 	assert_false(script_text.contains("focus_extra_bottom_space"), "Room focus should not move the apartment by adding temporary map height")
 	assert_false(script_text.contains("FOCUS_EXTRA_BOTTOM_SPACE"), "Room focus should not use extra bottom-space layout hacks")
 	assert_true(script_text.contains("_pan_camera"), "BuildingView should pan through the camera")
 	assert_true(script_text.contains("screen_to_world_position"), "Placement should convert overlay screen taps through the camera")
 	assert_true(script_text.contains("world_to_screen_position"), "Placement floating controls should map room preview positions back to the overlay")
-
