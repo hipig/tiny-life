@@ -3,22 +3,23 @@ extends "res://scripts/ui/AppPanel.gd"
 
 const ROOM_FURNITURE_ITEM_ROW_SCENE := preload("res://scenes/ui/RoomFurnitureItemRow.tscn")
 const PANEL_ACTION_BUTTON_SCENE := preload("res://scenes/ui/PanelActionButton.tscn")
+const ICON_ACTION_ROW_SCENE := preload("res://scenes/ui/IconActionRow.tscn")
 
 signal furniture_shop_requested(room_id: String)
 signal tenant_recruit_requested(room_id: String)
 signal tenant_view_requested(room_id: String)
-signal decor_apply_requested(target_ref: Dictionary, decor_id: String)
+signal decor_change_requested(target_ref: Dictionary, initial_category: String)
 signal move_furniture_requested(instance_id: String)
 signal recycle_furniture_requested(instance_id: String)
 
 var room_id := ""
 var selected_tab := "furniture"
-var selected_decor_category := ConfigManager.DECOR_WALLPAPER
 var tab_row: HBoxContainer
 var overview_content: VBoxContainer
 var furniture_content: VBoxContainer
 var tenant_content: VBoxContainer
 var decor_content: VBoxContainer
+var decor_summary_root: VBoxContainer
 var score_card: StatCard
 var rent_card: StatCard
 var attribute_row: IconInfoRow
@@ -32,7 +33,6 @@ var recruit_tenant_button: PanelActionButton
 var tenant_stat_card: StatCard
 var tenant_info_row: IconInfoRow
 var view_tenant_button: PanelActionButton
-var decor_catalog
 
 var title_template := ""
 var attribute_detail_template := ""
@@ -40,7 +40,10 @@ var tenant_stat_title_template := ""
 var tenant_satisfaction_title_template := ""
 var tenant_detail_template := ""
 var rent_value_template := ""
+var decor_detail_template := ""
+var decor_change_button_text := ""
 var behavior_label_by_key := {}
+var decor_category_label_by_key := {}
 
 func open(target_room_id: String, initial_tab := "furniture") -> void:
 	room_id = target_room_id
@@ -87,19 +90,15 @@ func _bind_scene_nodes() -> void:
 	tenant_stat_card = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantStatCard") as StatCard
 	tenant_info_row = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/TenantInfoRow") as IconInfoRow
 	view_tenant_button = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/TenantContent/TenantOccupiedRoot/ViewTenantButton") as PanelActionButton
-	decor_catalog = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorCatalog")
-	if overview_content == null or furniture_content == null or tenant_content == null or decor_content == null:
-		push_error("RoomPanel.tscn must expose OverviewContent, FurnitureContent, TenantContent, and DecorContent.")
+	decor_summary_root = get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TabContent/DecorContent/DecorSummaryRoot") as VBoxContainer
+	if overview_content == null or furniture_content == null or tenant_content == null or decor_content == null or decor_summary_root == null:
+		push_error("RoomPanel.tscn must expose OverviewContent, FurnitureContent, TenantContent, DecorContent, and DecorSummaryRoot.")
 	if add_furniture_button != null and not add_furniture_button.action_requested.is_connected(_on_add_furniture_pressed):
 		add_furniture_button.action_requested.connect(_on_add_furniture_pressed)
 	if recruit_tenant_button != null and not recruit_tenant_button.action_requested.is_connected(_on_recruit_tenant_pressed):
 		recruit_tenant_button.action_requested.connect(_on_recruit_tenant_pressed)
 	if view_tenant_button != null and not view_tenant_button.action_requested.is_connected(_on_view_tenant_pressed):
 		view_tenant_button.action_requested.connect(_on_view_tenant_pressed)
-	if decor_catalog != null and not decor_catalog.apply_requested.is_connected(_on_decor_apply_pressed):
-		decor_catalog.apply_requested.connect(_on_decor_apply_pressed)
-	if decor_catalog != null and not decor_catalog.category_changed.is_connected(_on_decor_category_changed):
-		decor_catalog.category_changed.connect(_on_decor_category_changed)
 
 func _bind_scene_text() -> void:
 	title_template = _template_text("TitleTemplate")
@@ -108,7 +107,10 @@ func _bind_scene_text() -> void:
 	tenant_satisfaction_title_template = _template_text("TenantSatisfactionTitleTemplate")
 	tenant_detail_template = _template_text("TenantDetailTemplate")
 	rent_value_template = _template_text("RentValueTemplate")
+	decor_detail_template = _template_text("DecorDetailTemplate")
+	decor_change_button_text = _template_text("DecorChangeButtonText")
 	behavior_label_by_key = _behavior_labels_from_scene()
+	decor_category_label_by_key = _decor_category_labels_from_scene()
 
 func _template_text(node_name: String) -> String:
 	var template_label := get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TemplateText/%s" % node_name) as Label
@@ -134,6 +136,24 @@ func _behavior_label_key(node: Node) -> String:
 	if not node.has_meta("behavior_key"):
 		return ""
 	return str(node.get_meta("behavior_key")).strip_edges()
+
+func _decor_category_labels_from_scene() -> Dictionary:
+	var labels := {}
+	var label_root := get_node_or_null("PanelBox/ScrollContainer/ContentRoot/TemplateText/DecorCategoryLabels")
+	if label_root == null:
+		push_error("RoomPanel scene is missing TemplateText/DecorCategoryLabels.")
+		return labels
+	for child in label_root.get_children():
+		if child is Label:
+			var key := _decor_category_label_key(child)
+			if not key.is_empty():
+				labels[key] = (child as Label).text
+	return labels
+
+func _decor_category_label_key(node: Node) -> String:
+	if not node.has_meta("decor_category"):
+		return ""
+	return str(node.get_meta("decor_category")).strip_edges()
 
 func _configure_tabs() -> void:
 	for node_name in ["FurnitureTab", "TenantTab", "DecorTab", "OverviewTab"]:
@@ -193,11 +213,31 @@ func _render_tenant_tab(room: Dictionary) -> void:
 		float(room.get("rent_per_minute", 0.0))
 	])
 
-func _render_decor_tab(room: Dictionary) -> void:
-	if decor_catalog == null:
+func _render_decor_tab(_room: Dictionary) -> void:
+	if decor_summary_root == null:
 		return
-	decor_catalog.open(GameState.space_decor_target(ConfigManager.TARGET_ROOM, room_id), selected_decor_category)
-	selected_decor_category = decor_catalog.get_selected_category()
+	UIPanelFactory.clear_children(decor_summary_root)
+	var target_ref := GameState.space_decor_target(ConfigManager.TARGET_ROOM, room_id)
+	var supported_categories := ConfigManager.supported_decor_categories_for_target(target_ref)
+	for category_value in supported_categories:
+		var category := str(category_value)
+		var decor_id := GameState.get_space_decor_id(target_ref, category)
+		var decor_item: Dictionary = ConfigManager.get_room_decor_item(decor_id)
+		var row := ICON_ACTION_ROW_SCENE.instantiate() as IconActionRow
+		decor_summary_root.add_child(row)
+		row.setup(
+			"Properties.png",
+			_decor_category_label(category),
+			decor_detail_template % str(decor_item.get("name", "")),
+			decor_change_button_text
+		)
+		row.action_requested.connect(_on_decor_change_pressed.bind(target_ref.duplicate(true), category))
+
+func _decor_category_label(category: String) -> String:
+	if decor_category_label_by_key.has(category):
+		return str(decor_category_label_by_key.get(category))
+	push_error("RoomPanel scene is missing a decor category label for '%s'." % category)
+	return category
 
 func _behavior_label(value: String) -> String:
 	var key := ConfigManager.normalize_behavior_key(value)
@@ -219,11 +259,8 @@ func _on_recruit_tenant_pressed() -> void:
 func _on_view_tenant_pressed() -> void:
 	tenant_view_requested.emit(room_id)
 
-func _on_decor_apply_pressed(decor_id: String) -> void:
-	decor_apply_requested.emit(GameState.space_decor_target(ConfigManager.TARGET_ROOM, room_id), decor_id)
-
-func _on_decor_category_changed(category: String) -> void:
-	selected_decor_category = category
+func _on_decor_change_pressed(target_ref: Dictionary, category: String) -> void:
+	decor_change_requested.emit(target_ref.duplicate(true), category)
 
 func _on_move_pressed(instance_id: String) -> void:
 	move_furniture_requested.emit(instance_id)

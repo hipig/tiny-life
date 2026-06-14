@@ -21,6 +21,7 @@ const OFFLINE_REWARD_POPUP_SCENE := preload("res://scenes/ui/OfflineRewardPopup.
 @onready var popup_layer: PopupLayer = $PopupLayer
 
 var selected_room_id := ""
+var decor_return_room_id := ""
 var state_loaded_once := false
 
 func _ready() -> void:
@@ -97,21 +98,28 @@ func _refresh_building_if_loaded() -> void:
 	if state_loaded_once:
 		_refresh_building()
 
-func _show_room_panel(room_id: String) -> void:
+func _show_room_panel(room_id: String, initial_tab := "furniture") -> void:
 	selected_room_id = room_id
+	decor_return_room_id = ""
 	var panel := _open_panel(ROOM_PANEL_SCENE) as RoomPanel
 	panel.furniture_shop_requested.connect(UIManager.open_furniture_shop)
 	panel.tenant_recruit_requested.connect(UIManager.open_tenant_panel_for_recruit)
 	panel.tenant_view_requested.connect(UIManager.open_tenant_panel)
-	panel.decor_apply_requested.connect(_on_decor_apply_requested)
+	panel.decor_change_requested.connect(_on_room_decor_change_requested)
 	panel.move_furniture_requested.connect(_on_move_furniture_pressed)
 	panel.recycle_furniture_requested.connect(_on_recycle_furniture_pressed)
-	panel.open(room_id)
+	panel.open(room_id, initial_tab)
 
 func _show_space_decor_panel(target_ref: Dictionary, initial_category: String) -> void:
+	if str(target_ref.get("kind", "")) != ConfigManager.TARGET_ROOM:
+		decor_return_room_id = ""
 	var panel = _open_panel(SPACE_DECOR_PANEL_SCENE)
 	panel.decor_apply_requested.connect(_on_decor_apply_requested)
 	panel.open(target_ref, initial_category)
+
+func _on_room_decor_change_requested(target_ref: Dictionary, initial_category: String) -> void:
+	decor_return_room_id = selected_room_id
+	UIManager.open_space_decor_panel(target_ref, initial_category)
 
 func _show_furniture_shop(room_id: String) -> void:
 	selected_room_id = room_id
@@ -333,6 +341,12 @@ func _open_panel(scene: PackedScene) -> AppPanel:
 	return popup_layer.open_panel(scene, _on_panel_close_requested)
 
 func _on_panel_close_requested() -> void:
+	if UIManager.current_state == UIManager.UIState.SPACE_DECOR_PANEL and not decor_return_room_id.is_empty():
+		var return_room_id := decor_return_room_id
+		decor_return_room_id = ""
+		UIManager.open_room_panel(return_room_id, "decor")
+		return
+	decor_return_room_id = ""
 	_clear_panel_layer_panels()
 	UIManager.return_to_normal()
 

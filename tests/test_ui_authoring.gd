@@ -198,8 +198,15 @@ func test_ui_scenes_are_editor_authored_for_360_viewport() -> void:
 	assert_true(room_panel_scene.contains("TenantContent"), "RoomPanel should expose an editor-authored tenant tab page")
 	assert_true(room_panel_scene.contains("DecorTab"), "RoomPanel should expose a decor tab")
 	assert_true(room_panel_scene.contains("DecorContent"), "RoomPanel should expose an editor-authored decor tab page")
-	assert_true(room_panel_scene.contains("res://scenes/ui/DecorCatalogContent.tscn"), "RoomPanel should reuse the shared decor catalog content")
-	assert_true(room_panel_scene.contains("[node name=\"DecorCatalog\""), "RoomPanel should expose the shared decor catalog instance")
+	assert_true(room_panel_scene.contains("DecorSummaryRoot"), "RoomPanel decor tab should expose an editor-authored current-decor summary list")
+	assert_true(room_panel_scene.contains("[node name=\"DecorDetailTemplate\" type=\"Label\""), "RoomPanel should keep current-decor detail templates as scene labels")
+	assert_true(room_panel_scene.contains("[node name=\"DecorChangeButtonText\" type=\"Label\""), "RoomPanel should keep decor change button copy in the scene")
+	assert_true(room_panel_scene.contains("[node name=\"DecorCategoryLabels\" type=\"Control\""), "RoomPanel should keep decor category labels in the editable scene")
+	assert_true(room_panel_scene.contains("metadata/decor_category = \"wallpaper\""), "RoomPanel wallpaper summary label should be scene-keyed")
+	assert_true(room_panel_scene.contains("metadata/decor_category = \"wall\""), "RoomPanel wall summary label should be scene-keyed")
+	assert_true(room_panel_scene.contains("metadata/decor_category = \"door\""), "RoomPanel door summary label should be scene-keyed")
+	assert_false(room_panel_scene.contains("res://scenes/ui/DecorCatalogContent.tscn"), "RoomPanel should not embed the decor catalog after moving changes into the popup")
+	assert_false(room_panel_scene.contains("[node name=\"DecorCatalog\""), "RoomPanel should not expose an embedded decor catalog instance")
 	assert_true(decor_catalog_scene.contains("DecorCategoryRow"), "DecorCatalogContent should expose decor category filters")
 	assert_true(decor_catalog_scene.contains("WallpaperDecorFilter"), "DecorCatalogContent should expose a wallpaper decor filter")
 	assert_true(decor_catalog_scene.contains("WallDecorFilter"), "DecorCatalogContent should expose a wall decor filter")
@@ -213,7 +220,10 @@ func test_ui_scenes_are_editor_authored_for_360_viewport() -> void:
 	assert_true(decor_catalog_source.contains("supported_decor_categories_for_target"), "DecorCatalogContent should hide unsupported target categories")
 	assert_true(space_decor_panel_scene.contains("res://scenes/ui/AppPanelBase.tscn"), "SpaceDecorPanel should inherit the editable AppPanelBase scene")
 	assert_true(space_decor_panel_scene.contains("res://scenes/ui/DecorCatalogContent.tscn"), "SpaceDecorPanel should reuse the shared decor catalog content")
-	assert_true(space_decor_panel_scene.contains("anchors_preset = 12"), "SpaceDecorPanel should be an editor-authored bottom sheet")
+	assert_true(space_decor_panel_scene.contains("anchors_preset = 8"), "SpaceDecorPanel should be an editor-authored centered popup")
+	assert_true(space_decor_panel_scene.contains("custom_minimum_size = Vector2(330, 560)"), "SpaceDecorPanel should match the centered shop popup size")
+	assert_true(space_decor_panel_scene.contains("offset_left = -165.0"), "SpaceDecorPanel should center the 330px popup width")
+	assert_true(space_decor_panel_scene.contains("offset_top = -280.0"), "SpaceDecorPanel should center the 560px popup height")
 	assert_true(space_decor_panel_source.contains("decor_apply_requested"), "SpaceDecorPanel should forward unified decor apply requests")
 	assert_true(room_panel_scene.contains("AddFurnitureButton"), "RoomPanel should expose its add-furniture button in the scene")
 	assert_true(room_panel_scene.contains("RecruitTenantButton"), "RoomPanel should expose its recruit button in the scene")
@@ -229,9 +239,11 @@ func test_ui_scenes_are_editor_authored_for_360_viewport() -> void:
 	assert_true(room_panel_scene.contains("metadata/behavior_key = \"away\""), "RoomPanel should label tenant away state")
 	assert_true(room_panel_scene.contains("metadata/behavior_key = \"returning\""), "RoomPanel should label tenant returning state")
 	assert_false(room_panel_source.contains("@export"), "RoomPanel should not require script exports for editor-authored text templates")
-	assert_true(room_panel_source.contains("decor_apply_requested"), "RoomPanel should emit decor apply requests instead of spending coins itself")
+	assert_true(room_panel_source.contains("decor_change_requested"), "RoomPanel should request the independent decor popup from its summary rows")
 	assert_true(decor_catalog_source.contains("ROOM_DECOR_ITEM_ROW_SCENE"), "DecorCatalogContent should render decor items through a reusable row scene")
-	assert_true(room_panel_source.contains("selected_decor_category"), "RoomPanel should filter decor items by selected category")
+	assert_true(room_panel_source.contains("supported_decor_categories_for_target"), "RoomPanel should summarize only categories supported by the room target")
+	assert_false(room_panel_source.contains("decor_apply_requested"), "RoomPanel should not emit direct decor apply requests")
+	assert_false(room_panel_source.contains("selected_decor_category"), "RoomPanel should not own decor catalog category state")
 	assert_false(room_panel_source.contains("behavior_label_by_key = {"), "RoomPanel should not hide behavior display labels in script")
 	assert_false(room_panel_source.contains("房间：%s"), "RoomPanel should not hard-code fixed title templates in script")
 	assert_false(room_panel_source.contains("添加家具"), "RoomPanel should not hard-code fixed button copy in script")
@@ -512,7 +524,8 @@ func test_room_flow_panels_are_bottom_sheets() -> void:
 	for path in [
 		"res://scenes/ui/FurnitureShopPanel.tscn",
 		"res://scenes/ui/OfflineRewardPopup.tscn",
-		"res://scenes/ui/RecycleConfirmPopup.tscn"
+		"res://scenes/ui/RecycleConfirmPopup.tscn",
+		"res://scenes/ui/SpaceDecorPanel.tscn"
 	]:
 		var scene_source := FileAccess.get_file_as_string(path)
 		assert_true(scene_source.contains("anchors_preset = 8"), "%s should keep centered popup layout in the scene" % path)

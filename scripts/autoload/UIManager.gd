@@ -19,7 +19,7 @@ enum UIState {
 }
 
 signal state_changed(state: int)
-signal room_panel_requested(room_id: String)
+signal room_panel_requested(room_id: String, initial_tab: String)
 signal furniture_shop_requested(room_id: String)
 signal tenant_panel_requested(room_id: String, mode: String)
 signal build_confirm_requested(room_id: String)
@@ -49,9 +49,9 @@ func is_furniture_placement_state() -> bool:
 func blocks_world_camera_input() -> bool:
 	return not allows_world_camera_input()
 
-func open_room_panel(room_id: String) -> void:
+func open_room_panel(room_id: String, initial_tab := "furniture") -> void:
 	set_state(UIState.ROOM_PANEL)
-	room_panel_requested.emit(room_id)
+	room_panel_requested.emit(room_id, initial_tab)
 
 func open_furniture_shop(room_id: String) -> void:
 	set_state(UIState.FURNITURE_SHOP)

@@ -38,6 +38,8 @@ func test_main_uses_popup_layer_scene_for_feedback() -> void:
 	assert_true(main_scene.contains("res://scenes/ui/PopupLayer.tscn"), "Main scene should compose the PopupLayer scene")
 	assert_true(main_source.contains("tenant_presence_changed.connect"), "Main should refresh open tenant panels when presence changes")
 	assert_true(main_source.contains("_refresh_tenant_panel_if_open"), "Main should refresh an open TenantPanel without rebuilding the building")
+	assert_true(main_source.contains("decor_return_room_id"), "Main should remember when a room opened the independent decor popup")
+	assert_true(main_source.contains("UIManager.open_room_panel(return_room_id, \"decor\")"), "Closing a room-launched decor popup should return to that room's decor tab")
 	assert_false(main_source.contains("CanvasLayer.new()"), "Main should not build the popup CanvasLayer by hand")
 
 
@@ -59,4 +61,3 @@ func test_main_scene_composes_primary_child_scenes() -> void:
 	assert_false(menu_source.contains("style_icon_button"), "Floating menu should keep icon-button skin in the editable scene")
 	assert_true(menu_scene.contains("custom_minimum_size = Vector2(44, 42)"), "Floating menu tap targets should fit the 360px viewport")
 	assert_true(menu_scene.contains("icons/Clipboard.png"), "Floating menu should configure icon resources in the scene")
-
