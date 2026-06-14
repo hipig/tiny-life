@@ -15,7 +15,20 @@ func setup(id := "", selected := false) -> void:
 		tab_id = id
 	if tab_id.is_empty():
 		_bind_scene_tab_id()
+	toggle_mode = false
+	button_pressed = false
 	disabled = selected
+	if not pressed.is_connected(_on_pressed):
+		pressed.connect(_on_pressed)
+
+func setup_toggle(id := "", selected := false) -> void:
+	if not id.is_empty():
+		tab_id = id
+	if tab_id.is_empty():
+		_bind_scene_tab_id()
+	toggle_mode = true
+	button_pressed = selected
+	disabled = false
 	if not pressed.is_connected(_on_pressed):
 		pressed.connect(_on_pressed)
 

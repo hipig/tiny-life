@@ -89,6 +89,18 @@ func load_all() -> void:
 func get_furniture_data(id: String) -> Dictionary:
 	return _required_dict_from_index(furniture_by_id, id, "Furniture")
 
+func get_furniture_categories() -> Array:
+	var result: Array = []
+	for item in furniture:
+		var data: Dictionary = item
+		var category := str(data["category"]).strip_edges()
+		if not result.has(category):
+			result.append(category)
+	return result
+
+func get_furniture_score(item: Dictionary) -> int:
+	return int(item["comfort"]) + int(item["entertainment"]) + int(item["hygiene"]) + int(item["food"])
+
 func get_furniture_orientation_data(id: String, orientation := "") -> Dictionary:
 	return furniture_orientation_data(get_furniture_data(id), orientation)
 

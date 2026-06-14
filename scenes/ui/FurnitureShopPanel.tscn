@@ -1,19 +1,69 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/AppPanelBase.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/ui/FurnitureShopPanel.gd" id="2_shop"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PanelTabButton.tscn" id="3_tab"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long.png" id="4_dropdown_blue"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long_pressed.png" id="5_dropdown_blue_pressed"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_yellow_long.png" id="6_dropdown_yellow"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/ui/Buttons, Sliders, Panels, Frames, Selection/Button_grey_long.png" id="7_dropdown_grey"]
+[ext_resource type="Texture2D" path="res://assets/pixel_spaces/icons/Arrow_down.png" id="8_dropdown_arrow"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dropdown_normal"]
+texture = ExtResource("4_dropdown_blue")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 6.0
+content_margin_top = 5.0
+content_margin_right = 18.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dropdown_pressed"]
+texture = ExtResource("5_dropdown_blue_pressed")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 6.0
+content_margin_top = 5.0
+content_margin_right = 18.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dropdown_hover"]
+texture = ExtResource("6_dropdown_yellow")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 6.0
+content_margin_top = 5.0
+content_margin_right = 18.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dropdown_disabled"]
+texture = ExtResource("7_dropdown_grey")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+content_margin_left = 6.0
+content_margin_top = 5.0
+content_margin_right = 18.0
+content_margin_bottom = 5.0
 
 [node name="FurnitureShopPanel" instance=ExtResource("1_base")]
-custom_minimum_size = Vector2(300, 430)
+custom_minimum_size = Vector2(330, 560)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -215.0
-offset_right = 150.0
-offset_bottom = 215.0
+offset_left = -165.0
+offset_top = -280.0
+offset_right = 165.0
+offset_bottom = 280.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_shop")
@@ -21,14 +71,157 @@ script = ExtResource("2_shop")
 [node name="TitleLabel" parent="PanelBox/Header" index="0"]
 text = "为房间添加家具"
 
-[node name="ListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+[node name="FilterRoot" type="VBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="CategoryFilterRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="CategoryTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/CategoryFilterRow"]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+text = "分类"
+
+[node name="CategoryDropdown" type="OptionButton" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/CategoryFilterRow"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+focus_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+theme_override_icons/arrow = ExtResource("8_dropdown_arrow")
+theme_override_styles/normal = SubResource("StyleBoxTexture_dropdown_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_dropdown_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_dropdown_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_dropdown_disabled")
+text = "全部"
+
+[node name="SortFilterRow" type="HBoxContainer" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="SortTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/SortFilterRow"]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+text = "排序"
+
+[node name="SortDropdown" type="OptionButton" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/SortFilterRow"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+focus_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_hover_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_pressed_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_disabled_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+theme_override_icons/arrow = ExtResource("8_dropdown_arrow")
+theme_override_styles/normal = SubResource("StyleBoxTexture_dropdown_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_dropdown_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_dropdown_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_dropdown_disabled")
+text = "默认"
+
+[node name="QuickTitle" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+text = "筛选"
+
+[node name="QuickFilterGrid" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 3
+
+[node name="AffordableFilter" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/QuickFilterGrid" instance=ExtResource("3_tab")]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "买得起"
+metadata/tab_id = "affordable"
+
+[node name="FloorItemFilter" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/QuickFilterGrid" instance=ExtResource("3_tab")]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "地面"
+metadata/tab_id = "floor_item"
+
+[node name="WallItemFilter" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/QuickFilterGrid" instance=ExtResource("3_tab")]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "墙面"
+metadata/tab_id = "wall_item"
+
+[node name="InteractiveFilter" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/QuickFilterGrid" instance=ExtResource("3_tab")]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "可互动"
+metadata/tab_id = "interactive"
+
+[node name="RotatableFilter" parent="PanelBox/ScrollContainer/ContentRoot/FilterRoot/QuickFilterGrid" instance=ExtResource("3_tab")]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "可转向"
+metadata/tab_id = "rotatable"
+
+[node name="ResultLabel" type="Label" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.14902, 0.188235, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+text = "显示 0 / 0 件家具"
+
+[node name="EmptyStateLabel" type="Label" parent="PanelBox/ScrollContainer/ContentRoot" index="2"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.490196, 0.454902, 0.439216, 1)
+theme_override_colors/font_outline_color = Color(1, 0.956863, 0.862745, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+autowrap_mode = 2
+text = "没有符合条件的家具"
+
+[node name="ListRoot" type="GridContainer" parent="PanelBox/ScrollContainer/ContentRoot" index="3"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 2
 
-[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="1"]
+[node name="TemplateText" type="Control" parent="PanelBox/ScrollContainer/ContentRoot" index="4"]
 visible = false
 layout_mode = 2
 
@@ -39,3 +232,100 @@ text = "为 %s 添加家具"
 [node name="FallbackRoomName" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
 layout_mode = 1
 text = "房间"
+
+[node name="ResultCountTemplate" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+layout_mode = 1
+text = "显示 %d / %d 件家具"
+
+[node name="CategoryOptions" type="Control" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+visible = false
+layout_mode = 1
+
+[node name="CategoryOptionAll" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "全部"
+metadata/tab_id = "__all__"
+
+[node name="CategoryOptionBed" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "床"
+metadata/tab_id = "床"
+
+[node name="CategoryOptionTableChair" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "桌椅"
+metadata/tab_id = "桌椅"
+
+[node name="CategoryOptionEntertainment" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "娱乐"
+metadata/tab_id = "娱乐"
+
+[node name="CategoryOptionStorage" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "收纳"
+metadata/tab_id = "收纳"
+
+[node name="CategoryOptionKitchen" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "厨房"
+metadata/tab_id = "厨房"
+
+[node name="CategoryOptionDecor" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "装饰"
+metadata/tab_id = "装饰"
+
+[node name="CategoryOptionLight" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "灯具"
+metadata/tab_id = "灯具"
+
+[node name="CategoryOptionWall" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/CategoryOptions"]
+layout_mode = 1
+text = "墙面"
+metadata/tab_id = "墙面"
+
+[node name="SortOptions" type="Control" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText"]
+visible = false
+layout_mode = 1
+
+[node name="SortOptionDefault" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "默认"
+metadata/tab_id = "default"
+
+[node name="SortOptionPriceAsc" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "低价优先"
+metadata/tab_id = "price_asc"
+
+[node name="SortOptionPriceDesc" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "高价优先"
+metadata/tab_id = "price_desc"
+
+[node name="SortOptionScore" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "评分优先"
+metadata/tab_id = "score"
+
+[node name="SortOptionComfort" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "舒适优先"
+metadata/tab_id = "comfort"
+
+[node name="SortOptionEntertainment" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "娱乐优先"
+metadata/tab_id = "entertainment"
+
+[node name="SortOptionHygiene" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "卫生优先"
+metadata/tab_id = "hygiene"
+
+[node name="SortOptionFood" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/SortOptions"]
+layout_mode = 1
+text = "食物优先"
+metadata/tab_id = "food"

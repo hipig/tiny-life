@@ -145,6 +145,8 @@ func test_room_grid_helpers_remain_for_furniture_and_wall_bounds() -> void:
 func test_furniture_orientations_are_config_driven() -> void:
 	var config_source := FileAccess.get_file_as_string("res://scripts/autoload/ConfigManager.gd")
 	assert_true(config_source.contains("_validate_furniture_orientations"), "Furniture config validation should validate orientation schema")
+	assert_true(config_source.contains("func get_furniture_categories()"), "ConfigManager should expose furniture categories for shop filters")
+	assert_true(config_source.contains("func get_furniture_score(item: Dictionary)"), "ConfigManager should expose furniture score for shop sorting")
 	assert_true(config_source.contains("orientation_mode"), "Furniture config should require orientation mode")
 	assert_true(config_source.contains("default_orientation"), "Furniture config should require default orientation")
 	assert_true(config_source.contains("rotation_degrees"), "Furniture orientation config should declare runtime rotation")
@@ -183,6 +185,20 @@ func test_furniture_orientations_are_config_driven() -> void:
 			continue
 		assert_eq(orientation_mode, "fixed", "%s should remain fixed unless explicitly allowlisted" % furniture_id)
 		assert_false(orientations.has("rotated"), "%s fixed furniture should not declare a rotated orientation" % furniture_id)
+
+
+func test_furniture_shop_filter_and_sort_data_contract() -> void:
+	assert_eq(_shop_filter({"category": "床"}).map(_furniture_id), ["bed_basic", "bed_soft"], "bed category filter should show only beds in config order")
+	assert_eq(_shop_filter({"affordable": true}, 100).map(_furniture_id), ["bed_basic", "chair_basic", "plant_small", "wall_clock", "lamp_warm"], "affordable filter should use current coins against item prices")
+	assert_eq(_shop_filter({"wall_item": true}).map(_furniture_id), ["painting_small", "wall_clock"], "wall-item filter should use furniture wall_item")
+	assert_eq(_shop_filter({"floor_item": true}).size(), furniture.size() - 2, "floor-item filter should exclude wall furniture")
+	assert_eq(_shop_filter({"interactive": true, "rotatable": true}).map(_furniture_id), ["bed_basic", "bed_soft", "desk_basic", "computer_desk", "sofa_green", "sofa_large", "dining_table"], "quick filters should combine interactable and rotatable flags")
+	assert_eq(_shop_filter({"floor_item": true, "wall_item": true}).size(), 0, "opposing placement filters should return an empty result")
+	assert_eq(_shop_sort(furniture, "price_asc").slice(0, 5).map(_furniture_id), ["chair_basic", "lamp_warm", "plant_small", "bed_basic", "wall_clock"], "price ascending sort should show cheap furniture first")
+	assert_eq(_shop_sort(furniture, "price_desc").slice(0, 3).map(_furniture_id), ["tv_wide", "sofa_large", "computer_desk"], "price descending sort should show expensive furniture first")
+	assert_eq(_shop_sort(furniture, "score").slice(0, 3).map(_furniture_id), ["sofa_large", "tv_wide", "shower_simple"], "score sort should prioritize total furniture attributes")
+	assert_eq(_shop_sort(furniture, "comfort").slice(0, 3).map(_furniture_id), ["bed_soft", "sofa_large", "plant_tall"], "comfort sort should prioritize comfort then price")
+	assert_eq(_shop_sort(furniture, "food").slice(0, 3).map(_furniture_id), ["fridge_basic", "dining_table", "chair_basic"], "single attribute ties should fall back to price then config order")
 
 
 func test_room_building_rules_unlock_same_floor_independently() -> void:
@@ -328,3 +344,69 @@ func _room_data(room_id: String) -> Dictionary:
 		if str(room_data.get("id", "")) == room_id:
 			return room_data
 	return {}
+
+
+func _furniture_id(item: Dictionary) -> String:
+	return str(item.get("id", ""))
+
+
+func _shop_filter(filters: Dictionary, coins := 999999) -> Array:
+	var result: Array = []
+	for item in furniture:
+		var furniture_data: Dictionary = item
+		if filters.has("category") and str(furniture_data.get("category", "")) != str(filters["category"]):
+			continue
+		if bool(filters.get("affordable", false)) and coins < int(furniture_data.get("price", 0)):
+			continue
+		if bool(filters.get("floor_item", false)) and bool(furniture_data.get("wall_item", false)):
+			continue
+		if bool(filters.get("wall_item", false)) and not bool(furniture_data.get("wall_item", false)):
+			continue
+		if bool(filters.get("interactive", false)) and not bool(furniture_data.get("interactive", false)):
+			continue
+		if bool(filters.get("rotatable", false)) and str(furniture_data.get("orientation_mode", "")) != "rotatable":
+			continue
+		result.append(furniture_data)
+	return result
+
+
+func _shop_sort(items: Array, sort_id: String) -> Array:
+	var indexed_items: Array = []
+	var index := 0
+	for item in items:
+		indexed_items.append({"item": item, "index": index})
+		index += 1
+	indexed_items.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var item_a: Dictionary = a["item"]
+		var item_b: Dictionary = b["item"]
+		var value_a := _shop_sort_value(item_a, sort_id)
+		var value_b := _shop_sort_value(item_b, sort_id)
+		if value_a != value_b:
+			return value_a > value_b if sort_id in ["price_desc", "score", "comfort", "entertainment", "hygiene", "food"] else value_a < value_b
+		var price_a := int(item_a.get("price", 0))
+		var price_b := int(item_b.get("price", 0))
+		if price_a != price_b:
+			return price_a < price_b
+		return int(a["index"]) < int(b["index"])
+	)
+	var result: Array = []
+	for entry in indexed_items:
+		var entry_data: Dictionary = entry
+		result.append(entry_data["item"])
+	return result
+
+
+func _shop_sort_value(item: Dictionary, sort_id: String) -> int:
+	match sort_id:
+		"price_asc", "price_desc":
+			return int(item.get("price", 0))
+		"score":
+			return _shop_furniture_score(item)
+		"comfort", "entertainment", "hygiene", "food":
+			return int(item.get(sort_id, 0))
+		_:
+			return 0
+
+
+func _shop_furniture_score(item: Dictionary) -> int:
+	return int(item.get("comfort", 0)) + int(item.get("entertainment", 0)) + int(item.get("hygiene", 0)) + int(item.get("food", 0))
