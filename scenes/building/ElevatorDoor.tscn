@@ -49,12 +49,52 @@ animations = [{
 "loop": false,
 "name": &"default",
 "speed": 8.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_484lp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aa7he")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kk1a7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rq0vi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_we5uj")
+}],
+"loop": false,
+"name": &"open",
+"speed": 8.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_we5uj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rq0vi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kk1a7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aa7he")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_484lp")
+}],
+"loop": false,
+"name": &"close",
+"speed": 8.5
 }]
 
 [node name="ElevatorDoor" type="Node2D" unique_id=1765481851]
 z_index = 5
 script = ExtResource("1_traffic_door")
-open_frame = 2
+open_frame = 4
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=223276189]
 position = Vector2(0, 3)

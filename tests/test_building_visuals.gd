@@ -83,6 +83,11 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(building_view_source.contains("func get_service_exit_world_position"), "BuildingView should expose the 1F exit route anchor")
 	assert_true(building_view_source.contains("func get_service_elevator_world_position"), "BuildingView should expose elevator route anchors")
 	assert_true(building_view_source.contains("func get_tenant_entry_start_world_position"), "BuildingView should expose a visible entry route start for returning tenants")
+	assert_true(building_view_source.contains("func get_room_spawn_world_position"), "BuildingView should convert room-local tenant spawns into safe world anchors")
+	assert_true(building_view_source.contains("func resolve_route_start_world_position"), "BuildingView should resolve route tenant starts through a shared safe helper")
+	assert_true(building_view_source.contains("func _route_start_candidates"), "BuildingView should centralize route-start anchor priority in one helper")
+	assert_true(building_view_source.contains("func _first_valid_route_world_position"), "BuildingView should pick the first usable world-route anchor instead of trusting zero vectors")
+	assert_true(building_view_source.contains("func _is_valid_route_world_position"), "BuildingView should reject zero and non-finite route anchors")
 	assert_true(building_view_source.contains("func get_left_offscreen_route_mark_world_position"), "BuildingView should expose a shared offscreen route mark")
 	assert_true(building_view_source.contains("world_camera.position.x - _visible_world_size().x * 0.5"), "Offscreen route mark should use the current visible screen left edge")
 	assert_false(building_view_source.contains("left_offscreen_marker.global_position ="), "BuildingView should not persist runtime offscreen mark coordinates into the scene")
@@ -92,7 +97,14 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(building_view_source.contains("_queue_free_other_tenant_views"), "BuildingView should remove duplicate tenant views for the same tenant_id")
 	assert_true(building_view_source.contains("ensure_home_tenant_view"), "BuildingView should return HOME tenants to their room visual layer")
 	assert_false(building_view_source.contains("func _ensure_world_tenants"), "BuildingView should not keep a separate world-only tenant spawner")
+	assert_true(building_view_source.contains("_snap_route_tenant_to_safe_world_position"), "BuildingView should repair reused route tenants that have already fallen onto an invalid world position")
+	assert_true(building_view_source.contains("var room_layer := get_room_visual_layer(room_id)"), "Leaving tenants should check the target room visual layer before rebuilding a route view")
+	assert_false(building_view_source.contains("_move_tenant_to_world_layer(tenant_view)\n\t\t_snap_route_tenant_to_safe_world_position(tenant_view, room_id, GameState.TENANT_PRESENCE_LEAVING)"), "Leaving tenants should not be promoted to the world layer before TenantAI finishes the in-room exit segment")
+	assert_true(building_view_source.contains("var route_start := resolve_route_start_world_position(room_id, presence)"), "BuildingView should resolve route-tenant spawn positions through the shared safe helper")
+	assert_true(building_view_source.contains("tenant_view.visible = false\n\ttenant_view.position = route_start"), "Route tenants should stay hidden until their safe world position is assigned")
 	assert_true(building_view_source.contains("tenant_view.position = route_start"), "BuildingView should place route tenants at the visible route start before setup")
+	assert_true(building_view_source.contains("tenant_view.ai_position_initialized = true"), "New route tenants should mark their safe world start before TenantAI resumes presence-specific state")
+	assert_true(building_view_source.contains("tenant_world_layer.add_child(tenant_view)\n\ttenant_view.visible = presence != GameState.TENANT_PRESENCE_AWAY"), "Route tenants should only be shown after entering the world layer at their resolved route start")
 	assert_true(traffic_source.contains("func play_open(duration_seconds"), "TrafficDoor should provide a duration-aware open animation hook")
 	assert_true(traffic_source.contains("func play_close(duration_seconds"), "TrafficDoor should provide a duration-aware close animation hook")
 	assert_true(traffic_source.contains("func set_open()"), "TrafficDoor should expose a final open-frame setter for route cleanup")
@@ -114,7 +126,7 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_true(ai_source.contains("await _wait_seconds(duration * show_progress)\n\tif tenant != null:"), "Target elevator flow should wait until configured open progress")
 	assert_true(ai_source.contains("tenant.position = elevator_position"), "Target elevator flow should place tenants at the elevator before showing them")
 	assert_true(ai_source.contains("tenant.visible = true\n\t\t_play_route_idle()"), "Target elevator flow should show tenants before the open animation fully finishes")
-	assert_true(ai_source.contains("await _move_to_position(_route_step_position(elevator_position, direction))\n\tawait _play_elevator_door(view, floor_index, false)"), "Target elevator flow should let the tenant leave before closing")
+	assert_true(ai_source.contains("if not await _move_to_position(_route_step_position(elevator_position, direction), \"leave elevator at floor %d\" % floor_index):\n\t\treturn\n\tawait _play_elevator_door(view, floor_index, false)"), "Target elevator flow should let the tenant leave through a guarded route step before closing")
 	assert_eq(float(ai_config.get("door_animation_seconds", 0.0)), 0.24, "Room and exit doors should open and close slowly enough to read")
 	assert_eq(float(ai_config.get("door_open_idle_seconds", 0.0)), 0.12, "Room and exit doors should hold a short open idle beat")
 	assert_eq(float(ai_config.get("elevator_animation_seconds", 0.0)), 0.56, "Five-frame elevators should play near their natural animation timing")
@@ -124,6 +136,9 @@ func test_building_traffic_scenes_support_short_away_routes() -> void:
 	assert_false(room_door_scene.contains("\"speed\": 1.0"), "Room door should animate quickly enough before tenants walk through")
 	assert_false(exit_door_scene.contains("\"speed\": 1.0"), "Exit door should animate quickly enough before tenants walk through")
 	assert_false(elevator_door_scene.contains("\"speed\": 3.0"), "Elevator door should animate quickly enough for route timing")
+	assert_true(elevator_door_scene.contains("\"name\": &\"open\""), "Elevator door should expose the open animation used by TrafficDoor")
+	assert_true(elevator_door_scene.contains("\"name\": &\"close\""), "Elevator door should expose the close animation used by TrafficDoor")
+	assert_true(elevator_door_scene.contains("open_frame = 4"), "Elevator door final open state should use the fully open fifth frame")
 	for floor in floors:
 		var floor_data: Dictionary = floor
 		if int(floor_data.get("floor_index", 0)) <= 1:
@@ -157,6 +172,7 @@ func test_building_outer_wall_edges_follow_floor_rules() -> void:
 
 func test_building_view_uses_backgrounds_atlas_for_scene_backdrop() -> void:
 	var building_scene := FileAccess.get_file_as_string("res://scenes/building/BuildingView.tscn")
+	var building_view_source := FileAccess.get_file_as_string("res://scripts/building/BuildingView.gd")
 	var backdrop_scene := FileAccess.get_file_as_string("res://scenes/building/SceneBackdrop.tscn")
 	var backdrop_source := FileAccess.get_file_as_string("res://scripts/building/SceneBackdrop.gd")
 	var tileset_source := FileAccess.get_file_as_string("res://tilesets/background_tileset.tres")
@@ -178,6 +194,14 @@ func test_building_view_uses_backgrounds_atlas_for_scene_backdrop() -> void:
 	assert_true(backdrop_scene.contains("Cloud_01"), "Cloud sprites should be editor-authored children, not generated by SceneBackdrop")
 	assert_true(backdrop_scene.contains("repeat_size = Vector2(360, 0)"), "Cloud parallax should repeat horizontally on the 360px design canvas")
 	assert_true(backdrop_scene.contains("scale = Vector2(1.5, 1.5)"), "Cloud scale should be authored in the scene for the 360x640 design canvas")
+	assert_true(backdrop_scene.contains("metadata/ground_offset_tiles = 1"), "Backdrop ground should be authored one 16px tile lower")
+	assert_true(backdrop_scene.contains("[node name=\"Tiles\" type=\"Node2D\" parent=\".\""), "SceneBackdrop should keep all tile layers grouped under Tiles")
+	assert_true(backdrop_scene.contains("position = Vector2(0, 16)"), "Backdrop tile layers should be shifted down by exactly one tile together")
+	assert_true(backdrop_source.contains("ground_offset_pixels"), "SceneBackdrop should expose the authored ground offset to BuildingView")
+	assert_true(building_view_source.contains("BUILDING_VERTICAL_OFFSET_TILES"), "BuildingView should keep the apartment one tile lower in world layout")
+	assert_true(building_view_source.contains("DEFAULT_MAP_SIZE.y + vertical_offset"), "World height should reserve the lowered ground tile")
+	assert_true(building_view_source.contains("+ NORMAL_TOP_MIN + vertical_offset"), "Tall-building camera bounds should include the one-tile vertical offset")
+	assert_true(building_view_source.contains("scene_backdrop.ground_offset_pixels"), "Apartment offset should stay aligned with the backdrop ground offset")
 	for node_name in ["WorldClip", "WorldViewport", "WorldRoot", "SceneBackdrop", "ApartmentBuilding", "WorldCamera"]:
 		assert_true(building_scene.contains("name=\"%s\"" % node_name), "BuildingView should expose %s in the editable scene tree" % node_name)
 	for node_name in ["SkySprite", "Tiles", "MountainTileMap", "BackgroundBuildingTileMap", "TreeTileMap", "GroundTileMap", "CloudParallax"]:

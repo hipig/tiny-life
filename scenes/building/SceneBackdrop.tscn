@@ -9,6 +9,7 @@ script = ExtResource("1_backdrop")
 
 [node name="SceneConfig" type="Node" parent="."]
 metadata/ground_rows = 3
+metadata/ground_offset_tiles = 1
 
 [node name="SkySprite" type="Sprite2D" parent="." unique_id=1070850058]
 z_index = -70
@@ -19,6 +20,7 @@ region_enabled = true
 region_rect = Rect2(0, 0, 16, 112)
 
 [node name="Tiles" type="Node2D" parent="." unique_id=1435295012]
+position = Vector2(0, 16)
 
 [node name="MountainTileMap" type="TileMapLayer" parent="Tiles" unique_id=1961708682]
 z_index = -50

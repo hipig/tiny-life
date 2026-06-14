@@ -15,6 +15,7 @@ const FOCUS_ATTEMPTS: int = 3
 const NORMAL_TOP_MIN: float = 44.0
 const DEFAULT_GROUND_BAND_HEIGHT: float = 48.0
 const BUILDING_GROUND_OVERLAP: float = 4.0
+const BUILDING_VERTICAL_OFFSET_TILES: int = 1
 const FOCUS_SCREEN_ANCHOR: Vector2 = Vector2(0.5, 0.58)
 const TOUCH_PINCH_MIN_DISTANCE: float = 8.0
 
@@ -161,6 +162,14 @@ func get_room_spawn_local_position(room_id: String) -> Vector2:
 		return room_node.call("get_room_spawn_local_position")
 	return Vector2.ZERO
 
+func get_room_spawn_world_position(room_id: String) -> Vector2:
+	var room_node := find_room_node(room_id)
+	if room_node != null and room_node.has_method("get_room_spawn_local_position"):
+		var room_spawn_local: Variant = room_node.call("get_room_spawn_local_position")
+		if room_spawn_local is Vector2:
+			return room_node.get_global_transform() * room_spawn_local
+	return Vector2.ZERO
+
 func get_floor_service_core(floor_index: int) -> FloorServiceCore:
 	if building_root == null:
 		return null
@@ -200,23 +209,14 @@ func get_offscreen_left_world_position(y: float) -> Vector2:
 	return get_left_offscreen_route_mark_world_position(y)
 
 func get_tenant_entry_start_world_position(target_room_id: String) -> Vector2:
-	var exit_position := get_service_exit_world_position()
-	if exit_position != Vector2.ZERO:
-		return exit_position
-	var room: Dictionary = GameState.rooms.get(target_room_id, {})
-	var floor_index := int(room.get("floor_index", 1))
-	if floor_index > 1:
-		var entry_elevator_position := get_service_elevator_world_position(1)
-		if entry_elevator_position != Vector2.ZERO:
-			return entry_elevator_position
-	var room_door_position := get_room_door_world_position(target_room_id)
-	if room_door_position != Vector2.ZERO:
-		return room_door_position
-	if floor_index > 1:
-		var target_elevator_position := get_service_elevator_world_position(floor_index)
-		if target_elevator_position != Vector2.ZERO:
-			return target_elevator_position
-	return Vector2.ZERO
+	return resolve_route_start_world_position(target_room_id, GameState.TENANT_PRESENCE_RETURNING)
+
+func resolve_route_start_world_position(room_id: String, presence: String) -> Vector2:
+	var safe_position := _first_valid_route_world_position(_route_start_candidates(room_id, presence))
+	if _is_valid_route_world_position(safe_position):
+		return safe_position
+	var fallback_y := _route_fallback_y(room_id)
+	return get_offscreen_left_world_position(fallback_y)
 
 func get_left_offscreen_route_mark_world_position(y: float) -> Vector2:
 	var marker_position := Vector2(_visible_world_left() - _tenant_route_offscreen_margin(), y)
@@ -380,8 +380,12 @@ func _ensure_home_tenant_view(tenant_id: String, room_id: String, candidates: Ar
 
 func _ensure_leaving_tenant_view(tenant_id: String, room_id: String, candidates: Array) -> void:
 	var tenant_view := _select_tenant_view_in_parent(candidates, tenant_world_layer)
-	if tenant_view == null:
-		tenant_view = _select_existing_tenant_view(candidates)
+	if tenant_view != null:
+		_snap_route_tenant_to_safe_world_position(tenant_view, room_id, GameState.TENANT_PRESENCE_LEAVING)
+		_queue_free_other_tenant_views(candidates, tenant_view)
+		return
+	var room_layer := get_room_visual_layer(room_id)
+	tenant_view = _select_tenant_view_in_parent(candidates, room_layer)
 	if tenant_view == null:
 		tenant_view = _create_route_tenant_view(tenant_id, room_id, GameState.TENANT_PRESENCE_LEAVING)
 	_queue_free_other_tenant_views(candidates, tenant_view)
@@ -394,6 +398,7 @@ func _ensure_route_tenant_view(tenant_id: String, room_id: String, presence: Str
 		tenant_view = _create_route_tenant_view(tenant_id, room_id, presence)
 	else:
 		_move_tenant_to_world_layer(tenant_view)
+		_snap_route_tenant_to_safe_world_position(tenant_view, room_id, presence)
 	_queue_free_other_tenant_views(candidates, tenant_view)
 
 func _create_route_tenant_view(tenant_id: String, room_id: String, presence: String) -> Tenant:
@@ -401,19 +406,65 @@ func _create_route_tenant_view(tenant_id: String, room_id: String, presence: Str
 	if tenant_view == null:
 		return null
 	tenant_view.name = "Tenant_%s" % tenant_id
-	tenant_world_layer.add_child(tenant_view)
-	var route_start := _route_start_for_tenant(room_id)
+	var route_start := resolve_route_start_world_position(room_id, presence)
+	tenant_view.visible = false
 	tenant_view.position = route_start
+	tenant_view.ai_position_initialized = true
+	tenant_world_layer.add_child(tenant_view)
 	tenant_view.visible = presence != GameState.TENANT_PRESENCE_AWAY
 	tenant_view.setup(tenant_id, room_id)
 	return tenant_view
 
-func _route_start_for_tenant(room_id: String) -> Vector2:
-	var route_start := get_tenant_entry_start_world_position(room_id)
-	if route_start == Vector2.ZERO:
-		var room_door_position := get_room_door_world_position(room_id)
-		route_start = get_offscreen_left_world_position(room_door_position.y)
-	return route_start
+func _snap_route_tenant_to_safe_world_position(tenant_view: Tenant, room_id: String, presence: String) -> void:
+	if not _tenant_view_is_available(tenant_view) or _is_valid_route_world_position(tenant_view.global_position):
+		return
+	tenant_view.global_position = resolve_route_start_world_position(room_id, presence)
+	tenant_view.ai_position_initialized = true
+
+func _route_start_candidates(room_id: String, presence: String) -> Array:
+	var floor_index := _room_floor_index(room_id)
+	var candidates: Array = []
+	match presence:
+		GameState.TENANT_PRESENCE_LEAVING:
+			if floor_index > 1:
+				candidates.append(get_service_elevator_world_position(floor_index))
+			candidates.append(get_room_door_world_position(room_id))
+			candidates.append(get_room_spawn_world_position(room_id))
+			candidates.append(get_service_exit_world_position())
+		GameState.TENANT_PRESENCE_AWAY, GameState.TENANT_PRESENCE_RETURNING:
+			candidates.append(get_service_exit_world_position())
+			if floor_index > 1:
+				candidates.append(get_service_elevator_world_position(1))
+			candidates.append(get_room_door_world_position(room_id))
+			candidates.append(get_room_spawn_world_position(room_id))
+		_:
+			candidates.append(get_room_spawn_world_position(room_id))
+			candidates.append(get_room_door_world_position(room_id))
+	return candidates
+
+func _route_fallback_y(room_id: String) -> float:
+	var safe_reference := _first_valid_route_world_position([
+		get_room_spawn_world_position(room_id),
+		get_room_door_world_position(room_id),
+		get_service_exit_world_position(),
+		get_service_elevator_world_position(_room_floor_index(room_id))
+	])
+	if _is_valid_route_world_position(safe_reference):
+		return safe_reference.y
+	return _default_camera_position().y
+
+func _first_valid_route_world_position(candidates: Array) -> Vector2:
+	for candidate in candidates:
+		if candidate is Vector2 and _is_valid_route_world_position(candidate):
+			return candidate
+	return Vector2.INF
+
+func _room_floor_index(room_id: String) -> int:
+	var room: Dictionary = GameState.rooms.get(room_id, {})
+	return maxi(1, int(room.get("floor_index", 1)))
+
+func _is_valid_route_world_position(position: Vector2) -> bool:
+	return is_finite(position.x) and is_finite(position.y) and not position.is_equal_approx(Vector2.ZERO)
 
 func _tenant_views_by_id() -> Dictionary:
 	var result := {}
@@ -656,7 +707,8 @@ func _world_to_viewport(world_position: Vector2) -> Vector2:
 
 func _default_camera_position() -> Vector2:
 	var visible_size: Vector2 = _visible_world_size()
-	return _clamped_camera_position(Vector2(world_base_size.x * 0.5, world_base_size.y - visible_size.y * 0.5))
+	var default_bottom := world_base_size.y - _building_vertical_offset_pixels()
+	return _clamped_camera_position(Vector2(world_base_size.x * 0.5, default_bottom - visible_size.y * 0.5))
 
 func _apply_camera_limits() -> void:
 	world_camera.limit_left = int(floor(camera_bounds.position.x))
@@ -710,12 +762,18 @@ func _ground_band_height() -> float:
 		return DEFAULT_GROUND_BAND_HEIGHT
 	return maxf(1.0, scene_backdrop.ground_band_height)
 
+func _building_vertical_offset_pixels() -> float:
+	if scene_backdrop != null:
+		return scene_backdrop.ground_offset_pixels
+	return float(BUILDING_VERTICAL_OFFSET_TILES * ApartmentTileMap.TILE_SIZE)
+
 func _world_size_for_content(building_world_size: Vector2) -> Vector2:
 	var viewport_size := _viewport_size()
+	var vertical_offset := _building_vertical_offset_pixels()
 	var required_width := maxf(DEFAULT_MAP_SIZE.x, viewport_size.x)
-	var required_height := maxf(DEFAULT_MAP_SIZE.y, viewport_size.y)
+	var required_height := maxf(DEFAULT_MAP_SIZE.y + vertical_offset, viewport_size.y)
 	required_width = maxf(required_width, building_world_size.x + 48.0)
-	required_height = maxf(required_height, building_world_size.y + _ground_band_height() + NORMAL_TOP_MIN)
+	required_height = maxf(required_height, building_world_size.y + _ground_band_height() + NORMAL_TOP_MIN + vertical_offset)
 	return Vector2(required_width, required_height)
 
 func _contains_screen_position(screen_position: Vector2) -> bool:
