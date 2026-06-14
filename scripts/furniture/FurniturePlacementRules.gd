@@ -7,9 +7,11 @@ const LAYER_WALL := "wall"
 const TILE_SIZE := 16
 const HORIZONTAL_SUBDIVISIONS := 2
 const DEFAULT_ORIENTATION := "default"
+const ROTATED_ORIENTATION := "rotated"
+const ORIENTATION_MODE_ROTATABLE := "rotatable"
 const ANCHOR_EPSILON := 0.01
 
-static func can_place_furniture(room_id: String, furniture_id: String, anchor_pos: Array, ignored_instance_id := "") -> bool:
+static func can_place_furniture(room_id: String, furniture_id: String, anchor_pos: Array, ignored_instance_id := "", orientation := DEFAULT_ORIENTATION) -> bool:
 	var game_state := _game_state()
 	var config_manager := _config_manager()
 	if game_state == null or config_manager == null:
@@ -24,7 +26,8 @@ static func can_place_furniture(room_id: String, furniture_id: String, anchor_po
 		func(other_furniture_id: String) -> Dictionary:
 			return config_manager.call("get_furniture_data", other_furniture_id),
 		anchor_pos,
-		ignored_instance_id
+		ignored_instance_id,
+		orientation
 	)
 
 static func can_place_furniture_in_room(
@@ -33,17 +36,18 @@ static func can_place_furniture_in_room(
 	furniture_data: Dictionary,
 	furniture_lookup: Callable,
 	anchor_pos: Array,
-	ignored_instance_id := ""
+	ignored_instance_id := "",
+	orientation := DEFAULT_ORIENTATION
 ) -> bool:
 	if anchor_pos.size() < 2:
 		return false
 	var layer := placement_layer_for(furniture_data)
 	var rect := placement_rect_for_layer(room, layer)
-	var visual_size := visual_size_for(room, furniture_data)
-	var normalized_anchor := normalized_anchor_for(room, furniture_data, anchor_pos)
+	var footprint_size := footprint_pixel_size_for(room, furniture_data, orientation)
+	var normalized_anchor := normalized_anchor_for(room, furniture_data, anchor_pos, orientation)
 	if not _anchors_equal(anchor_pos, normalized_anchor):
 		return false
-	var bounds := bounds_rect_for_anchor(room, furniture_data, anchor_pos, visual_size)
+	var bounds := bounds_rect_for_anchor(room, furniture_data, anchor_pos, footprint_size, orientation)
 	if bounds.size.x <= 0.0 or bounds.size.y <= 0.0:
 		return false
 	if not _rect_contains_rect(rect, bounds):
@@ -59,13 +63,14 @@ static func can_place_furniture_in_room(
 		var other_anchor: Array = instance_data.get("anchor_pos", [])
 		if other_anchor.size() < 2:
 			continue
-		var other_size := visual_size_for(room, other_data)
-		var other_bounds := bounds_rect_for_anchor(room, other_data, other_anchor, other_size)
+		var other_orientation := str(instance_data.get("orientation", DEFAULT_ORIENTATION))
+		var other_size := footprint_pixel_size_for(room, other_data, other_orientation)
+		var other_bounds := bounds_rect_for_anchor(room, other_data, other_anchor, other_size, other_orientation)
 		if bounds.intersects(other_bounds):
 			return false
 	return true
 
-static func find_first_valid_anchor(room_id: String, furniture_id: String, ignored_instance_id := "") -> Array:
+static func find_first_valid_anchor(room_id: String, furniture_id: String, ignored_instance_id := "", orientation := DEFAULT_ORIENTATION) -> Array:
 	var game_state := _game_state()
 	var config_manager := _config_manager()
 	if game_state == null or config_manager == null:
@@ -79,7 +84,8 @@ static func find_first_valid_anchor(room_id: String, furniture_id: String, ignor
 		data,
 		func(other_furniture_id: String) -> Dictionary:
 			return config_manager.call("get_furniture_data", other_furniture_id),
-		ignored_instance_id
+		ignored_instance_id,
+		orientation
 	)
 
 static func find_first_valid_anchor_in_room(
@@ -87,63 +93,64 @@ static func find_first_valid_anchor_in_room(
 	furniture_id: String,
 	furniture_data: Dictionary,
 	furniture_lookup: Callable,
-	ignored_instance_id := ""
+	ignored_instance_id := "",
+	orientation := DEFAULT_ORIENTATION
 ) -> Array:
 	var layer := placement_layer_for(furniture_data)
 	var rect := placement_rect_for_layer(room, layer)
-	var visual_size := visual_size_for(room, furniture_data)
+	var footprint_size := footprint_pixel_size_for(room, furniture_data, orientation)
 	var anchor := [0.0, 0.0]
 	if layer == LAYER_FLOOR:
 		anchor = [
-			roundf(rect.position.x + maxf(0.0, (rect.size.x - visual_size.x) * 0.5)),
+			roundf(rect.position.x + maxf(0.0, (rect.size.x - footprint_size.x) * 0.5)),
 			floor_baseline_y(room)
 		]
 	else:
 		anchor = [
-			roundf(rect.position.x + maxf(0.0, (rect.size.x - visual_size.x) * 0.5)),
-			roundf(rect.position.y + maxf(0.0, (rect.size.y - visual_size.y) * 0.5))
+			roundf(rect.position.x + maxf(0.0, (rect.size.x - footprint_size.x) * 0.5)),
+			roundf(rect.position.y + maxf(0.0, (rect.size.y - footprint_size.y) * 0.5))
 		]
-	anchor = normalized_anchor_for(room, furniture_data, anchor)
-	if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, anchor, ignored_instance_id):
+	anchor = normalized_anchor_for(room, furniture_data, anchor, orientation)
+	if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, anchor, ignored_instance_id, orientation):
 		return anchor
 
 	var step := 1.0
 	var min_x := rect.position.x
-	var max_x := rect.end.x - visual_size.x
+	var max_x := rect.end.x - footprint_size.x
 	var min_y := rect.position.y
-	var max_y := rect.end.y - visual_size.y
+	var max_y := rect.end.y - footprint_size.y
 	if layer == LAYER_FLOOR:
 		for x_index in range(maxi(1, int(ceil(maxf(0.0, max_x - min_x) / step)) + 1)):
-			var candidate := normalized_anchor_for(room, furniture_data, [roundf(min_x + float(x_index) * step), floor_baseline_y(room)])
-			if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, candidate, ignored_instance_id):
+			var candidate := normalized_anchor_for(room, furniture_data, [roundf(min_x + float(x_index) * step), floor_baseline_y(room)], orientation)
+			if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, candidate, ignored_instance_id, orientation):
 				return candidate
 	else:
 		for y_index in range(maxi(1, int(ceil(maxf(0.0, max_y - min_y) / step)) + 1)):
 			for x_index in range(maxi(1, int(ceil(maxf(0.0, max_x - min_x) / step)) + 1)):
-				var candidate := normalized_anchor_for(room, furniture_data, [roundf(min_x + float(x_index) * step), roundf(min_y + float(y_index) * step)])
-				if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, candidate, ignored_instance_id):
+				var candidate := normalized_anchor_for(room, furniture_data, [roundf(min_x + float(x_index) * step), roundf(min_y + float(y_index) * step)], orientation)
+				if can_place_furniture_in_room(room, furniture_id, furniture_data, furniture_lookup, candidate, ignored_instance_id, orientation):
 					return candidate
-	return normalized_anchor_for(room, furniture_data, anchor)
+	return normalized_anchor_for(room, furniture_data, anchor, orientation)
 
-static func normalized_anchor_for(room: Dictionary, furniture_data: Dictionary, anchor_pos: Array) -> Array:
+static func normalized_anchor_for(room: Dictionary, furniture_data: Dictionary, anchor_pos: Array, orientation := DEFAULT_ORIENTATION) -> Array:
 	var layer := placement_layer_for(furniture_data)
 	var rect := placement_rect_for_layer(room, layer)
-	var visual_size := visual_size_for(room, furniture_data)
+	var footprint_size := footprint_pixel_size_for(room, furniture_data, orientation)
 	var x := roundf(float(anchor_pos[0]) if anchor_pos.size() >= 1 else rect.position.x)
 	var y := roundf(float(anchor_pos[1]) if anchor_pos.size() >= 2 else rect.position.y)
-	var max_x := floorf(maxf(rect.position.x, rect.end.x - visual_size.x))
+	var max_x := floorf(maxf(rect.position.x, rect.end.x - footprint_size.x))
 	x = clampf(x, rect.position.x, max_x)
 	if layer == LAYER_FLOOR:
 		y = floor_baseline_y(room)
 	else:
-		var max_y := floorf(maxf(rect.position.y, rect.end.y - visual_size.y))
+		var max_y := floorf(maxf(rect.position.y, rect.end.y - footprint_size.y))
 		y = clampf(y, rect.position.y, max_y)
 	return [x, y]
 
-static func bounds_rect_for_anchor(room: Dictionary, furniture_data: Dictionary, anchor_pos: Array, visual_size := Vector2.ZERO) -> Rect2:
-	var size := visual_size
+static func bounds_rect_for_anchor(room: Dictionary, furniture_data: Dictionary, anchor_pos: Array, placement_size := Vector2.ZERO, orientation := DEFAULT_ORIENTATION) -> Rect2:
+	var size := placement_size
 	if size == Vector2.ZERO:
-		size = visual_size_for(room, furniture_data)
+		size = footprint_pixel_size_for(room, furniture_data, orientation)
 	var layer := placement_layer_for(furniture_data)
 	var anchor := Vector2(
 		float(anchor_pos[0]) if anchor_pos.size() >= 1 else 0.0,
@@ -153,9 +160,10 @@ static func bounds_rect_for_anchor(room: Dictionary, furniture_data: Dictionary,
 		return Rect2(Vector2(anchor.x, anchor.y - size.y), size)
 	return Rect2(anchor, size)
 
-static func visual_size_for(room: Dictionary, furniture_data: Dictionary) -> Vector2:
-	var asset_size := _asset_region_size(furniture_data.get("asset", {}))
-	var visual_grid: Array = furniture_data.get("size", [1, 1])
+static func visual_size_for(room: Dictionary, furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> Vector2:
+	var orientation_data := orientation_data_for(furniture_data, orientation)
+	var asset_size := _asset_region_size(orientation_data.get("asset", {}))
+	var visual_grid: Array = orientation_data.get("size", [1, 1])
 	var layer := placement_layer_for(furniture_data)
 	var rect := placement_rect_for_layer(room, layer)
 	var layer_grid := visual_grid_size_for_layer(room, layer)
@@ -173,6 +181,18 @@ static func visual_size_for(room: Dictionary, furniture_data: Dictionary) -> Vec
 	return Vector2(
 		roundf(maxf(12.0, asset_size.x * scale)),
 		roundf(maxf(10.0, asset_size.y * scale))
+	)
+
+static func footprint_pixel_size_for(room: Dictionary, furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> Vector2:
+	var footprint := footprint_for_orientation(furniture_data, orientation)
+	var layer := placement_layer_for(furniture_data)
+	var rect := placement_rect_for_layer(room, layer)
+	var grid := grid_size_for_layer(room, layer)
+	var cell_x := rect.size.x / maxf(1.0, float(grid[0]) if grid.size() >= 1 else 1.0)
+	var cell_y := rect.size.y / maxf(1.0, float(grid[1]) if grid.size() >= 2 else 1.0)
+	return Vector2(
+		roundf(maxf(1.0, float(footprint[0]) * cell_x)),
+		roundf(maxf(1.0, float(footprint[1]) * cell_y))
 	)
 
 static func placement_rect_for_layer(room: Dictionary, layer: String) -> Rect2:
@@ -217,12 +237,39 @@ static func floor_grid_y_for(grid_size: Array, furniture_size: Array) -> int:
 	return maxi(0, int(grid_size[1]) - maxi(1, int(furniture_size[1])))
 
 static func footprint_for_orientation(furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> Array:
-	var footprint: Array = furniture_data["footprint"]
-	match str(orientation):
-		DEFAULT_ORIENTATION:
-			return [maxi(1, int(footprint[0])), maxi(1, int(footprint[1]))]
-		_:
-			return [maxi(1, int(footprint[0])), maxi(1, int(footprint[1]))]
+	var footprint: Array = orientation_data_for(furniture_data, orientation)["footprint"]
+	return [maxi(1, int(footprint[0])), maxi(1, int(footprint[1]))]
+
+static func orientation_data_for(furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> Dictionary:
+	var orientations: Dictionary = furniture_data.get("orientations", {})
+	var selected := orientation.strip_edges()
+	if selected.is_empty():
+		selected = str(furniture_data.get("default_orientation", DEFAULT_ORIENTATION))
+	if not orientations.has(selected):
+		selected = str(furniture_data.get("default_orientation", DEFAULT_ORIENTATION))
+	if orientations.has(selected):
+		var data: Variant = orientations[selected]
+		if data is Dictionary:
+			return data
+	push_error("Furniture '%s' is missing orientation '%s'." % [str(furniture_data.get("id", "")), orientation])
+	return {}
+
+static func orientation_asset_for(furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> Dictionary:
+	return orientation_data_for(furniture_data, orientation).get("asset", {})
+
+static func orientation_rotation_degrees_for(furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> float:
+	return float(orientation_data_for(furniture_data, orientation).get("rotation_degrees", 0.0))
+
+static func default_orientation_for(furniture_data: Dictionary) -> String:
+	return str(furniture_data.get("default_orientation", DEFAULT_ORIENTATION)).strip_edges()
+
+static func can_rotate(furniture_data: Dictionary) -> bool:
+	return str(furniture_data.get("orientation_mode", "")).strip_edges() == ORIENTATION_MODE_ROTATABLE
+
+static func next_orientation_for(furniture_data: Dictionary, orientation := DEFAULT_ORIENTATION) -> String:
+	if not can_rotate(furniture_data):
+		return default_orientation_for(furniture_data)
+	return DEFAULT_ORIENTATION if orientation == ROTATED_ORIENTATION else ROTATED_ORIENTATION
 
 static func door_cells_for_layer(room: Dictionary, layer: String) -> Array:
 	return []

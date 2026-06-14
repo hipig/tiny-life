@@ -33,7 +33,8 @@ static func furniture_use_position(room: Dictionary, furniture_instance: Diction
 	var anchor_pos: Array = furniture_instance.get("anchor_pos", [])
 	if anchor_pos.size() < 2:
 		return spawn_position(room)
-	var bounds := FurniturePlacementRules.bounds_rect_for_anchor(room, furniture_data, anchor_pos)
+	var orientation := str(furniture_instance.get("orientation", FurniturePlacementRules.DEFAULT_ORIENTATION))
+	var bounds := FurniturePlacementRules.bounds_rect_for_anchor(room, furniture_data, anchor_pos, Vector2.ZERO, orientation)
 	if bounds.size.x <= 0.0:
 		return spawn_position(room)
 	return floor_position_at_x(room, bounds.position.x + bounds.size.x * 0.5)

@@ -1,8 +1,8 @@
 class_name PlacementOverlay
 extends Control
 
-signal new_placement_confirmed(room_id: String, furniture_id: String, anchor_pos: Array)
-signal move_confirmed(room_id: String, instance_id: String, anchor_pos: Array)
+signal new_placement_confirmed(room_id: String, furniture_id: String, anchor_pos: Array, orientation: String)
+signal move_confirmed(room_id: String, instance_id: String, anchor_pos: Array, orientation: String)
 signal cancelled(room_id: String)
 signal recycle_requested(room_id: String, instance_id: String)
 
@@ -21,6 +21,7 @@ var room_id := ""
 var furniture_id := ""
 var instance_id := ""
 var anchor_pos: Array = [0.0, 0.0]
+var orientation := FurniturePlacementRules.DEFAULT_ORIENTATION
 var is_move := false
 var target_room: Button
 var preview: FurniturePreview
@@ -42,8 +43,9 @@ func open_new(target_room_id: String, target_furniture_id: String) -> void:
 	furniture_id = target_furniture_id
 	instance_id = ""
 	is_move = false
+	orientation = FurniturePlacementRules.default_orientation_for(ConfigManager.get_furniture_data(furniture_id))
 	_attach_to_room()
-	anchor_pos = FurniturePlacementRules.find_first_valid_anchor(room_id, furniture_id, instance_id)
+	anchor_pos = FurniturePlacementRules.find_first_valid_anchor(room_id, furniture_id, instance_id, orientation)
 	_refresh()
 
 func open_move(target_room_id: String, target_instance_id: String) -> void:
@@ -55,6 +57,7 @@ func open_move(target_room_id: String, target_instance_id: String) -> void:
 		if str(instance_data.get("instance_id", "")) == instance_id:
 			furniture_id = str(instance_data.get("furniture_id", ""))
 			anchor_pos = instance_data.get("anchor_pos", [0.0, 0.0])
+			orientation = str(instance_data.get("orientation", FurniturePlacementRules.default_orientation_for(ConfigManager.get_furniture_data(furniture_id))))
 			break
 	is_move = true
 	_attach_to_room()
@@ -185,6 +188,8 @@ func _build_controls() -> void:
 		floating_controls.confirmed.connect(_on_confirm_pressed)
 	if not floating_controls.cancelled.is_connected(_on_cancel_pressed):
 		floating_controls.cancelled.connect(_on_cancel_pressed)
+	if not floating_controls.rotated.is_connected(_on_rotate_pressed):
+		floating_controls.rotated.connect(_on_rotate_pressed)
 	if not floating_controls.recycled.is_connected(_on_recycle_pressed):
 		floating_controls.recycled.connect(_on_recycle_pressed)
 
@@ -202,7 +207,7 @@ func _attach_to_room() -> void:
 	if is_move and target_room.has_method("set_furniture_instance_hidden"):
 		target_room.call("set_furniture_instance_hidden", instance_id, true)
 	if target_room.has_method("show_placement_grid"):
-		target_room.call("show_placement_grid", true, furniture_id, anchor_pos, instance_id)
+		target_room.call("show_placement_grid", true, furniture_id, anchor_pos, instance_id, orientation)
 	if preview == null:
 		preview = FURNITURE_PREVIEW_SCENE.instantiate() as FurniturePreview
 		preview.name = "SceneFurniturePreview"
@@ -213,7 +218,7 @@ func _attach_to_room() -> void:
 func _refresh(snap_preview := true) -> void:
 	_bind_scene_text()
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
-	var valid := _anchor_pos_is_valid() and FurniturePlacementRules.can_place_furniture(room_id, furniture_id, anchor_pos, instance_id)
+	var valid := _anchor_pos_is_valid() and FurniturePlacementRules.can_place_furniture(room_id, furniture_id, anchor_pos, instance_id, orientation)
 	var title_prefix := move_title_prefix if is_move else place_title_prefix
 	var furniture_name := str(data["name"])
 	title_label.text = ("%s %s" % [title_prefix, furniture_name])
@@ -222,13 +227,14 @@ func _refresh(snap_preview := true) -> void:
 	if floating_controls != null:
 		floating_controls.set_confirm_enabled(valid)
 		floating_controls.set_recycle_visible(is_move)
+		floating_controls.set_rotate_visible(FurniturePlacementRules.can_rotate(data))
 	if target_room != null and target_room.has_method("show_placement_grid"):
-		target_room.call("show_placement_grid", true, furniture_id, anchor_pos, instance_id)
+		target_room.call("show_placement_grid", true, furniture_id, anchor_pos, instance_id, orientation)
 	if preview != null:
-		preview.setup(furniture_id, anchor_pos, valid)
+		preview.setup(furniture_id, anchor_pos, valid, orientation)
 		if snap_preview and _anchor_pos_is_valid() and target_room != null and target_room.has_method("get_preview_position"):
-			preview.position = target_room.call("get_preview_position", furniture_id, anchor_pos)
-			preview.custom_minimum_size = target_room.call("get_preview_size", furniture_id)
+			preview.position = target_room.call("get_preview_position", furniture_id, anchor_pos, orientation)
+			preview.custom_minimum_size = target_room.call("get_preview_size", furniture_id, orientation)
 			preview.size = preview.custom_minimum_size
 		_position_floating_controls()
 
@@ -261,7 +267,7 @@ func _select_anchor(viewport_position: Vector2) -> bool:
 	var world_position := _screen_to_room_world_position(viewport_position)
 	var next_anchor: Array = []
 	if target_room.has_method("world_position_to_placement_anchor"):
-		next_anchor = target_room.call("world_position_to_placement_anchor", world_position, furniture_id)
+		next_anchor = target_room.call("world_position_to_placement_anchor", world_position, furniture_id, orientation)
 	if next_anchor.is_empty():
 		anchor_pos = []
 		return false
@@ -279,12 +285,22 @@ func _position_preview_under_pointer(screen_position: Vector2) -> void:
 	preview.position = local_position - preview.size * 0.5
 
 func _on_confirm_pressed() -> void:
-	if not _anchor_pos_is_valid() or not FurniturePlacementRules.can_place_furniture(room_id, furniture_id, anchor_pos, instance_id):
+	if not _anchor_pos_is_valid() or not FurniturePlacementRules.can_place_furniture(room_id, furniture_id, anchor_pos, instance_id, orientation):
 		return
 	if is_move:
-		move_confirmed.emit(room_id, instance_id, anchor_pos)
+		move_confirmed.emit(room_id, instance_id, anchor_pos, orientation)
 	else:
-		new_placement_confirmed.emit(room_id, furniture_id, anchor_pos)
+		new_placement_confirmed.emit(room_id, furniture_id, anchor_pos, orientation)
+
+func _on_rotate_pressed() -> void:
+	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
+	orientation = FurniturePlacementRules.next_orientation_for(data, orientation)
+	if _anchor_pos_is_valid():
+		if target_room != null and target_room.has_method("normalize_placement_anchor"):
+			anchor_pos = target_room.call("normalize_placement_anchor", furniture_id, anchor_pos, orientation)
+		else:
+			anchor_pos = FurniturePlacementRules.normalized_anchor_for(GameState.get_room(room_id), data, anchor_pos, orientation)
+	_refresh()
 
 func _find_room_node() -> Button:
 	var building_view := _building_view()
@@ -387,7 +403,7 @@ func _format_name_template(template: String, value: String) -> String:
 
 func _clear_room_preview() -> void:
 	if target_room != null and target_room.has_method("show_placement_grid"):
-		target_room.call("show_placement_grid", false, furniture_id, anchor_pos, instance_id)
+		target_room.call("show_placement_grid", false, furniture_id, anchor_pos, instance_id, orientation)
 	if is_move and target_room != null and target_room.has_method("set_furniture_instance_hidden"):
 		target_room.call("set_furniture_instance_hidden", instance_id, false)
 	if is_instance_valid(preview):

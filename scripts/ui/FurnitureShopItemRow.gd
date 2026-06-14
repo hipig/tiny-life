@@ -15,7 +15,8 @@ var furniture_id := ""
 func setup(item: Dictionary, can_buy: bool) -> void:
 	_bind_scene_text()
 	furniture_id = str(item.get("id", ""))
-	AssetResolver.apply_asset_to_texture_rect(preview, item.get("asset", {}), Vector2i(48, 48))
+	var orientation := FurniturePlacementRules.default_orientation_for(item)
+	AssetResolver.apply_asset_to_texture_rect(preview, FurniturePlacementRules.orientation_asset_for(item, orientation), Vector2i(48, 48))
 	item_label.text = str(item.get("name", ""))
 	place_button.text = price_button_template % int(item.get("price", 0))
 	place_button.disabled = not can_buy

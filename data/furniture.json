@@ -5,28 +5,70 @@
 	"category": "床",
 	"price": 100,
 	"refund_rate": 0.5,
-	"size": [2, 2],
-	"footprint": [3, 2],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  2
+		],
+		"footprint": [
+		  3,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			0,
+			49,
+			28,
+			14
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  2,
+		  3
+		],
+		"footprint": [
+		  2,
+		  3
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			0,
+			49,
+			28,
+			14
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 20,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["bed", "simple"],
+	"tags": [
+	  "bed",
+      "simple"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [0, 49, 28, 14]
-	},
 	"interaction": {
-	  "need": "energy",
 	  "bubble": "Zzz",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "Zzz",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "sleep"
 	}
   },
   {
@@ -35,28 +77,70 @@
 	"category": "床",
 	"price": 360,
 	"refund_rate": 0.5,
-	"size": [2, 2],
-	"footprint": [3, 2],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  2
+		],
+		"footprint": [
+		  3,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			17,
+			30,
+			13
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  2,
+		  3
+		],
+		"footprint": [
+		  2,
+		  3
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			17,
+			30,
+			13
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 42,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["bed", "comfort"],
+	"tags": [
+	  "bed",
+      "comfort"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [384, 17, 30, 13]
-	},
 	"interaction": {
-	  "need": "energy",
 	  "bubble": "Zzz",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "Zzz",
-	  "satisfaction_delta": 5
+	  "satisfaction_delta": 5,
+	  "behavior": "sleep"
 	}
   },
   {
@@ -65,28 +149,70 @@
 	"category": "桌椅",
 	"price": 120,
 	"refund_rate": 0.5,
-	"size": [2, 1],
-	"footprint": [3, 1],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  1
+		],
+		"footprint": [
+		  3,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			87,
+			48,
+			8
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			87,
+			48,
+			8
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 5,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["desk", "study"],
+	"tags": [
+	  "desk",
+      "study"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [384, 87, 48, 8]
-	},
 	"interaction": {
-	  "need": "study",
 	  "bubble": "书",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "书",
-	  "satisfaction_delta": 2
+	  "satisfaction_delta": 2,
+	  "behavior": "study"
 	}
   },
   {
@@ -95,28 +221,71 @@
 	"category": "桌椅",
 	"price": 420,
 	"refund_rate": 0.5,
-	"size": [2, 1],
-	"footprint": [3, 1],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  1
+		],
+		"footprint": [
+		  3,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			119,
+			44,
+			8
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			119,
+			44,
+			8
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 8,
 	"entertainment": 16,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["desk", "computer", "study"],
+	"tags": [
+	  "desk",
+	  "computer",
+      "study"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [384, 119, 44, 8]
-	},
 	"interaction": {
-	  "need": "study",
 	  "bubble": "电脑",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "电脑",
-	  "satisfaction_delta": 4
+	  "satisfaction_delta": 4,
+	  "behavior": "study"
 	}
   },
   {
@@ -125,22 +294,50 @@
 	"category": "桌椅",
 	"price": 60,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			274,
+			80,
+			12,
+			14
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 8,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["chair", "simple"],
-	"interactive": false,
+	"tags": [
+	  "chair",
+      "simple"
+	],
+	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [274, 80, 12, 14]
-	},
-	"interaction": {}
+	"interaction": {
+	  "bubble": "坐",
+	  "duration": 2,
+	  "visual_effect": "highlight",
+	  "floating_icon": "坐",
+	  "satisfaction_delta": 2,
+	  "behavior": "sit"
+	}
   },
   {
 	"id": "chair_soft",
@@ -148,22 +345,50 @@
 	"category": "桌椅",
 	"price": 140,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			594,
+			20,
+			26,
+			10
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 18,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["chair", "comfort"],
-	"interactive": false,
+	"tags": [
+	  "chair",
+      "comfort"
+	],
+	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [594, 20, 26, 10]
-	},
-	"interaction": {}
+	"interaction": {
+	  "bubble": "坐",
+	  "duration": 2,
+	  "visual_effect": "highlight",
+	  "floating_icon": "坐",
+	  "satisfaction_delta": 3,
+	  "behavior": "sit"
+	}
   },
   {
 	"id": "sofa_green",
@@ -171,28 +396,70 @@
 	"category": "娱乐",
 	"price": 220,
 	"refund_rate": 0.5,
-	"size": [3, 1],
-	"footprint": [5, 1],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  3,
+		  1
+		],
+		"footprint": [
+		  5,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			448,
+			17,
+			30,
+			13
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			448,
+			17,
+			30,
+			13
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 18,
 	"entertainment": 10,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["sofa", "comfort"],
+	"tags": [
+	  "sofa",
+      "comfort"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [448, 17, 30, 13]
-	},
 	"interaction": {
-	  "need": "comfort",
 	  "bubble": "心",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "心",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "sit"
 	}
   },
   {
@@ -201,28 +468,70 @@
 	"category": "娱乐",
 	"price": 460,
 	"refund_rate": 0.5,
-	"size": [3, 2],
-	"footprint": [5, 2],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  3,
+		  2
+		],
+		"footprint": [
+		  5,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			448,
+			50,
+			30,
+			12
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  2,
+		  3
+		],
+		"footprint": [
+		  2,
+		  3
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			448,
+			50,
+			30,
+			12
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 34,
 	"entertainment": 14,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["sofa", "comfort"],
+	"tags": [
+	  "sofa",
+      "comfort"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [448, 50, 30, 12]
-	},
 	"interaction": {
-	  "need": "comfort",
 	  "bubble": "心",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "心",
-	  "satisfaction_delta": 5
+	  "satisfaction_delta": 5,
+	  "behavior": "sit"
 	}
   },
   {
@@ -231,28 +540,49 @@
 	"category": "娱乐",
 	"price": 260,
 	"refund_rate": 0.5,
-	"size": [2, 1],
-	"footprint": [3, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  1
+		],
+		"footprint": [
+		  3,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Objects.png",
+		  "region": [
+			64,
+			176,
+			16,
+			16
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 0,
 	"entertainment": 25,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["tv", "fun"],
+	"tags": [
+	  "tv",
+      "fun"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Objects.png",
-	  "region": [64, 176, 16, 16]
-	},
 	"interaction": {
-	  "need": "entertainment",
 	  "bubble": "音符",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "♪",
-	  "satisfaction_delta": 4
+	  "satisfaction_delta": 4,
+	  "behavior": "entertainment"
 	}
   },
   {
@@ -261,28 +591,49 @@
 	"category": "娱乐",
 	"price": 620,
 	"refund_rate": 0.5,
-	"size": [3, 1],
-	"footprint": [5, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  3,
+		  1
+		],
+		"footprint": [
+		  5,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			279,
+			46,
+			22
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 0,
 	"entertainment": 48,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["tv", "fun"],
+	"tags": [
+	  "tv",
+      "fun"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [384, 279, 46, 22]
-	},
 	"interaction": {
-	  "need": "entertainment",
 	  "bubble": "音符",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "♪",
-	  "satisfaction_delta": 6
+	  "satisfaction_delta": 6,
+	  "behavior": "entertainment"
 	}
   },
   {
@@ -291,28 +642,50 @@
 	"category": "收纳",
 	"price": 180,
 	"refund_rate": 0.5,
-	"size": [1, 2],
-	"footprint": [2, 2],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			0,
+			135,
+			14,
+			23
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 8,
 	"entertainment": 6,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["bookshelf", "book", "study"],
+	"tags": [
+	  "bookshelf",
+	  "book",
+      "study"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [0, 135, 14, 23]
-	},
 	"interaction": {
-	  "need": "study",
 	  "bubble": "书",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "书",
-	  "satisfaction_delta": 2
+	  "satisfaction_delta": 2,
+	  "behavior": "study"
 	}
   },
   {
@@ -321,21 +694,42 @@
 	"category": "收纳",
 	"price": 260,
 	"refund_rate": 0.5,
-	"size": [2, 2],
-	"footprint": [3, 2],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  2
+		],
+		"footprint": [
+		  3,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			64,
+			135,
+			14,
+			23
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 10,
 	"entertainment": 0,
 	"hygiene": 8,
 	"food": 0,
-	"tags": ["storage", "simple"],
+	"tags": [
+	  "storage",
+      "simple"
+	],
 	"interactive": false,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [64, 135, 14, 23]
-	},
 	"interaction": {}
   },
   {
@@ -344,28 +738,49 @@
 	"category": "装饰",
 	"price": 90,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			113,
+			416,
+			12,
+			10
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 12,
 	"entertainment": 0,
 	"hygiene": 2,
 	"food": 0,
-	"tags": ["plant", "decor"],
+	"tags": [
+	  "plant",
+      "decor"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [113, 416, 12, 10]
-	},
 	"interaction": {
-	  "need": "comfort",
 	  "bubble": "心",
 	  "duration": 2,
 	  "visual_effect": "highlight",
 	  "floating_icon": "心",
-	  "satisfaction_delta": 2
+	  "satisfaction_delta": 2,
+	  "behavior": "relax"
 	}
   },
   {
@@ -374,28 +789,49 @@
 	"category": "装饰",
 	"price": 180,
 	"refund_rate": 0.5,
-	"size": [1, 2],
-	"footprint": [2, 2],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			178,
+			432,
+			12,
+			12
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 22,
 	"entertainment": 0,
 	"hygiene": 5,
 	"food": 0,
-	"tags": ["plant", "decor"],
+	"tags": [
+	  "plant",
+      "decor"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [178, 432, 12, 12]
-	},
 	"interaction": {
-	  "need": "comfort",
 	  "bubble": "心",
 	  "duration": 2,
 	  "visual_effect": "highlight",
 	  "floating_icon": "心",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "relax"
 	}
   },
   {
@@ -404,21 +840,42 @@
 	"category": "墙面",
 	"price": 120,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Objects.png",
+		  "region": [
+			0,
+			384,
+			16,
+			16
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 10,
 	"entertainment": 4,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["decor", "wall"],
+	"tags": [
+	  "decor",
+      "wall"
+	],
 	"interactive": false,
 	"requires_wall": true,
 	"wall_item": true,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Objects.png",
-	  "region": [0, 384, 16, 16]
-	},
 	"interaction": {}
   },
   {
@@ -427,21 +884,42 @@
 	"category": "墙面",
 	"price": 100,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Objects.png",
+		  "region": [
+			0,
+			144,
+			16,
+			16
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 6,
 	"entertainment": 2,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["decor", "wall"],
+	"tags": [
+	  "decor",
+      "wall"
+	],
 	"interactive": false,
 	"requires_wall": true,
 	"wall_item": true,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Objects.png",
-	  "region": [0, 144, 16, 16]
-	},
 	"interaction": {}
   },
   {
@@ -450,28 +928,49 @@
 	"category": "灯具",
 	"price": 80,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			65,
+			80,
+			16,
+			46
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 10,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["lamp", "light"],
+	"tags": [
+	  "lamp",
+      "light"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [65, 80, 16, 46]
-	},
 	"interaction": {
-	  "need": "comfort",
 	  "bubble": "光",
 	  "duration": 2,
 	  "visual_effect": "highlight",
 	  "floating_icon": "光",
-	  "satisfaction_delta": 1
+	  "satisfaction_delta": 1,
+	  "behavior": "relax"
 	}
   },
   {
@@ -480,28 +979,49 @@
 	"category": "灯具",
 	"price": 220,
 	"refund_rate": 0.5,
-	"size": [1, 2],
-	"footprint": [2, 2],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			80,
+			80,
+			16,
+			46
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 22,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["lamp", "light"],
+	"tags": [
+	  "lamp",
+      "light"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [80, 80, 16, 46]
-	},
 	"interaction": {
-	  "need": "comfort",
 	  "bubble": "光",
 	  "duration": 2,
 	  "visual_effect": "highlight",
 	  "floating_icon": "光",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "relax"
 	}
   },
   {
@@ -510,28 +1030,49 @@
 	"category": "厨房",
 	"price": 240,
 	"refund_rate": 0.5,
-	"size": [1, 2],
-	"footprint": [2, 2],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			0,
+			263,
+			28,
+			24
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 0,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 24,
-	"tags": ["fridge", "food"],
+	"tags": [
+	  "fridge",
+      "food"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [0, 263, 28, 24]
-	},
 	"interaction": {
-	  "need": "hunger",
 	  "bubble": "食",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "食",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "eat"
 	}
   },
   {
@@ -540,28 +1081,70 @@
 	"category": "厨房",
 	"price": 300,
 	"refund_rate": 0.5,
-	"size": [2, 1],
-	"footprint": [3, 1],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  1
+		],
+		"footprint": [
+		  3,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			18,
+			247,
+			38,
+			9
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			18,
+			247,
+			38,
+			9
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 8,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 24,
-	"tags": ["table", "food"],
+	"tags": [
+	  "table",
+      "food"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [18, 247, 38, 9]
-	},
 	"interaction": {
-	  "need": "hunger",
 	  "bubble": "食",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "食",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "eat"
 	}
   },
   {
@@ -570,28 +1153,49 @@
 	"category": "厨房",
 	"price": 200,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			0,
+			320,
+			16,
+			16
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 0,
 	"entertainment": 0,
 	"hygiene": 22,
 	"food": 0,
-	"tags": ["sink", "water"],
+	"tags": [
+	  "sink",
+      "water"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [0, 320, 16, 16]
-	},
 	"interaction": {
-	  "need": "hygiene",
 	  "bubble": "水",
 	  "duration": 3,
 	  "visual_effect": "highlight",
 	  "floating_icon": "水",
-	  "satisfaction_delta": 3
+	  "satisfaction_delta": 3,
+	  "behavior": "clean"
 	}
   },
   {
@@ -600,28 +1204,49 @@
 	"category": "厨房",
 	"price": 420,
 	"refund_rate": 0.5,
-	"size": [1, 2],
-	"footprint": [2, 2],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  2,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			0,
+			344,
+			16,
+			24
+		  ]
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 4,
 	"entertainment": 0,
 	"hygiene": 42,
 	"food": 0,
-	"tags": ["bath", "water"],
+	"tags": [
+	  "bath",
+      "water"
+	],
 	"interactive": true,
 	"requires_wall": true,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [0, 344, 16, 24]
-	},
 	"interaction": {
-	  "need": "hygiene",
 	  "bubble": "水",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "水",
-	  "satisfaction_delta": 5
+	  "satisfaction_delta": 5,
+	  "behavior": "clean"
 	}
   },
   {
@@ -630,21 +1255,63 @@
 	"category": "装饰",
 	"price": 110,
 	"refund_rate": 0.5,
-	"size": [2, 1],
-	"footprint": [3, 1],
+	"orientation_mode": "rotatable",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  2,
+		  1
+		],
+		"footprint": [
+		  3,
+		  1
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			240,
+			32,
+			16
+		  ]
+		},
+		"rotation_degrees": 0
+	  },
+	  "rotated": {
+		"size": [
+		  1,
+		  2
+		],
+		"footprint": [
+		  1,
+		  2
+		],
+		"asset": {
+		  "type": "atlas_region",
+		  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
+		  "region": [
+			384,
+			240,
+			32,
+			16
+		  ]
+		},
+		"rotation_degrees": 90
+	  }
+	},
 	"comfort": 14,
 	"entertainment": 0,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["rug", "decor"],
+	"tags": [
+	  "rug",
+      "decor"
+	],
 	"interactive": false,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "atlas_region",
-	  "texture": "res://assets/pixel_spaces/furniture/Furniture.png",
-	  "region": [384, 240, 32, 16]
-	},
 	"interaction": {}
   },
   {
@@ -653,27 +1320,43 @@
 	"category": "娱乐",
 	"price": 320,
 	"refund_rate": 0.5,
-	"size": [1, 1],
-	"footprint": [2, 1],
+	"orientation_mode": "fixed",
+	"default_orientation": "default",
+	"orientations": {
+	  "default": {
+		"size": [
+		  1,
+		  1
+		],
+		"footprint": [
+		  2,
+		  1
+		],
+		"asset": {
+		  "type": "single_sprite",
+		  "texture": "res://assets/pixel_spaces/icons/Game_controller.png"
+		},
+		"rotation_degrees": 0
+	  }
+	},
 	"comfort": 0,
 	"entertainment": 35,
 	"hygiene": 0,
 	"food": 0,
-	"tags": ["game", "fun"],
+	"tags": [
+	  "game",
+      "fun"
+	],
 	"interactive": true,
 	"requires_wall": false,
 	"wall_item": false,
-	"asset": {
-	  "type": "single_sprite",
-	  "texture": "res://assets/pixel_spaces/icons/Game_controller.png"
-	},
 	"interaction": {
-	  "need": "entertainment",
 	  "bubble": "玩",
 	  "duration": 4,
 	  "visual_effect": "highlight",
 	  "floating_icon": "玩",
-	  "satisfaction_delta": 5
+	  "satisfaction_delta": 5,
+	  "behavior": "entertainment"
 	}
   }
 ]

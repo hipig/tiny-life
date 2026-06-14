@@ -14,6 +14,7 @@ func test_ui_scenes_are_editor_authored_for_360_viewport() -> void:
 	var placement_scene := FileAccess.get_file_as_string("res://scenes/ui/PlacementOverlay.tscn")
 	var placement_source := FileAccess.get_file_as_string("res://scripts/ui/PlacementOverlay.gd")
 	var furniture_controls_scene := FileAccess.get_file_as_string("res://scenes/furniture/FurnitureFloatingControls.tscn")
+	var furniture_controls_source := FileAccess.get_file_as_string("res://scripts/furniture/FurnitureFloatingControls.gd")
 	var icon_row_scene := FileAccess.get_file_as_string("res://scenes/ui/IconInfoRow.tscn")
 	var stat_card_scene := FileAccess.get_file_as_string("res://scenes/ui/StatCard.tscn")
 	var progress_card_scene := FileAccess.get_file_as_string("res://scenes/ui/ProgressCard.tscn")
@@ -115,10 +116,18 @@ func test_ui_scenes_are_editor_authored_for_360_viewport() -> void:
 	assert_false(placement_source.contains("确认摆放并扣金币"), "Placement overlay should not hard-code confirm copy in script")
 	assert_true(furniture_controls_scene.contains("ConfirmButton"), "Furniture floating controls should expose confirm button in the scene")
 	assert_true(furniture_controls_scene.contains("CancelButton"), "Furniture floating controls should expose cancel button in the scene")
+	assert_true(furniture_controls_scene.contains("RotateButton"), "Furniture floating controls should expose rotate button in the scene")
 	assert_true(furniture_controls_scene.contains("RecycleButton"), "Furniture floating controls should expose recycle button in the scene")
 	assert_true(furniture_controls_scene.contains("custom_minimum_size = Vector2(40, 38)"), "Furniture floating controls should use compact icon buttons")
 	assert_true(furniture_controls_scene.contains("icons/Check.png"), "Furniture floating controls should configure confirm icon in the scene")
 	assert_true(furniture_controls_scene.contains("icons/Close.png"), "Furniture floating controls should configure cancel icon in the scene")
+	assert_true(furniture_controls_scene.contains("icons/Arrow_right.png"), "Furniture floating controls should configure rotate icon in the scene")
+	assert_true(furniture_controls_scene.contains("tooltip_text = \"转向\""), "Furniture floating controls should author rotate tooltip copy in the scene")
+	assert_true(furniture_controls_source.contains("signal rotated"), "Furniture floating controls should expose a rotate signal")
+	assert_true(furniture_controls_source.contains("func set_rotate_visible"), "Furniture floating controls should expose rotate visibility state")
+	assert_true(placement_source.contains("floating_controls.rotated.connect"), "Placement overlay should forward scene-authored rotate button signals")
+	assert_true(placement_source.contains("new_placement_confirmed(room_id: String, furniture_id: String, anchor_pos: Array, orientation: String)"), "Placement confirmation should include orientation")
+	assert_true(placement_source.contains("move_confirmed(room_id: String, instance_id: String, anchor_pos: Array, orientation: String)"), "Move confirmation should include orientation")
 	assert_false(furniture_controls_scene.contains("\ntext = \"确认\""), "Furniture floating controls should not use wide text buttons")
 	assert_true(icon_row_scene.contains("TitleLabel"), "Repeated icon-info rows should live in a reusable scene")
 	assert_true(icon_row_scene.contains("DetailLabel"), "IconInfoRow should expose detail text in the scene")
@@ -393,6 +402,12 @@ func test_ui_scripts_do_not_hide_fixed_layout_or_style() -> void:
 			"custom_minimum_size",
 			".position =",
 			".size ="
+		],
+		"res://scripts/furniture/Furniture.gd": [
+			"pivot_offset"
+		],
+		"res://scripts/furniture/FurniturePreview.gd": [
+			"pivot_offset"
 		]
 	}
 	for path in _presentation_script_paths():
@@ -497,9 +512,14 @@ func test_furniture_in_room_supports_scene_long_press_move() -> void:
 	assert_false(preview_source.contains("@export"), "FurniturePreview should not require script exports for scene-authored presentation")
 	assert_false(furniture_source.contains("override_configured_asset"), "Furniture should use configured asset data instead of script-level visual overrides")
 	assert_false(preview_source.contains("override_configured_asset"), "FurniturePreview should use configured asset data instead of script-level visual overrides")
+	assert_true(furniture_source.contains("orientation_asset_for"), "Furniture should render the configured orientation asset")
+	assert_true(furniture_source.contains("orientation_rotation_degrees_for"), "Furniture should apply orientation rotation at runtime")
+	assert_true(preview_source.contains("orientation_asset_for"), "FurniturePreview should render the configured orientation asset")
+	assert_true(preview_source.contains("orientation_rotation_degrees_for"), "FurniturePreview should apply orientation rotation at runtime")
 	assert_false(furniture_source.contains("custom_minimum_size ="), "Furniture fixed size should stay in Furniture.tscn")
 	assert_false(furniture_source.contains("stretch_mode ="), "Furniture stretch mode should stay in Furniture.tscn")
-	assert_false(furniture_source.contains("pivot_offset ="), "Furniture pivot should stay in Furniture.tscn")
+	assert_true(furniture_source.contains("pivot_offset = size * 0.5"), "Furniture should keep runtime rotation centered on its orientation-sized bounds")
+	assert_true(preview_source.contains("pivot_offset = size * 0.5"), "FurniturePreview should keep runtime rotation centered on its orientation-sized bounds")
 	assert_false(furniture_source.contains("\"家具\""), "Furniture fallback tooltip copy should not be hard-coded in script")
 	assert_true(preview_source.contains("VALID_OUTLINE_COLOR"), "FurniturePreview should expose valid placement with its own outline")
 	assert_true(preview_source.contains("INVALID_OUTLINE_COLOR"), "FurniturePreview should expose invalid placement with its own outline")

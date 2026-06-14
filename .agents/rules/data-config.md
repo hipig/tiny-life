@@ -50,7 +50,12 @@ name 或 text_key
 category
 price
 refund_rate
-size
+orientation_mode
+default_orientation
+orientations.default.size
+orientations.default.footprint
+orientations.default.asset
+orientations.default.rotation_degrees
 comfort
 entertainment
 hygiene
@@ -59,7 +64,6 @@ tags
 interactive
 requires_wall
 wall_item
-asset
 interaction
 ```
 
@@ -71,11 +75,13 @@ comfort + entertainment + hygiene + food
 
 家具互动应描述：
 
-- 需求类型。
+- 行为键（`behavior`，例如 `sleep`、`sit`、`study`、`entertainment`、`eat`、`clean`、`relax`）。
 - 气泡/图标。
 - 持续时间。
 - 视觉反馈。
 - 满意度变化。
+
+只有 `orientation_mode = "rotatable"` 且不是墙面家具的家具可以声明 `rotated` 朝向；固定家具只保留 `default`。摆放合法性必须使用实例当前 `orientation` 对应的 `footprint`。
 
 ## 房间数据
 
@@ -115,6 +121,7 @@ instance_id
 furniture_id
 anchor_pos
 mirrored
+orientation
 ```
 
 楼层配置必须包含：

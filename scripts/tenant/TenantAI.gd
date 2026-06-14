@@ -26,7 +26,9 @@ var state := AIState.IDLE
 var state_elapsed := 0.0
 var state_duration := 0.0
 var target_position := Vector2.ZERO
-var pending_action_need := ""
+var pending_action_behavior := ""
+var pending_action_instance_id := ""
+var pending_action_satisfaction_delta := 1
 var pending_action_duration := DEFAULT_ACTION_SECONDS
 var route_running := false
 
@@ -34,6 +36,7 @@ func setup(owner: Tenant, id: String, target_room_id: String) -> void:
 	tenant = owner
 	tenant_id = id
 	room_id = target_room_id
+	_connect_events()
 	if tenant == null or room_id.is_empty():
 		return
 	var presence := _presence_state()
@@ -63,7 +66,6 @@ func _process(delta: float) -> void:
 				_enter_idle()
 		AIState.BUBBLE_ACTION:
 			if state_elapsed >= state_duration:
-				tenant.hide_behavior_bubble()
 				_enter_idle()
 		AIState.AWAY:
 			if _away_is_finished():
@@ -88,7 +90,7 @@ func _choose_next_state() -> void:
 
 func _sync_from_current_behavior() -> void:
 	state_elapsed = 0.0
-	pending_action_need = ""
+	_clear_pending_action()
 	match _presence_state():
 		GameState.TENANT_PRESENCE_AWAY:
 			_enter_away(false)
@@ -103,7 +105,7 @@ func _sync_from_current_behavior() -> void:
 	var behavior := ConfigManager.normalize_behavior_key(raw_behavior)
 	if not current_need.is_empty():
 		state = AIState.BUBBLE_ACTION
-		pending_action_need = current_need
+		pending_action_behavior = ConfigManager.normalize_behavior_key(current_need)
 		pending_action_duration = DEFAULT_ACTION_SECONDS
 		state_duration = pending_action_duration
 		return
@@ -118,10 +120,11 @@ func _sync_from_current_behavior() -> void:
 	state_duration = randf_range(IDLE_MIN_SECONDS, IDLE_MAX_SECONDS)
 
 func _enter_idle() -> void:
+	_end_pending_interaction()
 	state = AIState.IDLE
 	state_elapsed = 0.0
 	state_duration = randf_range(IDLE_MIN_SECONDS, IDLE_MAX_SECONDS)
-	pending_action_need = ""
+	_clear_pending_action()
 	GameState.set_tenant_behavior(tenant_id, GameState.IDLE_TENANT_BEHAVIOR)
 	tenant.play_avatar_behavior(GameState.IDLE_TENANT_BEHAVIOR)
 	tenant.hide_behavior_bubble()
@@ -131,7 +134,9 @@ func _enter_wander_walk() -> void:
 	_enter_walk()
 
 func _walk_to_furniture_use(target: Dictionary) -> void:
-	pending_action_need = str(target.get("need", ""))
+	pending_action_behavior = ConfigManager.normalize_behavior_key(str(target.get("behavior", "")))
+	pending_action_instance_id = str(target.get("instance_id", ""))
+	pending_action_satisfaction_delta = maxi(0, int(target.get("satisfaction_delta", 1)))
 	pending_action_duration = maxf(0.1, float(target.get("duration", DEFAULT_ACTION_SECONDS)))
 	var position_value: Variant = target.get("position", tenant.position)
 	target_position = position_value if position_value is Vector2 else tenant.position
@@ -151,7 +156,7 @@ func _process_walk(delta: float) -> void:
 	tenant.face_towards(tenant.position.x - previous.x)
 	if tenant.position.distance_to(target_position) <= ARRIVE_DISTANCE:
 		tenant.position = target_position
-		if pending_action_need.is_empty():
+		if pending_action_behavior.is_empty():
 			_enter_idle()
 		else:
 			_enter_bubble_action()
@@ -168,15 +173,18 @@ func _enter_bubble_action() -> void:
 	state = AIState.BUBBLE_ACTION
 	state_elapsed = 0.0
 	state_duration = pending_action_duration
-	GameState.observe_tenant_behavior(tenant_id, pending_action_need)
+	if not pending_action_instance_id.is_empty():
+		GameEvents.furniture_interaction_started.emit(room_id, pending_action_instance_id, pending_action_behavior)
+	GameState.observe_tenant_behavior(tenant_id, pending_action_behavior, pending_action_satisfaction_delta)
 
 func _enter_leaving() -> void:
 	if route_running:
 		return
+	_end_pending_interaction()
+	_clear_pending_action()
 	state = AIState.LEAVING
 	state_elapsed = 0.0
 	route_running = true
-	pending_action_need = ""
 	tenant.visible = true
 	tenant.play_avatar_behavior(GameState.DEFAULT_TENANT_BEHAVIOR)
 	tenant.hide_behavior_bubble()
@@ -184,10 +192,11 @@ func _enter_leaving() -> void:
 	call_deferred("_run_leaving_route")
 
 func _enter_away(update_until: bool) -> void:
+	_end_pending_interaction()
+	_clear_pending_action()
 	state = AIState.AWAY
 	state_elapsed = 0.0
 	route_running = false
-	pending_action_need = ""
 	tenant.visible = false
 	tenant.hide_behavior_bubble()
 	tenant.play_avatar_behavior(GameState.AWAY_TENANT_BEHAVIOR)
@@ -199,10 +208,11 @@ func _enter_returning() -> void:
 	if route_running:
 		return
 	var should_stagger_route_start := state != AIState.AWAY
+	_end_pending_interaction()
+	_clear_pending_action()
 	state = AIState.RETURNING
 	state_elapsed = 0.0
 	route_running = true
-	pending_action_need = ""
 	tenant.visible = false
 	tenant.play_avatar_behavior(GameState.RETURNING_TENANT_BEHAVIOR)
 	tenant.hide_behavior_bubble()
@@ -533,15 +543,49 @@ func _furniture_use_targets() -> Array:
 		var instance_data: Dictionary = instance
 		var furniture_data := ConfigManager.get_furniture_data(str(instance_data.get("furniture_id", "")))
 		var interaction: Dictionary = furniture_data.get("interaction", {})
-		var need := str(interaction.get("need", ""))
-		if need.is_empty():
+		var behavior := str(interaction.get("behavior", ""))
+		if behavior.is_empty():
 			continue
 		targets.append({
-			"need": need,
+			"behavior": ConfigManager.normalize_behavior_key(behavior),
+			"instance_id": str(instance_data.get("instance_id", "")),
+			"satisfaction_delta": int(interaction.get("satisfaction_delta", 1)),
 			"duration": float(interaction.get("duration", DEFAULT_ACTION_SECONDS)),
 			"position": TenantRoomLocator.furniture_use_position(room, instance_data, furniture_data)
 		})
 	return targets
+
+func _connect_events() -> void:
+	if not GameEvents.tenant_furniture_reaction_requested.is_connected(_on_tenant_furniture_reaction_requested):
+		GameEvents.tenant_furniture_reaction_requested.connect(_on_tenant_furniture_reaction_requested)
+
+func _on_tenant_furniture_reaction_requested(target_tenant_id: String, target_room_id: String, _furniture_id: String, reaction_key: String) -> void:
+	if target_tenant_id != tenant_id or target_room_id != room_id:
+		return
+	if tenant == null or route_running or _presence_state() != GameState.TENANT_PRESENCE_HOME:
+		return
+	_enter_purchase_reaction(reaction_key)
+
+func _enter_purchase_reaction(reaction_key: String) -> void:
+	_end_pending_interaction()
+	_clear_pending_action()
+	state = AIState.JUMP
+	state_elapsed = 0.0
+	state_duration = JUMP_SECONDS
+	GameState.set_tenant_behavior(tenant_id, "happy")
+	tenant.play_avatar_behavior("happy")
+	tenant.hide_behavior_bubble()
+	tenant.play_emote("like" if reaction_key == "favorite" else "present", 1.1)
+
+func _end_pending_interaction() -> void:
+	if state == AIState.BUBBLE_ACTION and not pending_action_instance_id.is_empty():
+		GameEvents.furniture_interaction_finished.emit(room_id, pending_action_instance_id, pending_action_behavior)
+
+func _clear_pending_action() -> void:
+	pending_action_behavior = ""
+	pending_action_instance_id = ""
+	pending_action_satisfaction_delta = 1
+	pending_action_duration = DEFAULT_ACTION_SECONDS
 
 func _room() -> Dictionary:
 	return GameState.rooms.get(room_id, {})

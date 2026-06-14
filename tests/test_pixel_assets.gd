@@ -22,8 +22,14 @@ func test_pixel_space_assets_are_configured_for_mvp_surfaces() -> void:
 	assert_true(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_vertices_to_pixel")), "2D vertices should snap to pixels")
 	for item in furniture:
 		var furniture_data: Dictionary = item
-		assert_false(str(furniture_data.get("asset", {}).get("type", "placeholder")) == "placeholder", "%s should use a Pixel Spaces visual asset" % furniture_data.get("id", ""))
-		assert_true(_asset_texture_exists(furniture_data.get("asset", {})), "%s furniture asset texture should exist" % furniture_data.get("id", ""))
+		var furniture_id := str(furniture_data.get("id", ""))
+		var orientations: Dictionary = furniture_data.get("orientations", {})
+		assert_true(orientations.has(str(furniture_data.get("default_orientation", "default"))), "%s should expose its default visual orientation" % furniture_id)
+		for orientation_key in orientations.keys():
+			var orientation_data: Dictionary = orientations[orientation_key]
+			var asset: Dictionary = orientation_data.get("asset", {})
+			assert_false(str(asset.get("type", "placeholder")) == "placeholder", "%s %s should use a Pixel Spaces visual asset" % [furniture_id, orientation_key])
+			assert_true(_asset_texture_exists(asset), "%s %s furniture asset texture should exist" % [furniture_id, orientation_key])
 	for tenant in tenants:
 		var tenant_data: Dictionary = tenant
 		var asset: Dictionary = tenant_data.get("asset", {})

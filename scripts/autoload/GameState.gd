@@ -1,6 +1,6 @@
 extends Node
 
-const SAVE_SCHEMA_VERSION := 7
+const SAVE_SCHEMA_VERSION := 8
 const DEFAULT_TENANT_BEHAVIOR := "wander"
 const RECRUITED_TENANT_BEHAVIOR := "recruited"
 const IDLE_TENANT_BEHAVIOR := "idle"
@@ -21,6 +21,7 @@ const VALID_TENANT_BEHAVIORS := {
 	"entertainment": true,
 	"clean": true,
 	"study": true,
+	"sit": true,
 	"relax": true,
 	"happy": true,
 	"leaving": true,
@@ -433,14 +434,15 @@ func add_furniture_instance(room_id: String, furniture_id: String, anchor_pos: A
 	if not rooms.has(room_id):
 		push_error("Cannot add furniture to unknown room '%s'." % room_id)
 		return {}
-	ConfigManager.get_furniture_data(furniture_id)
+	var furniture_data := ConfigManager.get_furniture_data(furniture_id)
+	var normalized_orientation := _normalize_furniture_orientation(furniture_id, furniture_data, orientation)
 	var room: Dictionary = rooms[room_id]
 	var instance: Dictionary = {
 		"instance_id": "f_%d_%d" % [Time.get_ticks_msec(), randi_range(100, 999)],
 		"furniture_id": furniture_id,
 		"anchor_pos": anchor_pos,
 		"mirrored": mirrored,
-		"orientation": orientation
+		"orientation": normalized_orientation
 	}
 	var list: Array = room["furniture_instances"]
 	list.append(instance)
@@ -451,10 +453,11 @@ func add_furniture_instance(room_id: String, furniture_id: String, anchor_pos: A
 	EconomyManager.recalculate_total_rent()
 	GameEvents.furniture_placed.emit(room_id, furniture_id)
 	TaskManager.notify_event("furniture_placed", {"room_id": room_id, "furniture_id": furniture_id})
+	_request_tenant_furniture_reaction(room_id, furniture_id)
 	add_apartment_exp(5)
 	return instance
 
-func move_furniture_instance(room_id: String, instance_id: String, anchor_pos: Array) -> bool:
+func move_furniture_instance(room_id: String, instance_id: String, anchor_pos: Array, orientation := "default") -> bool:
 	if not rooms.has(room_id):
 		push_error("Cannot move furniture in unknown room '%s'." % room_id)
 		return false
@@ -463,14 +466,45 @@ func move_furniture_instance(room_id: String, instance_id: String, anchor_pos: A
 	for i in range(list.size()):
 		var instance_data: Dictionary = list[i]
 		if str(instance_data["instance_id"]) == instance_id:
+			var furniture_id := str(instance_data["furniture_id"])
+			var furniture_data := ConfigManager.get_furniture_data(furniture_id)
 			instance_data["anchor_pos"] = anchor_pos
+			instance_data["orientation"] = _normalize_furniture_orientation(furniture_id, furniture_data, orientation)
 			list[i] = instance_data
 			room["furniture_instances"] = list
 			rooms[room_id] = room
-			GameEvents.furniture_moved.emit(room_id, str(instance_data["furniture_id"]))
+			GameEvents.furniture_moved.emit(room_id, furniture_id)
 			GameEvents.room_updated.emit(room_id)
 			return true
 	return false
+
+func _request_tenant_furniture_reaction(room_id: String, furniture_id: String) -> void:
+	var room: Dictionary = rooms.get(room_id, {})
+	var tenant_id := str(room.get("tenant_id", ""))
+	if tenant_id.is_empty() or not tenants.has(tenant_id):
+		return
+	var tenant: Dictionary = tenants[tenant_id]
+	if str(tenant.get("presence_state", TENANT_PRESENCE_HOME)) != TENANT_PRESENCE_HOME:
+		return
+	var preferred := _tenant_prefers_furniture(tenant_id, furniture_id)
+	react_to_new_furniture(tenant_id, furniture_id, preferred)
+	GameEvents.tenant_furniture_reaction_requested.emit(tenant_id, room_id, furniture_id, "favorite" if preferred else "new_furniture")
+
+func _tenant_prefers_furniture(tenant_id: String, furniture_id: String) -> bool:
+	var tenant_data: Dictionary = ConfigManager.get_tenant_data(tenant_id)
+	var furniture_data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
+	var favorite_tags: Array = tenant_data.get("favorite_tags", [])
+	for tag in furniture_data.get("tags", []):
+		if favorite_tags.has(str(tag)):
+			return true
+	return false
+
+func _normalize_furniture_orientation(furniture_id: String, furniture_data: Dictionary, orientation: String) -> String:
+	var normalized := orientation.strip_edges()
+	if normalized.is_empty():
+		normalized = str(furniture_data.get("default_orientation", FurniturePlacementRules.DEFAULT_ORIENTATION)).strip_edges()
+	ConfigManager.get_furniture_orientation_data(furniture_id, normalized)
+	return normalized
 
 func recycle_furniture_instance(room_id: String, instance_id: String) -> int:
 	if not rooms.has(room_id):
@@ -572,20 +606,34 @@ func build_room(room_id: String) -> bool:
 	add_apartment_exp(int(ConfigManager.get_economy_value("room_build_exp")))
 	return true
 
-func observe_tenant_behavior(tenant_id: String, need: String) -> void:
+func observe_tenant_behavior(tenant_id: String, behavior_key: String, satisfaction_delta := 1) -> void:
 	if not tenants.has(tenant_id):
 		push_error("Cannot observe behavior for unknown tenant '%s'." % tenant_id)
 		return
 	var tenant: Dictionary = tenants[tenant_id]
-	var behavior := _need_to_behavior_key(need)
-	tenant["current_need"] = need
+	var behavior := _normalize_tenant_behavior(behavior_key)
+	tenant["current_need"] = behavior
 	tenant["current_behavior"] = behavior
-	tenant["satisfaction"] = clampi(int(tenant["satisfaction"]) + 1, 0, 100)
+	tenant["satisfaction"] = clampi(int(tenant["satisfaction"]) + maxi(0, satisfaction_delta), 0, 100)
 	tenants[tenant_id] = tenant
 	GameEvents.tenant_behavior_changed.emit(tenant_id, behavior)
-	GameEvents.tenant_behavior_observed.emit(tenant_id, need)
+	GameEvents.tenant_behavior_observed.emit(tenant_id, behavior)
 	GameEvents.tenant_satisfaction_changed.emit(tenant_id, int(tenant["satisfaction"]))
-	TaskManager.notify_event("tenant_behavior_observed", {"tenant_id": tenant_id, "behavior": need})
+	TaskManager.notify_event("tenant_behavior_observed", {"tenant_id": tenant_id, "behavior": behavior})
+	EconomyManager.recalculate_total_rent()
+
+func react_to_new_furniture(tenant_id: String, furniture_id: String, preferred := false) -> void:
+	if not tenants.has(tenant_id):
+		push_error("Cannot react for unknown tenant '%s'." % tenant_id)
+		return
+	var tenant: Dictionary = tenants[tenant_id]
+	tenant["current_need"] = ""
+	tenant["current_behavior"] = "happy"
+	var delta := 2 if preferred else 1
+	tenant["satisfaction"] = clampi(int(tenant["satisfaction"]) + delta, 0, 100)
+	tenants[tenant_id] = tenant
+	GameEvents.tenant_behavior_changed.emit(tenant_id, "happy")
+	GameEvents.tenant_satisfaction_changed.emit(tenant_id, int(tenant["satisfaction"]))
 	EconomyManager.recalculate_total_rent()
 
 func to_save_data() -> Dictionary:
@@ -746,24 +794,6 @@ func _room_layout_for_level(room_data: Dictionary, room_level: int) -> Dictionar
 		layout["frame_tiles"] = [maxi(2, int(upgrade["frame_tiles"][0])), int(upgrade["frame_tiles"][1])]
 		layout["grid_size"] = [maxi(1, int(upgrade["grid_size"][0])), int(upgrade["grid_size"][1])]
 	return layout
-
-func _need_to_behavior_key(need: String) -> String:
-	match need:
-		"energy":
-			return "sleep"
-		"hunger":
-			return "eat"
-		"entertainment":
-			return "entertainment"
-		"hygiene":
-			return "clean"
-		"study":
-			return "study"
-		"comfort":
-			return "relax"
-		_:
-			_fail("Unknown tenant need '%s'." % need)
-			return DEFAULT_TENANT_BEHAVIOR
 
 func _normalize_tenant_behavior(value: String) -> String:
 	var key := ConfigManager.normalize_behavior_key(value)
@@ -985,6 +1015,9 @@ func _furniture_instance_validation_error(room_id: String, instance: Dictionary)
 		return "room '%s' furniture mirrored must be bool" % room_id
 	if not (instance["orientation"] is String) or str(instance["orientation"]).strip_edges().is_empty():
 		return "room '%s' furniture orientation must be a non-empty string" % room_id
+	var orientation := str(instance["orientation"]).strip_edges()
+	if not ConfigManager.get_furniture_data(furniture_id).get("orientations", {}).has(orientation):
+		return "room '%s' furniture '%s' uses unsupported orientation '%s'" % [room_id, furniture_id, orientation]
 	return ""
 
 func _tenants_validation_error(saved_tenants: Dictionary, saved_rooms: Dictionary) -> String:

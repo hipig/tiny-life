@@ -10,6 +10,7 @@ const META_ROOM_ID := &"room_id"
 
 @onready var avatar_sprite: AnimatedSprite2D = $AvatarSprite
 @onready var need_bubble: NeedBubble = $NeedBubble
+@onready var tenant_emote: TenantEmote = $TenantEmote
 @onready var body_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 @onready var click_area: Area2D = get_node_or_null("ClickArea") as Area2D
 @onready var click_shape: CollisionShape2D = get_node_or_null("ClickArea/ClickShape") as CollisionShape2D
@@ -78,6 +79,10 @@ func show_behavior_bubble(behavior: String) -> void:
 
 func hide_behavior_bubble() -> void:
 	need_bubble.hide_bubble()
+
+func play_emote(emote_key: String, seconds := 1.2) -> void:
+	if tenant_emote != null:
+		tenant_emote.play_emote(emote_key, seconds)
 
 func face_towards(delta_x: float) -> void:
 	if absf(delta_x) < 0.01:

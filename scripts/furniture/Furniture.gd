@@ -4,9 +4,15 @@ const LONG_PRESS_SECONDS := 0.5
 
 var instance_data: Dictionary = {}
 var furniture_id := ""
+var instance_id := ""
 var room_id := ""
 var _pressing := false
 var _press_token := 0
+var _interaction_active := false
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		pivot_offset = size * 0.5
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -35,11 +41,35 @@ func _gui_input(event: InputEvent) -> void:
 func setup(data: Dictionary) -> void:
 	instance_data = data
 	furniture_id = str(instance_data.get("furniture_id", ""))
+	instance_id = str(instance_data.get("instance_id", ""))
 	room_id = str(instance_data.get("room_id", room_id))
 	var furniture_data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
-	var asset: Dictionary = furniture_data.get("asset", {})
+	var orientation := str(instance_data.get("orientation", FurniturePlacementRules.DEFAULT_ORIENTATION))
+	var asset := FurniturePlacementRules.orientation_asset_for(furniture_data, orientation)
 	AssetResolver.apply_asset_to_texture_rect(self, asset, Vector2i(26, 26))
+	rotation_degrees = FurniturePlacementRules.orientation_rotation_degrees_for(furniture_data, orientation)
+	pivot_offset = size * 0.5
 	tooltip_text = _furniture_name(furniture_data)
+	_connect_interaction_events()
+	set_interaction_active(false)
+
+func set_interaction_active(active: bool) -> void:
+	_interaction_active = active
+	modulate = Color(1.08, 1.0, 0.72, 1.0) if _interaction_active else Color.WHITE
+
+func _connect_interaction_events() -> void:
+	if not GameEvents.furniture_interaction_started.is_connected(_on_furniture_interaction_started):
+		GameEvents.furniture_interaction_started.connect(_on_furniture_interaction_started)
+	if not GameEvents.furniture_interaction_finished.is_connected(_on_furniture_interaction_finished):
+		GameEvents.furniture_interaction_finished.connect(_on_furniture_interaction_finished)
+
+func _on_furniture_interaction_started(target_room_id: String, target_instance_id: String, _behavior: String) -> void:
+	if target_room_id == room_id and target_instance_id == instance_id:
+		set_interaction_active(true)
+
+func _on_furniture_interaction_finished(target_room_id: String, target_instance_id: String, _behavior: String) -> void:
+	if target_room_id == room_id and target_instance_id == instance_id:
+		set_interaction_active(false)
 
 func _furniture_name(furniture_data: Dictionary) -> String:
 	var configured_name := str(furniture_data.get("name", "")).strip_edges()

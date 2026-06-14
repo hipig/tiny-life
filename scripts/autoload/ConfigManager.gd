@@ -13,6 +13,11 @@ const TARGET_ROOF := "roof"
 const APARTMENT_SERVICE_CORE_TARGET_ID := "service_core"
 const APARTMENT_ROOF_TARGET_ID := "roof"
 
+const FURNITURE_ORIENTATION_FIXED := "fixed"
+const FURNITURE_ORIENTATION_ROTATABLE := "rotatable"
+const FURNITURE_ORIENTATION_DEFAULT := "default"
+const FURNITURE_ORIENTATION_ROTATED := "rotated"
+
 const ROOM_DECOR_CATEGORIES := [DECOR_WALLPAPER, DECOR_WALL, DECOR_DOOR]
 const PUBLIC_AREA_DECOR_CATEGORIES := [DECOR_WALLPAPER, DECOR_WALL]
 const SERVICE_CORE_DECOR_CATEGORIES := [DECOR_WALLPAPER, DECOR_WALL]
@@ -27,6 +32,7 @@ const VALID_BEHAVIOR_KEYS := {
 	"entertainment": true,
 	"clean": true,
 	"study": true,
+	"sit": true,
 	"relax": true,
 	"happy": true,
 	"leaving": true,
@@ -82,6 +88,32 @@ func load_all() -> void:
 
 func get_furniture_data(id: String) -> Dictionary:
 	return _required_dict_from_index(furniture_by_id, id, "Furniture")
+
+func get_furniture_orientation_data(id: String, orientation := "") -> Dictionary:
+	return furniture_orientation_data(get_furniture_data(id), orientation)
+
+func furniture_orientation_data(furniture_data: Dictionary, orientation := "") -> Dictionary:
+	var orientations := _require_dict(furniture_data, "orientations", "furniture '%s'" % str(furniture_data.get("id", "")))
+	var selected := orientation.strip_edges()
+	if selected.is_empty():
+		selected = str(furniture_data["default_orientation"]).strip_edges()
+	if not orientations.has(selected):
+		_fail("Furniture '%s' does not support orientation '%s'." % [str(furniture_data.get("id", "")), selected])
+		return {}
+	var data: Variant = orientations[selected]
+	_expect(data is Dictionary, "Furniture '%s' orientation '%s' must be a dictionary." % [str(furniture_data.get("id", "")), selected])
+	return (data as Dictionary).duplicate(true)
+
+func furniture_can_rotate(furniture_data: Dictionary) -> bool:
+	return str(furniture_data.get("orientation_mode", "")).strip_edges() == FURNITURE_ORIENTATION_ROTATABLE
+
+func next_furniture_orientation(furniture_data: Dictionary, orientation := "") -> String:
+	if not furniture_can_rotate(furniture_data):
+		return str(furniture_data["default_orientation"]).strip_edges()
+	var current := orientation.strip_edges()
+	if current.is_empty():
+		current = str(furniture_data["default_orientation"]).strip_edges()
+	return FURNITURE_ORIENTATION_DEFAULT if current == FURNITURE_ORIENTATION_ROTATED else FURNITURE_ORIENTATION_ROTATED
 
 func get_tenant_data(id: String) -> Dictionary:
 	return _required_dict_from_index(tenant_by_id, id, "Tenant")
@@ -404,6 +436,27 @@ func _validate_platform_config() -> void:
 	_expect(platform_config.has("platform"), "platform_config.json is missing key 'platform'.")
 	_expect(platform_config.has("rewarded_ads_enabled"), "platform_config.json is missing key 'rewarded_ads_enabled'.")
 
+func _validate_furniture_orientations(data: Dictionary, furniture_id: String) -> void:
+	var orientation_mode := _require_string(data, "orientation_mode", "furniture '%s'" % furniture_id)
+	_expect(orientation_mode in [FURNITURE_ORIENTATION_FIXED, FURNITURE_ORIENTATION_ROTATABLE], "furniture '%s' orientation_mode is invalid." % furniture_id)
+	var default_orientation := _require_string(data, "default_orientation", "furniture '%s'" % furniture_id)
+	var orientations := _require_dict(data, "orientations", "furniture '%s'" % furniture_id)
+	_expect(orientations.has(default_orientation), "furniture '%s' default_orientation must exist in orientations." % furniture_id)
+	if orientation_mode == FURNITURE_ORIENTATION_ROTATABLE:
+		_expect(not bool(data.get("wall_item", false)), "furniture '%s' wall items cannot be rotatable in v1." % furniture_id)
+		_expect(orientations.has(FURNITURE_ORIENTATION_DEFAULT), "rotatable furniture '%s' must support default orientation." % furniture_id)
+		_expect(orientations.has(FURNITURE_ORIENTATION_ROTATED), "rotatable furniture '%s' must support rotated orientation." % furniture_id)
+	else:
+		_expect(default_orientation == FURNITURE_ORIENTATION_DEFAULT, "fixed furniture '%s' default orientation must be default." % furniture_id)
+	for orientation_key in orientations.keys():
+		var orientation := str(orientation_key).strip_edges()
+		_expect(not orientation.is_empty(), "furniture '%s' contains an empty orientation key." % furniture_id)
+		var orientation_data := _require_dict(orientations, orientation, "furniture '%s' orientations" % furniture_id)
+		_require_vector_array(orientation_data, "size", 2, "furniture '%s' orientation '%s'" % [furniture_id, orientation])
+		_require_vector_array(orientation_data, "footprint", 2, "furniture '%s' orientation '%s'" % [furniture_id, orientation])
+		_require_number(orientation_data, "rotation_degrees", "furniture '%s' orientation '%s'" % [furniture_id, orientation])
+		_validate_asset_config(_require_dict(orientation_data, "asset", "furniture '%s' orientation '%s'" % [furniture_id, orientation]), "furniture '%s' orientation '%s' asset" % [furniture_id, orientation])
+
 func _validate_furniture() -> void:
 	var seen_ids := {}
 	for item in furniture:
@@ -416,8 +469,7 @@ func _validate_furniture() -> void:
 		_require_string(data, "category", "furniture '%s'" % furniture_id)
 		_require_number(data, "price", "furniture '%s'" % furniture_id)
 		_require_number(data, "refund_rate", "furniture '%s'" % furniture_id)
-		_require_vector_array(data, "size", 2, "furniture '%s'" % furniture_id)
-		_require_vector_array(data, "footprint", 2, "furniture '%s'" % furniture_id)
+		_validate_furniture_orientations(data, furniture_id)
 		_require_number(data, "comfort", "furniture '%s'" % furniture_id)
 		_require_number(data, "entertainment", "furniture '%s'" % furniture_id)
 		_require_number(data, "hygiene", "furniture '%s'" % furniture_id)
@@ -426,11 +478,14 @@ func _validate_furniture() -> void:
 		_require_bool(data, "interactive", "furniture '%s'" % furniture_id)
 		_require_bool(data, "requires_wall", "furniture '%s'" % furniture_id)
 		_require_bool(data, "wall_item", "furniture '%s'" % furniture_id)
-		_validate_asset_config(_require_dict(data, "asset", "furniture '%s' asset" % furniture_id), "furniture '%s' asset" % furniture_id)
 		var interaction := _require_dict(data, "interaction", "furniture '%s'" % furniture_id)
 		if bool(data["interactive"]):
-			_require_string(interaction, "need", "furniture '%s' interaction" % furniture_id)
+			_expect(VALID_BEHAVIOR_KEYS.has(_require_string(interaction, "behavior", "furniture '%s' interaction" % furniture_id)), "furniture '%s' interaction behavior must be a tenant behavior key." % furniture_id)
 			_require_number(interaction, "duration", "furniture '%s' interaction" % furniture_id)
+			_require_string(interaction, "bubble", "furniture '%s' interaction" % furniture_id)
+			_require_string(interaction, "visual_effect", "furniture '%s' interaction" % furniture_id)
+			_require_string(interaction, "floating_icon", "furniture '%s' interaction" % furniture_id)
+			_require_number(interaction, "satisfaction_delta", "furniture '%s' interaction" % furniture_id)
 
 func _validate_tenants() -> void:
 	var seen_ids := {}

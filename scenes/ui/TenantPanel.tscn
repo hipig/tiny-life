@@ -219,12 +219,17 @@ layout_mode = 1
 text = "睡觉"
 metadata/behavior_key = "sleep"
 
-[node name="Study" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels" index="11" unique_id=594281851]
+[node name="Sit" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels" index="11"]
+layout_mode = 1
+text = "坐下"
+metadata/behavior_key = "sit"
+
+[node name="Study" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels" index="12" unique_id=594281851]
 layout_mode = 1
 text = "学习/工作"
 metadata/behavior_key = "study"
 
-[node name="Wander" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels" index="12" unique_id=1121342471]
+[node name="Wander" type="Label" parent="PanelBox/ScrollContainer/ContentRoot/TemplateText/BehaviorLabels" index="13" unique_id=1121342471]
 layout_mode = 1
 text = "闲逛"
 metadata/behavior_key = "wander"

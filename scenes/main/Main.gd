@@ -145,13 +145,13 @@ func _show_move_existing(room_id: String, instance_id: String) -> void:
 	overlay.cancelled.connect(UIManager.open_room_panel)
 	overlay.open_move(room_id, instance_id)
 
-func _confirm_new_placement(room_id: String, furniture_id: String, anchor_pos: Array) -> void:
+func _confirm_new_placement(room_id: String, furniture_id: String, anchor_pos: Array, orientation: String) -> void:
 	var data: Dictionary = ConfigManager.get_furniture_data(furniture_id)
 	var price := int(data.get("price", 0))
 	if not GameState.spend_coins(price):
 		_toast("toast_insufficient_coins")
 		return
-	GameState.add_furniture_instance(room_id, furniture_id, anchor_pos)
+	GameState.add_furniture_instance(room_id, furniture_id, anchor_pos, false, orientation)
 	SaveManager.save_game()
 	_toast("toast_furniture_placed", [data.get("name", "furniture")])
 	UIManager.open_room_panel(room_id)
@@ -200,8 +200,8 @@ func _on_decor_apply_requested(target_ref: Dictionary, decor_id: String) -> void
 	else:
 		GameState.add_coins(price, "decor_apply_refund")
 
-func _confirm_move(room_id: String, instance_id: String, anchor_pos: Array) -> void:
-	if GameState.move_furniture_instance(room_id, instance_id, anchor_pos):
+func _confirm_move(room_id: String, instance_id: String, anchor_pos: Array, orientation: String) -> void:
+	if GameState.move_furniture_instance(room_id, instance_id, anchor_pos, orientation):
 		SaveManager.save_game()
 		_toast("toast_furniture_moved")
 	UIManager.open_room_panel(room_id)

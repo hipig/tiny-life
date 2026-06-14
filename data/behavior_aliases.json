@@ -7,6 +7,7 @@
   "娱乐": "entertainment",
   "清洁": "clean",
   "学习/工作": "study",
+  "坐下": "sit",
   "放松": "relax",
   "开心": "happy",
   "离开": "leaving",
@@ -15,5 +16,6 @@
   "energy": "sleep",
   "hunger": "eat",
   "hygiene": "clean",
+  "sit": "sit",
   "comfort": "relax"
 }

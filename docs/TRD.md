@@ -734,7 +734,8 @@ var rent_per_minute: float
       "instance_id": "f_0001",
       "furniture_id": "bed_basic",
       "anchor_pos": [32.0, 64.0],
-      "mirrored": false
+      "mirrored": false,
+      "orientation": "default"
     }
   ],
   "score": 45,
@@ -839,7 +840,30 @@ func _on_recruit_tenant_pressed():
     "category": "bed",
     "price": 100,
     "refund_rate": 0.5,
-    "size": [2, 3],
+    "orientation_mode": "rotatable",
+    "default_orientation": "default",
+    "orientations": {
+      "default": {
+        "size": [2, 2],
+        "footprint": [3, 2],
+        "asset": {
+          "type": "atlas_region",
+          "texture": "res://assets/pixel_spaces/furniture_atlas.png",
+          "region": [0, 0, 64, 48]
+        },
+        "rotation_degrees": 0
+      },
+      "rotated": {
+        "size": [2, 3],
+        "footprint": [2, 3],
+        "asset": {
+          "type": "atlas_region",
+          "texture": "res://assets/pixel_spaces/furniture_atlas.png",
+          "region": [0, 0, 64, 48]
+        },
+        "rotation_degrees": 90
+      }
+    },
     "comfort": 20,
     "entertainment": 0,
     "hygiene": 0,
@@ -848,13 +872,8 @@ func _on_recruit_tenant_pressed():
     "interactive": true,
     "requires_wall": true,
     "wall_item": false,
-    "asset": {
-      "type": "atlas_region",
-      "texture": "res://assets/pixel_spaces/furniture_atlas.png",
-      "region": [0, 0, 64, 48]
-    },
     "interaction": {
-      "need": "energy",
+      "behavior": "sleep",
       "bubble": "zzz",
       "duration": 4,
       "visual_effect": "highlight",
@@ -864,6 +883,8 @@ func _on_recruit_tenant_pressed():
   }
 ]
 ```
+
+`orientation_mode = "rotatable"` 仅允许非墙面家具使用，且必须同时声明 `default` 和 `rotated`。固定家具使用 `orientation_mode = "fixed"`，只声明 `default`。摆放合法性、重叠、越界、视觉尺寸和租客使用位置都以实例当前 `orientation` 的 `footprint` / `size` 为准。
 
 ---
 
@@ -938,6 +959,7 @@ var instance_id: String
 var furniture_id: String
 var room_id: String
 var anchor_pos: Array
+var orientation: String
 var data: Dictionary
 ```
 
@@ -990,11 +1012,12 @@ func start_new_furniture_placement(furniture_id: String, target_room_id: String)
 
     current_mode = "new"
     current_furniture_id = furniture_id
+    current_orientation = ConfigManager.get_furniture_data(furniture_id)["default_orientation"]
     target_room = BuildingManager.get_room(target_room_id)
 
     preview = preload("res://scenes/furniture/FurniturePreview.tscn").instantiate()
     target_room.add_child(preview)
-    preview.setup(furniture_id)
+    preview.setup(furniture_id, [0.0, 0.0], true, current_orientation)
     preview.position = target_room.get_center_position()
 
     target_room.show_placement_area(true)
@@ -1021,7 +1044,8 @@ func confirm_new_placement():
     target_room.add_furniture_instance(
         current_furniture_id,
         preview.anchor_pos,
-        false
+        false,
+        preview.orientation
     )
 
     target_room.recalculate_stats()
@@ -1046,6 +1070,7 @@ func start_move_existing(furniture: Furniture):
     current_mode = "move"
     moving_furniture = furniture
     original_anchor_pos = furniture.anchor_pos
+    original_orientation = furniture.orientation
     target_room = BuildingManager.get_room(furniture.room_id)
 
     target_room.release_preview_collision(furniture)
@@ -1063,6 +1088,7 @@ func confirm_move():
         return
 
     moving_furniture.anchor_pos = moving_furniture.preview_anchor_pos
+    moving_furniture.orientation = moving_furniture.preview_orientation
     target_room.occupy_preview_collision(moving_furniture)
     moving_furniture.set_as_preview(false)
 
@@ -1078,6 +1104,7 @@ func confirm_move():
 ```gdscript
 func cancel_move():
     moving_furniture.anchor_pos = original_anchor_pos
+    moving_furniture.orientation = original_orientation
     target_room.occupy_preview_collision(moving_furniture)
     moving_furniture.restore_position()
     moving_furniture.set_as_preview(false)
@@ -1133,7 +1160,7 @@ func world_to_anchor(world_pos: Vector2) -> Array:
 func anchor_to_world(anchor_pos: Array) -> Vector2:
     pass
 
-func can_place(furniture_data: Dictionary, anchor_pos: Array) -> bool:
+func can_place(furniture_data: Dictionary, anchor_pos: Array, orientation: String) -> bool:
     pass
 
 func occupy(furniture_instance):
@@ -1150,6 +1177,7 @@ func release(furniture_instance):
 ```text
 是否超出房间边界
 是否与已有家具重叠
+是否使用当前 orientation 对应的 footprint
 是否挡住门
 是否符合墙面规则
 是否满足靠墙要求
@@ -1362,16 +1390,19 @@ Idle
 
 ---
 
-## 16.3 需求与家具匹配
+## 16.3 家具互动行为
 
-| 需求            | 家具标签                | 气泡    |
-| ------------- | ------------------- | ----- |
-| energy        | bed                 | zzz   |
-| hunger        | fridge / table      | food  |
-| entertainment | tv / game / sofa    | fun   |
-| hygiene       | sink / bath         | water |
-| study         | desk / book         | book  |
-| comfort       | plant / lamp / sofa | heart |
+互动家具在 `interaction.behavior` 中直接声明标准行为键。
+
+| 行为            | 家具示例              | 气泡    |
+| ------------- | ----------------- | ----- |
+| sleep         | bed               | zzz   |
+| sit           | chair / sofa      | sit   |
+| study         | desk / book       | book  |
+| entertainment | tv / game / sofa  | fun   |
+| eat           | fridge / table    | food  |
+| clean         | sink / bath       | water |
+| relax         | plant / lamp      | heart |
 
 ---
 
@@ -1379,8 +1410,7 @@ Idle
 
 ```gdscript
 func choose_next_behavior():
-    var need = pick_need()
-    var target = room.find_furniture_by_need(need)
+    var target = room.pick_interactive_furniture()
 
     if target == null:
         show_bubble("question")
@@ -1396,14 +1426,25 @@ func interact_with_target():
     current_target.set_in_use(true)
 
     var interaction = current_target.data.get("interaction", {})
-    show_bubble(interaction.get("bubble", "happy"))
+    var behavior = interaction["behavior"]
+    GameEvents.furniture_interaction_started.emit(room_id, current_target.instance_id, behavior)
+    show_bubble(behavior)
 
     await get_tree().create_timer(interaction.get("duration", 3)).timeout
 
     current_target.set_in_use(false)
-    apply_interaction_result(interaction)
+    GameState.observe_tenant_behavior(tenant_id, behavior, interaction.get("satisfaction_delta", 1))
+    GameEvents.furniture_interaction_finished.emit(room_id, current_target.instance_id, behavior)
     state = TenantAIState.REACT
 ```
+
+确认新家具购买后，`GameState.add_furniture_instance()` 会在房间有 HOME 租客时发出：
+
+```gdscript
+tenant_furniture_reaction_requested(tenant_id, room_id, furniture_id, reaction_key)
+```
+
+`reaction_key` 至少包含 `new_furniture` 和 `favorite`。命中租客 `favorite_tags` 时使用 `favorite`，租客短跳并播放更强表情，同时增加更多满意度。移动已有家具和回收家具不触发购置反馈。
 
 ---
 
@@ -1865,10 +1906,13 @@ signal decor_target_changed(kind, target_id, decor_id, category)
 signal furniture_placed(room_id, furniture_id)
 signal furniture_moved(room_id, furniture_id)
 signal furniture_recycled(room_id, furniture_id)
+signal furniture_interaction_started(room_id, instance_id, behavior)
+signal furniture_interaction_finished(room_id, instance_id, behavior)
 
 signal tenant_recruited(tenant_id, room_id)
 signal tenant_satisfaction_changed(tenant_id, value)
 signal tenant_behavior_observed(tenant_id, behavior)
+signal tenant_furniture_reaction_requested(tenant_id, room_id, furniture_id, reaction_key)
 
 signal room_built(room_id, floor_index)
 signal task_updated(task_id)
@@ -1925,6 +1969,7 @@ RoomPanel 支持家具 Tab
 家具商店
 新家具购买即摆放
 连续坐标摆放，地面家具保持地面线对齐
+可转向家具支持摆放时切换朝向
 确认后扣金币
 ```
 
@@ -2032,6 +2077,8 @@ RoomPanel 有家具 / 租客 Tab
 ```text
 选择家具后进入摆放
 家具按连续坐标摆放
+配置声明可转向的地面家具可切换朝向
+转向后的越界和重叠按对应 footprint 校验
 合法位置可确认
 确认后扣金币
 长按家具可移动

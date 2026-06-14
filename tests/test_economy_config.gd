@@ -142,19 +142,47 @@ func test_room_grid_helpers_remain_for_furniture_and_wall_bounds() -> void:
 	assert_eq(Vector2(cell_width, cell_height), Vector2(8.0, 16.0), "placement helper cells should be 8px wide and 16px tall")
 
 
-func test_furniture_footprints_are_required_and_derived_from_visual_size() -> void:
+func test_furniture_orientations_are_config_driven() -> void:
 	var config_source := FileAccess.get_file_as_string("res://scripts/autoload/ConfigManager.gd")
-	assert_true(config_source.contains("_require_vector_array(data, \"footprint\""), "Furniture config validation should require footprint")
+	assert_true(config_source.contains("_validate_furniture_orientations"), "Furniture config validation should validate orientation schema")
+	assert_true(config_source.contains("orientation_mode"), "Furniture config should require orientation mode")
+	assert_true(config_source.contains("default_orientation"), "Furniture config should require default orientation")
+	assert_true(config_source.contains("rotation_degrees"), "Furniture orientation config should declare runtime rotation")
+	var rotatable_ids := [
+		"bed_basic",
+		"bed_soft",
+		"desk_basic",
+		"computer_desk",
+		"sofa_green",
+		"sofa_large",
+		"dining_table",
+		"rug_red"
+	]
 	for item in furniture:
 		var furniture_data: Dictionary = item
-		var size: Array = furniture_data.get("size", [])
-		var footprint: Array = furniture_data.get("footprint", [])
 		var furniture_id := str(furniture_data.get("id", ""))
-		assert_eq(footprint.size(), 2, "%s should define a two-value footprint" % furniture_id)
-		if size.size() < 2 or footprint.size() < 2:
+		var orientation_mode := str(furniture_data.get("orientation_mode", ""))
+		var default_orientation := str(furniture_data.get("default_orientation", ""))
+		var orientations: Dictionary = furniture_data.get("orientations", {})
+		assert_eq(default_orientation, "default", "%s should default to the default orientation" % furniture_id)
+		assert_true(orientations.has(default_orientation), "%s default orientation should exist" % furniture_id)
+		assert_true(orientation_mode == "fixed" or orientation_mode == "rotatable", "%s should declare a valid orientation mode" % furniture_id)
+		for orientation_key in orientations.keys():
+			var orientation_data: Dictionary = orientations[orientation_key]
+			assert_eq(orientation_data.get("size", []).size(), 2, "%s %s should define visual size" % [furniture_id, orientation_key])
+			assert_eq(orientation_data.get("footprint", []).size(), 2, "%s %s should define placement footprint" % [furniture_id, orientation_key])
+			assert_true(orientation_data.get("asset", {}) is Dictionary, "%s %s should define an asset" % [furniture_id, orientation_key])
+			assert_true(orientation_data.has("rotation_degrees"), "%s %s should define rotation_degrees" % [furniture_id, orientation_key])
+		if rotatable_ids.has(furniture_id):
+			assert_eq(orientation_mode, "rotatable", "%s should be rotatable in the first supported subset" % furniture_id)
+			assert_true(orientations.has("rotated"), "%s should support rotated orientation" % furniture_id)
+			assert_false(bool(furniture_data.get("wall_item", false)), "%s rotatable furniture should be floor-only" % furniture_id)
+			var default_footprint: Array = orientations.get("default", {}).get("footprint", [])
+			var rotated_footprint: Array = orientations.get("rotated", {}).get("footprint", [])
+			assert_false(default_footprint == rotated_footprint, "%s rotated footprint should differ from default footprint" % furniture_id)
 			continue
-		var expected := [int(ceil(float(size[0]) * 1.5)), int(size[1])]
-		assert_eq([int(footprint[0]), int(footprint[1])], expected, "%s footprint should be derived from visual size" % furniture_id)
+		assert_eq(orientation_mode, "fixed", "%s should remain fixed unless explicitly allowlisted" % furniture_id)
+		assert_false(orientations.has("rotated"), "%s fixed furniture should not declare a rotated orientation" % furniture_id)
 
 
 func test_room_building_rules_unlock_same_floor_independently() -> void:
@@ -190,7 +218,9 @@ func test_furniture_placement_rules_keep_core_restrictions() -> void:
 	assert_true(rules_source.contains("LAYER_FLOOR"), "placement rules should expose a floor placement layer")
 	assert_true(rules_source.contains("wall_item"), "wall-item furniture should use the wall placement layer")
 	assert_true(rules_source.contains("floor_baseline_y"), "floor furniture should align to the room floor baseline")
-	assert_true(rules_source.contains("bounds_rect_for_anchor"), "placement rules should use visual rectangles for continuous collision")
+	assert_true(rules_source.contains("footprint_pixel_size_for"), "placement rules should convert orientation footprints into pixel bounds")
+	assert_true(rules_source.contains("bounds_rect_for_anchor"), "placement rules should use orientation footprint rectangles for continuous collision")
+	assert_true(rules_source.contains("orientation_data_for"), "placement rules should read orientation-specific furniture data")
 	assert_true(rules_source.contains("placement_layer_for(other_data) != layer"), "wall and floor furniture should not collide with each other")
 	assert_true(rules_source.contains("door_cells_for_layer"), "placement rules should keep a compatibility hook for route helpers")
 	assert_false(rules_source.contains("in door_cells"), "placement rules should not reserve door cells after doors became outward-opening")
@@ -212,10 +242,18 @@ func test_furniture_placement_rules_validate_floor_and_wall_layers() -> void:
 	assert_eq(FurniturePlacementRules.placement_layer_for(_furniture_data("painting_small")), FurniturePlacementRules.LAYER_WALL, "painting should be a wall item")
 	assert_eq(FurniturePlacementRules.floor_baseline_y(room), 64.0, "floor furniture should align to the 6x4 room baseline")
 	var bed_anchor := FurniturePlacementRules.normalized_anchor_for(room, _furniture_data("bed_basic"), [7.0, 64.0])
+	var rotated_bed_anchor := FurniturePlacementRules.normalized_anchor_for(room, _furniture_data("bed_basic"), [0.0, 64.0], FurniturePlacementRules.ROTATED_ORIENTATION)
 	var chair_anchor := FurniturePlacementRules.normalized_anchor_for(room, _furniture_data("chair_basic"), [40.0, 64.0])
 	var sofa_anchor := FurniturePlacementRules.normalized_anchor_for(room, _furniture_data("sofa_green"), [62.0, 64.0])
 	assert_eq(bed_anchor[1], 64.0, "bed anchor should normalize to the floor baseline")
+	assert_eq(rotated_bed_anchor[1], 64.0, "rotated bed anchor should keep the same floor baseline")
+	assert_false(
+		FurniturePlacementRules.footprint_for_orientation(_furniture_data("bed_basic"), FurniturePlacementRules.DEFAULT_ORIENTATION) == FurniturePlacementRules.footprint_for_orientation(_furniture_data("bed_basic"), FurniturePlacementRules.ROTATED_ORIENTATION),
+		"rotated bed footprint should differ from default footprint"
+	)
 	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, bed_anchor), "bed should be valid when anchored to the floor baseline")
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, rotated_bed_anchor, "", FurniturePlacementRules.ROTATED_ORIENTATION), "rotated bed should be valid when using its rotated footprint")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [81.0, 64.0], "", FurniturePlacementRules.ROTATED_ORIENTATION), "rotated furniture should reject anchors beyond its orientation-specific bounds")
 	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [7.0, 48.0]), "bed should not float above the floor baseline")
 	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [-1.0, 64.0]), "bed should not silently clamp beyond the left edge")
 	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, chair_anchor), "chair should be valid on the floor baseline")
@@ -236,9 +274,15 @@ func test_furniture_placement_rules_validate_floor_and_wall_layers() -> void:
 		{"instance_id": "wall_a", "furniture_id": "painting_small", "anchor_pos": [2.0, 0.0], "orientation": "default"}
 	]
 	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "sofa_green", _furniture_data("sofa_green"), furniture_lookup, [39.0, 64.0]), "floor furniture should still collide with floor furniture")
+	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, [32.0, 64.0], "", FurniturePlacementRules.ROTATED_ORIENTATION), "rotated floor furniture should collide using its rotated footprint")
 	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "wall_clock", _furniture_data("wall_clock"), furniture_lookup, [24, 0]), "wall furniture should ignore floor furniture collision")
 	assert_false(FurniturePlacementRules.can_place_furniture_in_room(room, "wall_clock", _furniture_data("wall_clock"), furniture_lookup, [2, 0]), "wall furniture should still collide with wall furniture")
 	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "chair_basic", _furniture_data("chair_basic"), furniture_lookup, chair_anchor, "floor_a"), "moving furniture should ignore its own original footprint")
+
+	room["furniture_instances"] = [
+		{"instance_id": "bed_a", "furniture_id": "bed_basic", "anchor_pos": rotated_bed_anchor, "orientation": "rotated"}
+	]
+	assert_true(FurniturePlacementRules.can_place_furniture_in_room(room, "bed_basic", _furniture_data("bed_basic"), furniture_lookup, rotated_bed_anchor, "bed_a", FurniturePlacementRules.ROTATED_ORIENTATION), "moving a rotated furniture item should ignore its own rotated footprint")
 
 
 func test_continuous_floor_anchors_allow_starter_room_combo() -> void:
